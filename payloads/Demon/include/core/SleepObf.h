@@ -36,6 +36,6 @@ typedef struct _SLEEP_PARAM
     PVOID   Slave;
 } SLEEP_PARAM, *PSLEEP_PARAM;
 
-VOID SleepObf( );
+VOID EepOb( );
 
 #endif

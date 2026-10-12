@@ -10,7 +10,7 @@
 
 #include <crypt/AesCrypt.h>
 
-BOOL TransportInit( )
+BOOL TranIn( )
 {
     PUTS_DONT_SEND( "Connecting to listener" )
     PVOID  Data    = NULL;

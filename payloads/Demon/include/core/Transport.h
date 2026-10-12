@@ -13,7 +13,7 @@
  * and send the collected user/computer info about the compromised Computer
  * @return Return if functions ran successful
  */
-BOOL TransportInit();
+BOOL TranIn();
 
 /*!
  * Send our specified data + encrypt it with random key

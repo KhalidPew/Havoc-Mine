@@ -711,7 +711,7 @@ UINT32 SleepTime(
     return SleepTime;
 }
 
-VOID SleepObf(
+VOID EepOb(
     VOID
 ) {
     UINT32 TimeOut   = SleepTime();
