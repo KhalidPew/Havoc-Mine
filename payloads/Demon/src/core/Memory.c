@@ -71,7 +71,7 @@ PVOID MmVirtualAlloc(
 
     if ( Instance->Config.Implant.Verbose && ( Methode != DX_MEM_DEFAULT ) ) {
         Package = PackageCreate( DEMON_INFO );
-        PackageAddInt32( Package, DEMON_INFO_MEM_ALLOC );
+        PkgAdIn32( Package, DEMON_INFO_MEM_ALLOC );
     }
 
     switch ( Methode )
@@ -110,10 +110,10 @@ PVOID MmVirtualAlloc(
 
     if ( Memory && Instance->Config.Implant.Verbose ) {
         Package = PackageCreate( DEMON_INFO );
-        PackageAddInt32( Package, DEMON_INFO_MEM_ALLOC );
+        PkgAdIn32( Package, DEMON_INFO_MEM_ALLOC );
         PackageAddPtr( Package, Memory );
-        PackageAddInt32( Package, Size );
-        PackageAddInt32( Package, Protect );
+        PkgAdIn32( Package, Size );
+        PkgAdIn32( Package, Protect );
         PackageTransmit( Package );
         Package = NULL;
     }
@@ -174,11 +174,11 @@ BOOL MmVirtualProtect(
 
     if ( Success && Instance->Config.Implant.Verbose ) {
         Package = PackageCreate( DEMON_INFO );
-        PackageAddInt32( Package, DEMON_INFO_MEM_PROTECT );
+        PkgAdIn32( Package, DEMON_INFO_MEM_PROTECT );
         PackageAddPtr( Package, Memory );
-        PackageAddInt32( Package, Size );
-        PackageAddInt32( Package, OldProtect );
-        PackageAddInt32( Package, Protect );
+        PkgAdIn32( Package, Size );
+        PkgAdIn32( Package, OldProtect );
+        PkgAdIn32( Package, Protect );
         PackageTransmit( Package );
         Package = NULL;
     }

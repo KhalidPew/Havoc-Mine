@@ -115,7 +115,7 @@ VOID JobCheckList()
 
                         // notify the TS that the process is dead, so that the RequestID can be closed
                         PPACKAGE Package = PackageCreateWithRequestID( DEMON_COMMAND_JOB, JobList->RequestID );
-                        PackageAddInt32( Package, DEMON_COMMAND_JOB_DIED );
+                        PkgAdIn32( Package, DEMON_COMMAND_JOB_DIED );
                         PackageTransmit( Package );
 
                         // free resources

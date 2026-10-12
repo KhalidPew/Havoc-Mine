@@ -52,8 +52,8 @@ LONG WINAPI VehDebugger( PEXCEPTION_POINTERS Exception )
         Package = PackageCreate( DEMON_COMMAND_INLINE_EXECUTE );
     }
 
-    PackageAddInt32( Package, DEMON_COMMAND_INLINE_EXECUTE_EXCEPTION );
-    PackageAddInt32( Package, Exception->ExceptionRecord->ExceptionCode );
+    PkgAdIn32( Package, DEMON_COMMAND_INLINE_EXECUTE_EXCEPTION );
+    PkgAdIn32( Package, Exception->ExceptionRecord->ExceptionCode );
     PackageAddInt64( Package, (UINT64)(ULONG_PTR)Exception->ExceptionRecord->ExceptionAddress );
     PackageTransmit( Package );
 
@@ -231,7 +231,7 @@ BOOL CoffeeProcessSymbol( PCOFFEE Coffee, LPSTR SymbolName, UINT16 SymbolType, P
 
 SymbolNotFound:
     Package = PackageCreateWithRequestID( DEMON_COMMAND_INLINE_EXECUTE, Coffee->RequestID );
-    PackageAddInt32( Package, DEMON_COMMAND_INLINE_EXECUTE_SYMBOL_NOT_FOUND );
+    PkgAdIn32( Package, DEMON_COMMAND_INLINE_EXECUTE_SYMBOL_NOT_FOUND );
     PackageAddString( Package, SymbolName );
     PackageTransmit( Package );
 
@@ -353,7 +353,7 @@ BOOL CoffeeExecuteFunction( PCOFFEE Coffee, PCHAR Function, PVOID Argument, SIZE
 
         PPACKAGE Package = PackageCreateWithRequestID( DEMON_COMMAND_INLINE_EXECUTE, RequestID );
 
-        PackageAddInt32( Package, DEMON_COMMAND_INLINE_EXECUTE_SYMBOL_NOT_FOUND );
+        PkgAdIn32( Package, DEMON_COMMAND_INLINE_EXECUTE_SYMBOL_NOT_FOUND );
         PackageAddString( Package, Function );
         PackageTransmit( Package );
 
@@ -776,13 +776,13 @@ END:
     if ( Success )
     {
         PPACKAGE Package = PackageCreateWithRequestID( DEMON_COMMAND_INLINE_EXECUTE, RequestID );
-        PackageAddInt32( Package, DEMON_COMMAND_INLINE_EXECUTE_RAN_OK );
+        PkgAdIn32( Package, DEMON_COMMAND_INLINE_EXECUTE_RAN_OK );
         PackageTransmit( Package );
     }
     else
     {
         PPACKAGE Package = PackageCreateWithRequestID( DEMON_COMMAND_INLINE_EXECUTE, RequestID );
-        PackageAddInt32( Package, DEMON_COMMAND_INLINE_EXECUTE_COULD_NO_RUN );
+        PkgAdIn32( Package, DEMON_COMMAND_INLINE_EXECUTE_COULD_NO_RUN );
         PackageTransmit( Package );
     }
 

