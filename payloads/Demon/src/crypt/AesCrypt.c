@@ -106,18 +106,32 @@ void AesInit( PAESCTX ctx, const PUINT8 key, const PUINT8 iv)
   MemCopy( ctx->Iv, iv, AES_BLOCKLEN );
 }
 
-// This function adds the round key to state.
-// The round key is added to the state by an XOR function.
-static void AddRoundKey(UINT8 round, state_t* state, const UINT8* RoundKey)
+
+
+
+static void ApplyKeyTransformation(UINT8 cycle, state_t* matrix, const UINT8* expandedKey)
 {
-    UINT8 i,j;
-    for (i = 0; i < 4; ++i)
-    {
-        for (j = 0; j < 4; ++j)
-        {
-            (*state)[i][j] ^= RoundKey[(round * Nb * 4) + (i * Nb) + j];
-        }
-    }
+    const UINT8* currentKey = expandedKey + ((size_t)cycle * 16);
+
+    (*matrix)[0][0] ^= currentKey[0];
+    (*matrix)[0][1] ^= currentKey[1];
+    (*matrix)[0][2] ^= currentKey[2];
+    (*matrix)[0][3] ^= currentKey[3];
+
+    (*matrix)[1][0] ^= currentKey[4];
+    (*matrix)[1][1] ^= currentKey[5];
+    (*matrix)[1][2] ^= currentKey[6];
+    (*matrix)[1][3] ^= currentKey[7];
+
+    (*matrix)[2][0] ^= currentKey[8];
+    (*matrix)[2][1] ^= currentKey[9];
+    (*matrix)[2][2] ^= currentKey[10];
+    (*matrix)[2][3] ^= currentKey[11];
+
+    (*matrix)[3][0] ^= currentKey[12];
+    (*matrix)[3][1] ^= currentKey[13];
+    (*matrix)[3][2] ^= currentKey[14];
+    (*matrix)[3][3] ^= currentKey[15];
 }
 
 // The SubBytes Function Substitutes the values in the
@@ -192,7 +206,7 @@ static void Cipher(state_t* state, const UINT8* RoundKey) // Main
     UINT8 round = 0;
 
     // Add the First round key to the state before starting the rounds.
-    AddRoundKey(0, state, RoundKey);
+    ApplyKeyTransformation(0, state, RoundKey);
 
     // There will be Nr rounds.
     // The first Nr-1 rounds are identical.
@@ -206,10 +220,10 @@ static void Cipher(state_t* state, const UINT8* RoundKey) // Main
             break;
         }
         MixColumns(state);
-        AddRoundKey(round, state, RoundKey);
+        ApplyKeyTransformation(round, state, RoundKey);
     }
     // Add round key to last round
-    AddRoundKey(Nr, state, RoundKey);
+    ApplyKeyTransformation(Nr, state, RoundKey);
 }
 
 #if defined(CTR) && (CTR == 1)

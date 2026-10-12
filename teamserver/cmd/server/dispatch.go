@@ -915,7 +915,7 @@ func (t *Teamserver) DispatchEvent(pk packager.Package) {
 					if PayloadBuilder.Build() {
 						pal := PayloadBuilder.GetPayloadBytes()
 						if len(pal) > 0 {
-							err := t.SendEvent(PayloadBuilder.ClientId, events.Gate.SendStageless("demon"+Ext, pal))
+							err := t.SendEvent(PayloadBuilder.ClientId, events.Gate.SendStageless("butterfact"+Ext, pal))
 							if err != nil {
 								logger.Error("Error while sending event: " + err.Error())
 								return

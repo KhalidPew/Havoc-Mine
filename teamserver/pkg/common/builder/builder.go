@@ -25,7 +25,7 @@ import (
 // TODO: move to agent package
 const (
 	PayloadDir  = "payloads"
-	PayloadName = "demon"
+	PayloadName = "butterfact"
 )
 
 const (
