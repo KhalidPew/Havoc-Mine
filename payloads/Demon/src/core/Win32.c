@@ -76,7 +76,7 @@ PVOID LoaderModPebbb(
     }
 
     pabb = Instance->Teb->ProcessEnvironmentBlock;
-    hadaar = & pabb->leedar->InLoadOrderModuleList;
+    hadaar = & pabb->Ldr->InLoadOrderModuleList;
     ENTRAA = hadaar->Flink;
 
     for ( ; hadaar != ENTRAA ; ENTRAA = ENTRAA->Flink ) {
