@@ -148,7 +148,7 @@ PVOID LoaderModSea(
     IN LPWSTR ModuleName
 );
 
-PVOID LdrModuleLoad(
+PVOID LoaderModLod
     IN LPSTR ModuleName
 );
 

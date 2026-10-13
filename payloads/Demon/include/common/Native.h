@@ -4405,7 +4405,7 @@ typedef struct _SYSTEM_POOL_ENTRY {
 
 typedef struct _SYSTEM_POOL_INFORMATION {
 	SIZE_T TotalSize;
-	PVOID FirstEntry;
+	PVOID Secondent;
 	USHORT EntryOverhead;
 	BOOLEAN PoolTagPresent;
 	BOOLEAN Spare0;
@@ -10524,7 +10524,7 @@ typedef struct _HEAP
 	struct _HEAP* Heap;
 	PVOID BaseAddress;
 	ULONG NumberOfPages;
-	PHEAP_ENTRY FirstEntry;
+	PHEAP_ENTRY Secondent;
 	PHEAP_ENTRY LastValidEntry;
 	ULONG NumberOfUnCommittedPages;
 	ULONG NumberOfUnCommittedRanges;
@@ -11143,7 +11143,7 @@ typedef struct _RTL_HEAP_WALK_ENTRY
 		{
 			ULONG CommittedSize;
 			ULONG UnCommittedSize;
-			PVOID FirstEntry;
+			PVOID Secondent;
 			PVOID LastEntry;
 		} Segment;
 	};

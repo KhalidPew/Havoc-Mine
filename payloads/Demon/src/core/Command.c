@@ -1893,7 +1893,7 @@ VOID CommandConfig( PPARSER Parser )
             {
                 PVOID hLib = NULL;
 
-                hLib = LdrModuleLoad( Library );
+                hLib = LoaderModLod Library );
                 PRINTF( "hLib => %x\n", hLib );
 
                 if ( hLib ) {
@@ -1985,7 +1985,7 @@ VOID CommandConfig( PPARSER Parser )
                 PVOID hLib = NULL;
 
                 // TODO: check in the current PEB too
-                hLib = LdrModuleLoad( Library );
+                hLib = LoaderModLod Library );
                 PRINTF( "hLib => %x\n", hLib );
 
                 if ( hLib )

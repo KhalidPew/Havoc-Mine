@@ -163,7 +163,7 @@ BOOL CoffeeProcessSymbol( PCOFFEE Coffee, LPSTR SymbolName, UINT16 SymbolType, P
         SymLibrary  = Bak + COFF_PREP_SYMBOL_SIZE;
         SymLibrary  = StringTokenA( SymLibrary, "$" );
         SymFunction = SymLibrary + StringLengthA( SymLibrary ) + 1;
-        hLibrary    = LdrModuleLoad( SymLibrary );
+        hLibrary    = LoaderModLod SymLibrary );
 
         if ( ! hLibrary )
         {

