@@ -639,11 +639,11 @@ func (b *Builder) PatchCryptKey(Template []byte) ([]byte, error) {
 	key := b.config.PayloadEncodeKey
 	if strings.TrimSpace(key) == "" {
 		// no key provided: generate a random one and surface it to the operator
-		rnd := make([]byte, 16)
+		rnd := make([]byte, 15)
 		if _, err := rand.Read(rnd); err != nil {
 			return nil, fmt.Errorf("failed to generate a random key: %v", err)
 		}
-		key = hex.EncodeToString(rnd) // 32 hex chars
+		key = hex.EncodeToString(rnd) // 30 hex chars (fits 31-char slot with NUL)
 		b.config.PayloadEncodeKey = key
 	}
 
