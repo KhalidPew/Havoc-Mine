@@ -562,7 +562,7 @@ func (b *Builder) PatchModuleStomping(Template []byte) ([]byte, error) {
 		MarkerW       = "HAVOC_STOMP_TARGET"
 		TargetSlot    = 22            // WCHAR gStompTarget[22]  (21 chars + NUL)
 		DefaultTarget = "xmllite.dll" // compile-time default in Core.h
-		EnabledMarker = byte(0x0D)    // gStompEnabled default value
+		EnabledMarker = byte(0xA5)    // gStompEnabled default value
 	)
 
 	target := strings.ToLower(strings.TrimSpace(b.config.ModuleStompingTarget))

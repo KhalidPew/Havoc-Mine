@@ -12,7 +12,7 @@
 // markers the teamserver locates & patches in the shellcode template to enable
 // module stomping and set the decoy module name at build time.
 #define STOMP_TARGET_MARKER     L"HAVOC_STOMP_TARGET"
-#define STOMP_ENABLED_MARKER    0x0D
+#define STOMP_ENABLED_MARKER    0xA5
 
 // marker the teamserver patches with the payload-encoding key at build time
 #define CRYPT_KEY_MARKER        "HAVOC_CRYPT_KEY_MARKER"
