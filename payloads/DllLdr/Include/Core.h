@@ -16,7 +16,7 @@
 
 #define U_PTR( x )                      ( ( UINT_PTR ) x )
 #define C_PTR( x )                      ( ( LPVOID ) x )
-#define RVA2VA(type, base, rva) (type)((ULONG_PTR) base + rva)
+#define R2V2A(type, base, rva) (type)((ULONG_PTR) base + rva)
 
 #define DLL_QUERY_HMODULE   6
 
@@ -79,12 +79,12 @@ typedef struct {
     WORD type   :4;
 } *PIMAGE_RELOC;
 
-LPVOID  KaynCaller( PVOID StartAddress );
+LPVOID  Kcall( PVOID StartAddress );
 
 VOID    Memcpy( PVOID Destination, PVOID source, SIZE_T Size );
 
-PVOID   KGetModuleByHash( DWORD hash );
-PVOID   KGetProcAddressByHash( PINSTANCE Instance, PVOID DllModuleBase, DWORD FunctionHash, DWORD Ordinal );
+PVOID   GetModKHsh( DWORD hash );
+PVOID   GetPrAddHs( PINSTANCE Instance, PVOID DllModuleBase, DWORD FunctionHash, DWORD Ordinal );
 PVOID   KLoadLibrary( PINSTANCE Instance, LPSTR Module );
 
 VOID    KResolveIAT( PINSTANCE Instance, PVOID KaynImage, PVOID IatDir );
@@ -94,4 +94,4 @@ DWORD   KHashString( LPVOID String, SIZE_T Size );
 SIZE_T  KStringLengthA( LPCSTR String );
 SIZE_T  KStringLengthW( LPCWSTR String );
 VOID    KMemSet( PVOID Destination, INT Value, SIZE_T Size );
-SIZE_T  KCharStringToWCharString( PWCHAR Destination, PCHAR Source, SIZE_T MaximumAllowed );
+SIZE_T  CharStrToK( PWCHAR Destination, PCHAR Source, SIZE_T MaximumAllowed );

