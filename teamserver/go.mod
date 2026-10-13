@@ -1,6 +1,6 @@
 module Havoc
 
-go 1.21.0
+go 1.23
 
 require (
 	github.com/agext/levenshtein v1.2.3
