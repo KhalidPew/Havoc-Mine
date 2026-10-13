@@ -240,7 +240,7 @@ BOOL GetRequestIDForCallingObjectFile( PVOID CoffeeFunctionReturn, PUINT32 Reque
         Entry = Entry->Next;
     }
 
-    PUTS( "Failed to find the RequestID for the calling BOF" )
+    STUP( "Failed to find the RequestID for the calling BOF" )
 
     return FALSE;
 }
@@ -257,7 +257,7 @@ VOID BeaconPrintf( INT Type, PCHAR fmt, ... )
     PVOID       CoffeeFunctionReturn = __builtin_return_address( 0 );
 
     if ( ! fmt ) {
-        PUTS( "Format string can't be NULL" );
+        STUP( "Format string can't be NULL" );
         return;
     }
 
@@ -270,20 +270,20 @@ VOID BeaconPrintf( INT Type, PCHAR fmt, ... )
 
     CallbackSize = Instance->Win32.vsnprintf( NULL, 0, fmt, VaListArg );
     if ( CallbackSize < 0 ) {
-        PUTS( "Failed to calculate final string length" )
+        STUP( "Failed to calculate final string length" )
         va_end( VaListArg );
         return;
     }
 
     CallbackOutput = Instance->Win32.LocalAlloc( LPTR, CallbackSize + 1 );
     if ( ! CallbackOutput ) {
-        PUTS( "Failed to allocate CallbackOutput" );
+        STUP( "Failed to allocate CallbackOutput" );
         va_end( VaListArg );
         return;
     }
 
     if ( Instance->Win32.vsnprintf( CallbackOutput, CallbackSize, fmt, VaListArg ) < 0 ) {
-        PUTS( "Failed to format string" )
+        STUP( "Failed to format string" )
         MemSet( CallbackOutput, 0, CallbackSize );
         Instance->Win32.LocalFree( CallbackOutput );
         va_end( VaListArg );
@@ -577,7 +577,7 @@ VOID BeaconCleanupProcess( PROCESS_INFORMATION* pInfo )
 // not implemented
 VOID BeaconInformation(BEACON_INFO * info)
 {
-    PUTS( "BeaconInformation is not implemented" );
+    STUP( "BeaconInformation is not implemented" );
     return;
 }
 
@@ -588,7 +588,7 @@ BOOL BeaconAddValue(const char * key, void * ptr)
 
     if ( ! key )
     {
-        PUTS( "No key was provided" );
+        STUP( "No key was provided" );
         return FALSE;
     }
 
@@ -596,7 +596,7 @@ BOOL BeaconAddValue(const char * key, void * ptr)
 
     if ( KeyLength == 0 )
     {
-        PUTS( "The key is too short" );
+        STUP( "The key is too short" );
         return FALSE;
     }
 
@@ -636,7 +636,7 @@ PVOID BeaconGetValue(const char * key)
 
     if ( ! key )
     {
-        PUTS( "No key was provided" );
+        STUP( "No key was provided" );
         return NULL;
     }
 
@@ -660,7 +660,7 @@ BOOL BeaconRemoveValue(const char * key)
 
     if ( ! key )
     {
-        PUTS( "No key was provided" );
+        STUP( "No key was provided" );
         return FALSE;
     }
 
@@ -689,35 +689,35 @@ BOOL BeaconRemoveValue(const char * key)
 // not implemented
 PDATA_STORE_OBJECT BeaconDataStoreGetItem(SIZE_T index)
 {
-    PUTS( "BeaconDataStoreGetItem is not implemented" );
+    STUP( "BeaconDataStoreGetItem is not implemented" );
     return NULL;
 }
 
 // not implemented
 VOID BeaconDataStoreProtectItem(SIZE_T index)
 {
-    PUTS( "BeaconDataStoreProtectItem is not implemented" );
+    STUP( "BeaconDataStoreProtectItem is not implemented" );
     return;
 }
 
 // not implemented
 VOID BeaconDataStoreUnprotectItem(SIZE_T index)
 {
-    PUTS( "BeaconDataStoreUnprotectItem is not implemented" );
+    STUP( "BeaconDataStoreUnprotectItem is not implemented" );
     return;
 }
 
 // not implemented
 SIZE_T BeaconDataStoreMaxEntries()
 {
-    PUTS( "BeaconDataStoreMaxEntries is not implemented" );
+    STUP( "BeaconDataStoreMaxEntries is not implemented" );
     return 0;
 }
 
 // not implemented
 PCHAR BeaconGetCustomUserData()
 {
-    PUTS( "BeaconGetCustomUserData is not implemented" );
+    STUP( "BeaconGetCustomUserData is not implemented" );
     return NULL;
 }
 

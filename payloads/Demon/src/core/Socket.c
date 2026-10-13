@@ -16,7 +16,7 @@ BOOL RecvAll( SOCKET Socket, PVOID Buffer, DWORD Length, PDWORD BytesRead )
 
         if ( nret == SOCKET_ERROR )
         {
-            PUTS( "recv Failed" )
+            STUP( "recv Failed" )
             *BytesRead = tret;
             return FALSE;
         }
@@ -38,7 +38,7 @@ BOOL InitWSA( VOID )
     /* Init Windows Socket. */
     if ( Instance->WSAWasInitialised == FALSE )
     {
-        PUTS( "Init Windows Socket..." )
+        STUP( "Init Windows Socket..." )
 
         if ( ( Result = Instance->Win32.WSAStartup( MAKEWORD( 2, 2 ), &WsData ) ) != 0 )
         {
@@ -71,7 +71,7 @@ PSOCKET_DATA SocketNew( SOCKET WinSock, DWORD Type, BOOL UseIpv4, DWORD IPv4, PB
         if ( ! InitWSA() )
             return NULL;
 
-        PUTS( "Create Socket..." )
+        STUP( "Create Socket..." )
 
         if ( UseIpv4 )
         {
@@ -146,7 +146,7 @@ PSOCKET_DATA SocketNew( SOCKET WinSock, DWORD Type, BOOL UseIpv4, DWORD IPv4, PB
                 goto CLEANUP;
             }
 
-            PUTS( "Connected to host" )
+            STUP( "Connected to host" )
         }
         else
         {
@@ -173,7 +173,7 @@ PSOCKET_DATA SocketNew( SOCKET WinSock, DWORD Type, BOOL UseIpv4, DWORD IPv4, PB
                 goto CLEANUP;
             }
 
-            PUTS( "Started listening..." )
+            STUP( "Started listening..." )
         }
     }
 

@@ -295,7 +295,7 @@ VOID PivotPush()
 
                     if ( NtGetLastError() == ERROR_BROKEN_PIPE )
                     {
-                        PUTS( "ERROR_BROKEN_PIPE. Remove pivot" )
+                        STUP( "ERROR_BROKEN_PIPE. Remove pivot" )
 
                         DWORD DemonID = TempList->DemonID;
                         TempList      = TempList->Next;

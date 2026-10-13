@@ -441,7 +441,7 @@ BOOL TimerObf(
                     {
                         /* retrieve Tib if stack spoofing is enabled */
                         if ( ! ThreadQueryTib( C_PTR( TimerCtx.Rsp ), &NtTib ) ) {
-                            PUTS( "Failed to retrieve Tib" )
+                            STUP( "Failed to retrieve Tib" )
                             goto LEAVE;
                         }
 

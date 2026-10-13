@@ -101,7 +101,7 @@ BOOL SysExtract(
     /* check args */
     if ( ! Function )
     {
-        PUTS( "Function address is not defined" )
+        STUP( "Function address is not defined" )
         return FALSE;
     }
 
@@ -209,7 +209,7 @@ BOOL FindSsnOfHookedSyscall(
     PRINTF( "The syscall at address 0x%p seems to be hooked, trying to resolve its Ssn via neighbouring syscalls...\n", Function )
 
     if ( ! ( SyscallSize = GSystemcalsi() ) ) {
-        PUTS( "Failed to obtain the size of the syscalls stub" )
+        STUP( "Failed to obtain the size of the syscalls stub" )
         return FALSE;
     }
 

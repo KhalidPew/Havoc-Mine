@@ -121,7 +121,7 @@ HANDLE ThreadCreateWoW64(
     IN  PVOID  Entry,
     IN  PVOID  Arg
 ) {
-    // TODO: define these arrays with HideChar or some other method
+    // TODO: define these arrays with HiChara or some other method
     /*
      * NOTE: migrate_executex64 was modified to include the instructions "mov ax, ds; mov ss, ax"
      *       which fixes a bizarre CPU bug described here http://blog.rewolf.pl/blog/?p=1484
@@ -165,7 +165,7 @@ HANDLE ThreadCreateWoW64(
     // allocate some memory for both shellcode stubs
     Size = sizeof( migrate_executex64 ) + sizeof(migrate_wownativex);
     if ( ! ( pExecuteX64 = MmVirtualAlloc( DX_MEM_DEFAULT, NtCurrentProcess(), Size, PAGE_READWRITE ) ) ) {
-        PUTS( "Failed allocating RW for migrate_executex64 and migrate_wownativex" )
+        STUP( "Failed allocating RW for migrate_executex64 and migrate_wownativex" )
         goto END;
     }
 
@@ -178,26 +178,26 @@ HANDLE ThreadCreateWoW64(
 
     // switch RW to RX
     if ( ! ( MmVirtualProtect( DX_MEM_SYSCALL, NtCurrentProcess(), pExecuteX64, Size, PAGE_EXECUTE_READ ) ) ) {
-        PUTS( "Failed to change memory protection" )
+        STUP( "Failed to change memory protection" )
         goto END;
     }
 
-    PUTS( "calling RtlCreateUserThread( ctx->h.hProcess, NULL, TRUE, 0, NULL, NULL, ctx->s.lpStartAddress, ctx->p.lpParameter, &ctx->t.hThread, NULL ) on x64 context" )
+    STUP( "calling RtlCreateUserThread( ctx->h.hProcess, NULL, TRUE, 0, NULL, NULL, ctx->s.lpStartAddress, ctx->p.lpParameter, &ctx->t.hThread, NULL ) on x64 context" )
     if( ! pExecuteX64( pX64function, &ctx ) )
     {
         NtSetLastError( ERROR_ACCESS_DENIED );
-        PUTS( "ThreadCreateWoW64 failed" )
+        STUP( "ThreadCreateWoW64 failed" )
         goto END;
     }
 
     if( ! ctx.t.hThread )
     {
         NtSetLastError( ERROR_INVALID_HANDLE );
-        PUTS( "ThreadCreateWoW64: ctx->t.hThread is NULL" )
+        STUP( "ThreadCreateWoW64: ctx->t.hThread is NULL" )
         goto END;
     }
 
-    PUTS( "The thread was created" )
+    STUP( "The thread was created" )
 
     hThread = ctx.t.hThread;
 

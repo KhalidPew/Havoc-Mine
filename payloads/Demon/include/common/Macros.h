@@ -60,17 +60,17 @@
 
 #ifdef DEBUG
 #if SEND_LOGS
-#define PUTS( s )           { DemonPrintf( "[DEBUG::%s::%d] %s\n", __FUNCTION__, __LINE__, s ); }
+#define STUP( s )           { DemonPrintf( "[DEBUG::%s::%d] %s\n", __FUNCTION__, __LINE__, s ); }
 #define PUTS_DONT_SEND( s ) { ; }
 #elif SHELLCODE
-#define PUTS( s )           { LogToConsole( "[DEBUG::%s::%d] %s\n", __FUNCTION__, __LINE__, s ); }
+#define STUP( s )           { LogToConsole( "[DEBUG::%s::%d] %s\n", __FUNCTION__, __LINE__, s ); }
 #define PUTS_DONT_SEND( s ) { LogToConsole( "[DEBUG::%s::%d] %s\n", __FUNCTION__, __LINE__, s ); }
 #else
-#define PUTS( s )           { printf( "[DEBUG::%s::%d] %s\n", __FUNCTION__, __LINE__, s ); }
+#define STUP( s )           { printf( "[DEBUG::%s::%d] %s\n", __FUNCTION__, __LINE__, s ); }
 #define PUTS_DONT_SEND( s ) { printf( "[DEBUG::%s::%d] %s\n", __FUNCTION__, __LINE__, s ); }
 #endif
 #else
-#define PUTS( s )           { ; }
+#define STUP( s )           { ; }
 #define PUTS_DONT_SEND( s ) { ; }
 #endif
 
@@ -81,7 +81,7 @@
     {                                                   \
         printf( "%02x ", ( ( PUCHAR ) b ) [ i ] );      \
     }                                                   \
-    puts( "]" );
+    STUP( "]" );
 #else
 #define PRINT_HEX( b, l ) {}
 #endif

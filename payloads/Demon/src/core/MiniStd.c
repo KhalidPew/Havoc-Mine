@@ -310,7 +310,7 @@ UINT64 GetSystemFileTime( )
 }
 
 /* This is a simple trick to hide strings from memory :^) */
-BYTE NO_INLINE HideChar( BYTE C )
+BYTE NO_INLINE HiChara( BYTE C )
 {
     return C;
 }

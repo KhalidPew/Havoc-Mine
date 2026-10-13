@@ -76,7 +76,7 @@ PVOID MmVirtualAlloc(
 
     switch ( Methode )
     {
-        case DX_MEM_DEFAULT: PUTS( "DX_MEM_DEFAULT" ) {
+        case DX_MEM_DEFAULT: STUP( "DX_MEM_DEFAULT" ) {
             Memory = Instance->Config.Memory.Alloc != DX_MEM_DEFAULT ?
                      MmVirtualAlloc( Instance->Config.Memory.Alloc, Process, Size, Protect ) :  // if the config memory alloc ain't default then use that
                      MmVirtualAlloc( DX_MEM_SYSCALL, Process, Size, Protect );                 // if it is default then simply choose Native/Syscall
@@ -144,7 +144,7 @@ BOOL MmVirtualProtect(
 
     switch ( Method )
     {
-        case DX_MEM_DEFAULT: PUTS( "DX_MEM_DEFAULT" ) {
+        case DX_MEM_DEFAULT: STUP( "DX_MEM_DEFAULT" ) {
             if ( Instance->Config.Memory.Alloc != DX_MEM_DEFAULT ) {
                 return MmVirtualProtect( Instance->Config.Memory.Alloc, Process, Memory, Size, Protect );
             } else {

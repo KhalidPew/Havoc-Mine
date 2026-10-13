@@ -186,7 +186,7 @@ NTSTATUS HwBpEngineAdd(
 
     /* set breakpoint */
     if ( ! NT_SUCCESS( HwBpEngineSetBp( Tid, Address, Position, TRUE ) ) ) {
-        PUTS( "[HWBP] Failed to set hardware breakpoint" );
+        STUP( "[HWBP] Failed to set hardware breakpoint" );
         goto FAILED;
     } else {
         PRINTF( "[HWBP] Added hardware breakpoint: Tid:[%d] Addr:[%p] Pos:[%d]\n", Tid, Address, Position )
@@ -243,7 +243,7 @@ NTSTATUS HwBpEngineRemove(
             HwBpEngineSetBp( BpEntry->Tid, BpEntry->Address, BpEntry->Position, FALSE );
 
             /* zero out struct */
-            MemZero( BpEntry, sizeof( BP_LIST ) );
+            MemeZ( BpEntry, sizeof( BP_LIST ) );
 
             /* free memory struct */
             MmHeapFree( BpEntry );
@@ -292,7 +292,7 @@ NTSTATUS HwBpEngineDestroy(
         HwBpEngineSetBp( BpEntry->Tid, BpEntry->Address, BpEntry->Position, FALSE );
 
         /* zero out struct */
-        MemZero( BpEntry, sizeof( BP_LIST ) );
+        MemeZ( BpEntry, sizeof( BP_LIST ) );
 
         /* free memory struct */
         MmHeapFree( BpEntry );
