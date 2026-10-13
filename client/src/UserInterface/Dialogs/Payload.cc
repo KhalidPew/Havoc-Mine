@@ -578,9 +578,12 @@ auto Payload::DefaultConfig() -> void
     ModuleStomping->addItems( QStringList() << "None" << "xmllite.dll" << "fdwapi.dll" << "wer.dll" << "dbghelp.dll" );
     EncodeKey->setPlaceholderText( "leave blank for a random key" );
     EncodeKey->setEnabled( false );
+    EncodeKey->setMinimumHeight( 22 );
 
     // only allow an encode key once encoding is enabled
     QObject::connect( PayloadEncode, &QCheckBox::toggled, EncodeKey, &QLineEdit::setEnabled );
+    // make sure the initial enabled state matches the checkbox
+    EncodeKey->setEnabled( PayloadEncode->isChecked() );
 
     ConfigInjectAlloc->setCurrentIndex( 1 );
     ConfigInjectExecute->setCurrentIndex( 1 );
