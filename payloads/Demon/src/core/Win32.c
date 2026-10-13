@@ -76,7 +76,7 @@ PVOID LoaderModPebbb(
     }
 
     pabb = Instance->Teb->ProcessEnvironmentBlock;
-    hadaar = & pabb->Ldr->InLoadOrderModList;
+    hadaar = & pabb->Ldr->InLoadOrderModuleList;
     ENTRAA = hadaar->Flink;
 
     for ( ; hadaar != ENTRAA ; ENTRAA = ENTRAA->Flink ) {
@@ -114,7 +114,7 @@ PVOID LoaderModPeBStr(
     Naamhota = MmHeapAlloc( MAX_PATH );
 
     Peb = Instance->Teb->ProcessEnvironmentBlock;
-    Hdr = & Peb->Ldr->InLoadOrderModList;
+    Hdr = & Peb->Ldr->InLoadOrderModuleList;
     Ent = Hdr->Flink;
 
     for ( ; Hdr != Ent ; Ent = Ent->Flink ) {
@@ -176,8 +176,8 @@ PVOID LoaderModSea(
     LLd[ 2 ] = HideChar( 'L' );
     LLd[ 0 ] = HideChar( '.' );
 
-    Ent      = Instance->Teb->ProcessEnvironmentBlock->Ldr->InLoadOrderModList.Flink;
-    Secondent = &Instance->Teb->ProcessEnvironmentBlock->Ldr->InLoadOrderModList.Flink;
+    Ent      = Instance->Teb->ProcessEnvironmentBlock->Ldr->InLoadOrderModuleList.Flink;
+    Secondent = &Instance->Teb->ProcessEnvironmentBlock->Ldr->InLoadOrderModuleList.Flink;
 
     StringCopyW( Name, ModNm );
 
