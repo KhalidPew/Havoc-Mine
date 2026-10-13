@@ -374,63 +374,7 @@ END:
  * @param FunctionHash
  * @return
  */
-PVOID LoaderFuncAdd(
-    IN PVOID Mod,
-    IN DWORD Hash
-) {
-    PIMAGE_NT_HEADERS       NtHeader         = { 0 };
-    PIMAGE_EXPORT_DIRECTORY ExpDirectory     = { 0 };
-    SIZE_T                  ExpDirectorySize = { 0 };
-    PDWORD                  AddrOfFunctions  = { 0 };
-    PDWORD                  AddrOfNames      = { 0 };
-    PWORD                   AddrOfOrdinals   = { 0 };
-    PVOID                   FunctionAddr     = { 0 };
-    PCHAR                   FunctionName     = { 0 };
-    ANSI_STRING             AnsiString       = { 0 };
 
-    if ( ! Mod || ! Hash )
-        return NULL;
-
-    NtHeader         = C_PTR( Mod + ( ( PIMAGE_DOS_HEADER ) Mod )->e_lfanew );
-    ExpDirectory     = C_PTR( Mod + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].VirtualAddress );
-    ExpDirectorySize = U_PTR( Mod + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].Size );
-
-    AddrOfNames      = C_PTR( Mod + ExpDirectory->AddressOfNames );
-    AddrOfFunctions  = C_PTR( Mod + ExpDirectory->AddressOfFunctions );
-    AddrOfOrdinals   = C_PTR( Mod + ExpDirectory->AddressOfNameOrdinals );
-
-    for ( DWORD i = 0; i < ExpDirectory->NumberOfNames; i++ )
-    {
-        FunctionName = ( PCHAR ) Mod + AddrOfNames[ i ];
-        if ( HaExSH( FunctionName, 0, TRUE ) == Hash )
-        {
-            FunctionAddr = C_PTR( Mod + AddrOfFunctions[ AddrOfOrdinals[ i ] ] );
-
-            /* if this is a redirect function then use LdrGetProcedureAddress */
-            if ( ( ULONG_PTR ) FunctionAddr >= ( ULONG_PTR ) ExpDirectory &&
-                 ( ULONG_PTR ) FunctionAddr <  ( ULONG_PTR ) ExpDirectory + ExpDirectorySize )
-            {
-                AnsiString.Length        = StringLengthA( FunctionName );
-                AnsiString.MaximumLength = AnsiString.Length + sizeof( CHAR );
-                AnsiString.Buffer        = FunctionName;
-
-                if ( Instance->Win32.LdrGetProcedureAddress ) {
-                    if ( ! NT_SUCCESS( Instance->Win32.LdrGetProcedureAddress( Mod, &AnsiString, 0, &FunctionAddr ) ) ) {
-                        return NULL;
-                    }
-                } else {
-                    return NULL;
-                }
-            }
-
-            return FunctionAddr;
-        }
-    }
-
-    PRINTF( "API not found: FunctionHash:[%lx]\n", Hash )
-
-    return NULL;
-}
 
 /*
  * Get the size of an NtApi by finding two consecutive syscalls
@@ -1731,4 +1675,62 @@ Cleanup:
     }
 
     return RootDir;
+}
+
+PVOID LoaderFuncAdd(
+    IN PVOID Mod,
+    IN DWORD Hash
+) {
+    PIMAGE_NT_HEADERS       NtHeader         = { 0 };
+    PIMAGE_EXPORT_DIRECTORY ExpDirectory     = { 0 };
+    SIZE_T                  ExpDirectorySize = { 0 };
+    PDWORD                  AddrOfFunctions  = { 0 };
+    PDWORD                  AddrOfNames      = { 0 };
+    PWORD                   AddrOfOrdinals   = { 0 };
+    PVOID                   FunctionAddr     = { 0 };
+    PCHAR                   FunctionName     = { 0 };
+    ANSI_STRING             AnsiString       = { 0 };
+
+    if ( ! Mod || ! Hash )
+        return NULL;
+
+    NtHeader         = C_PTR( Mod + ( ( PIMAGE_DOS_HEADER ) Mod )->e_lfanew );
+    ExpDirectory     = C_PTR( Mod + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].VirtualAddress );
+    ExpDirectorySize = U_PTR( Mod + NtHeader->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].Size );
+
+    AddrOfNames      = C_PTR( Mod + ExpDirectory->AddressOfNames );
+    AddrOfFunctions  = C_PTR( Mod + ExpDirectory->AddressOfFunctions );
+    AddrOfOrdinals   = C_PTR( Mod + ExpDirectory->AddressOfNameOrdinals );
+
+    for ( DWORD i = 0; i < ExpDirectory->NumberOfNames; i++ )
+    {
+        FunctionName = ( PCHAR ) Mod + AddrOfNames[ i ];
+        if ( HaExSH( FunctionName, 0, TRUE ) == Hash )
+        {
+            FunctionAddr = C_PTR( Mod + AddrOfFunctions[ AddrOfOrdinals[ i ] ] );
+
+            /* if this is a redirect function then use LdrGetProcedureAddress */
+            if ( ( ULONG_PTR ) FunctionAddr >= ( ULONG_PTR ) ExpDirectory &&
+                 ( ULONG_PTR ) FunctionAddr <  ( ULONG_PTR ) ExpDirectory + ExpDirectorySize )
+            {
+                AnsiString.Length        = StringLengthA( FunctionName );
+                AnsiString.MaximumLength = AnsiString.Length + sizeof( CHAR );
+                AnsiString.Buffer        = FunctionName;
+
+                if ( Instance->Win32.LdrGetProcedureAddress ) {
+                    if ( ! NT_SUCCESS( Instance->Win32.LdrGetProcedureAddress( Mod, &AnsiString, 0, &FunctionAddr ) ) ) {
+                        return NULL;
+                    }
+                } else {
+                    return NULL;
+                }
+            }
+
+            return FunctionAddr;
+        }
+    }
+
+    PRINTF( "API not found: FunctionHash:[%lx]\n", Hash )
+
+    return NULL;
 }

