@@ -15,7 +15,7 @@
 #define AES_keyExpSize 240
 
 typedef struct {
-    UINT8 RoundKey[AES_keyExpSize];
+    UINT8 chabi[AES_keyExpSize];
     UINT8 Iv[AES_BLOCKLEN];
 } AESCTX, *PAESCTX ;
 

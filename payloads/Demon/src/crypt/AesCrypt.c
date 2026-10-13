@@ -18,9 +18,9 @@
 #define MULTIPLY_AS_A_FUNCTION 0
 #endif
 
-typedef UINT8 state_t[4][4];
+typedef UINT8 dabba[4][4];
 
-static const UINT8 sbox[256] = {
+static const UINT8 boxy[256] = {
         //0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
         0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
         0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -39,111 +39,111 @@ static const UINT8 sbox[256] = {
         0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
         0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16 };
 
-static const UINT8 Rcon[11] = {
+static const UINT8 valhoti[11] = {
         0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36 };
 
-#define getSBoxValue(num) (sbox[(num)])
+#define nilenival(num) (boxy[(num)])
 
-void KeyExpansion(UINT8* RoundKey, const UINT8* Key)
+void keywaddikro(UINT8* chabi, const UINT8* Key)
 {
     unsigned i, j, k;
-    UINT8 tempa[4];
+    UINT8 faltu[4];
 
     for (i = 0; i < Nk; ++i)
     {
-        RoundKey[(i * 4) + 0] = Key[(i * 4) + 0];
-        RoundKey[(i * 4) + 1] = Key[(i * 4) + 1];
-        RoundKey[(i * 4) + 2] = Key[(i * 4) + 2];
-        RoundKey[(i * 4) + 3] = Key[(i * 4) + 3];
+        chabi[(i * 4) + 0] = Key[(i * 4) + 0];
+        chabi[(i * 4) + 1] = Key[(i * 4) + 1];
+        chabi[(i * 4) + 2] = Key[(i * 4) + 2];
+        chabi[(i * 4) + 3] = Key[(i * 4) + 3];
     }
 
     for (i = Nk; i < Nb * (Nr + 1); ++i)
     {
         {
             k = (i - 1) * 4;
-            tempa[0]=RoundKey[k + 0];
-            tempa[1]=RoundKey[k + 1];
-            tempa[2]=RoundKey[k + 2];
-            tempa[3]=RoundKey[k + 3];
+            faltu[0]=chabi[k + 0];
+            faltu[1]=chabi[k + 1];
+            faltu[2]=chabi[k + 2];
+            faltu[3]=chabi[k + 3];
 
         }
 
         if (i % Nk == 0)
         {
-            const UINT8 u8tmp = tempa[0];
-            tempa[0] = tempa[1];
-            tempa[1] = tempa[2];
-            tempa[2] = tempa[3];
-            tempa[3] = u8tmp;
+            const UINT8 u8tmp = faltu[0];
+            faltu[0] = faltu[1];
+            faltu[1] = faltu[2];
+            faltu[2] = faltu[3];
+            faltu[3] = u8tmp;
 
-            tempa[0] = getSBoxValue(tempa[0]);
-            tempa[1] = getSBoxValue(tempa[1]);
-            tempa[2] = getSBoxValue(tempa[2]);
-            tempa[3] = getSBoxValue(tempa[3]);
+            faltu[0] = nilenival(faltu[0]);
+            faltu[1] = nilenival(faltu[1]);
+            faltu[2] = nilenival(faltu[2]);
+            faltu[3] = nilenival(faltu[3]);
 
-            tempa[0] = tempa[0] ^ Rcon[i/Nk];
+            faltu[0] = faltu[0] ^ valhoti[i/Nk];
         }
 
         if (i % Nk == 4)
         {
-            tempa[0] = getSBoxValue(tempa[0]);
-            tempa[1] = getSBoxValue(tempa[1]);
-            tempa[2] = getSBoxValue(tempa[2]);
-            tempa[3] = getSBoxValue(tempa[3]);
+            faltu[0] = nilenival(faltu[0]);
+            faltu[1] = nilenival(faltu[1]);
+            faltu[2] = nilenival(faltu[2]);
+            faltu[3] = nilenival(faltu[3]);
         }
 
         j = i * 4; k=(i - Nk) * 4;
-        RoundKey[j + 0] = RoundKey[k + 0] ^ tempa[0];
-        RoundKey[j + 1] = RoundKey[k + 1] ^ tempa[1];
-        RoundKey[j + 2] = RoundKey[k + 2] ^ tempa[2];
-        RoundKey[j + 3] = RoundKey[k + 3] ^ tempa[3];
+        chabi[j + 0] = chabi[k + 0] ^ faltu[0];
+        chabi[j + 1] = chabi[k + 1] ^ faltu[1];
+        chabi[j + 2] = chabi[k + 2] ^ faltu[2];
+        chabi[j + 3] = chabi[k + 3] ^ faltu[3];
     }
 }
 
 void AesInit( PAESCTX ctx, const PUINT8 key, const PUINT8 iv)
 {
-  KeyExpansion( ctx->RoundKey, key );
+  keywaddikro( ctx->chabi, key );
   MemCopy( ctx->Iv, iv, AES_BLOCKLEN );
 }
 
 
 
 
-static void ApplyKeyTransformation(UINT8 cycle, state_t* matrix, const UINT8* expandedKey)
+static void ApplyKeyTransformation(UINT8 cycle, dabba* kenue, const UINT8* expandedKey)
 {
     const UINT8* currentKey = expandedKey + ((size_t)cycle * 16);
 
-    (*matrix)[0][0] ^= currentKey[0];
-    (*matrix)[0][1] ^= currentKey[1];
-    (*matrix)[0][2] ^= currentKey[2];
-    (*matrix)[0][3] ^= currentKey[3];
+    (*kenue)[0][0] ^= currentKey[0];
+    (*kenue)[0][1] ^= currentKey[1];
+    (*kenue)[0][2] ^= currentKey[2];
+    (*kenue)[0][3] ^= currentKey[3];
 
-    (*matrix)[1][0] ^= currentKey[4];
-    (*matrix)[1][1] ^= currentKey[5];
-    (*matrix)[1][2] ^= currentKey[6];
-    (*matrix)[1][3] ^= currentKey[7];
+    (*kenue)[1][0] ^= currentKey[4];
+    (*kenue)[1][1] ^= currentKey[5];
+    (*kenue)[1][2] ^= currentKey[6];
+    (*kenue)[1][3] ^= currentKey[7];
 
-    (*matrix)[2][0] ^= currentKey[8];
-    (*matrix)[2][1] ^= currentKey[9];
-    (*matrix)[2][2] ^= currentKey[10];
-    (*matrix)[2][3] ^= currentKey[11];
+    (*kenue)[2][0] ^= currentKey[8];
+    (*kenue)[2][1] ^= currentKey[9];
+    (*kenue)[2][2] ^= currentKey[10];
+    (*kenue)[2][3] ^= currentKey[11];
 
-    (*matrix)[3][0] ^= currentKey[12];
-    (*matrix)[3][1] ^= currentKey[13];
-    (*matrix)[3][2] ^= currentKey[14];
-    (*matrix)[3][3] ^= currentKey[15];
+    (*kenue)[3][0] ^= currentKey[12];
+    (*kenue)[3][1] ^= currentKey[13];
+    (*kenue)[3][2] ^= currentKey[14];
+    (*kenue)[3][3] ^= currentKey[15];
 }
 
 // The SubBytes Function Substitutes the values in the
-// state matrix with values in an S-box.
-static void SubBytes(state_t* state)
+// state kenue with values in an S-box.
+static void SubBytes(dabba* state)
 {
     UINT8 i, j;
     for (i = 0; i < 4; ++i)
     {
         for (j = 0; j < 4; ++j)
         {
-            (*state)[j][i] = getSBoxValue((*state)[j][i]);
+            (*state)[j][i] = nilenival((*state)[j][i]);
         }
     }
 }
@@ -151,7 +151,7 @@ static void SubBytes(state_t* state)
 // The ShiftRows() function shifts the rows in the state to the left.
 // Each row is shifted with different offset.
 // Offset = Row number. So the first row is not shifted.
-static void ShiftRows(state_t* state)
+static void ShiftRows(dabba* state)
 {
     UINT8 temp;
 
@@ -184,8 +184,8 @@ static UINT8 xtime(UINT8 x)
     return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
 }
 
-// MixColumns function mixes the columns of the state matrix
-static void MixColumns(state_t* state)
+// MixColumns function mixes the columns of the state kenue
+static void MixColumns(dabba* state)
 {
     UINT8 i;
     UINT8 Tmp, Tm, t;
@@ -201,12 +201,12 @@ static void MixColumns(state_t* state)
 }
 
 // Cipher is the main function that encrypts the PlainText.
-static void Cipher(state_t* state, const UINT8* RoundKey) // Main
+static void Cipher(dabba* state, const UINT8* chabi) // Main
 {
     UINT8 round = 0;
 
     // Add the First round key to the state before starting the rounds.
-    ApplyKeyTransformation(0, state, RoundKey);
+    ApplyKeyTransformation(0, state, chabi);
 
     // There will be Nr rounds.
     // The first Nr-1 rounds are identical.
@@ -220,10 +220,10 @@ static void Cipher(state_t* state, const UINT8* RoundKey) // Main
             break;
         }
         MixColumns(state);
-        ApplyKeyTransformation(round, state, RoundKey);
+        ApplyKeyTransformation(round, state, chabi);
     }
     // Add round key to last round
-    ApplyKeyTransformation(Nr, state, RoundKey);
+    ApplyKeyTransformation(Nr, state, chabi);
 }
 
 #if defined(CTR) && (CTR == 1)
@@ -239,7 +239,7 @@ void AesXCryptBuffer( PAESCTX ctx, PUINT8 buf, SIZE_T length)
         if (bi == AES_BLOCKLEN) /* we need to regen xor compliment in buffer */
         {
             MemCopy(buffer, ctx->Iv, AES_BLOCKLEN);
-            Cipher((state_t*)buffer,ctx->RoundKey);
+            Cipher((dabba*)buffer,ctx->chabi);
 
             for (bi = (AES_BLOCKLEN - 1); bi >= 0; --bi)
             {
