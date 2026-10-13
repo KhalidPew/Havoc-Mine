@@ -96,7 +96,7 @@ BOOL EndsWithIW( LPWSTR String, LPWSTR Ending )
     return StringCompareIW( String, Ending ) == 0;
 }
 
-/* TODO: replace every func with HashEx */
+/* TODO: replace every func with HaExSH */
 DWORD HashStringA( PCHAR String )
 {
     ULONG Hash = HASH_KEY;

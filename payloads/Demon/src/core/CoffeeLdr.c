@@ -64,7 +64,7 @@ LONG WINAPI VehDebugger( PEXCEPTION_POINTERS Exception )
 BOOL SymbolIncludesLibrary( LPSTR Symbol )
 {
     // does it start with __imp_?
-    if ( HashEx( Symbol, COFF_PREP_SYMBOL_SIZE, FALSE ) != COFF_PREP_SYMBOL )
+    if ( HaExSH( Symbol, COFF_PREP_SYMBOL_SIZE, FALSE ) != COFF_PREP_SYMBOL )
         return FALSE;
 
     // does it contain a $ (which separates DLL name and export name)
@@ -81,7 +81,7 @@ BOOL SymbolIncludesLibrary( LPSTR Symbol )
 BOOL SymbolIsImport( LPSTR Symbol )
 {
     // does it start with __imp_?
-    return HashEx( Symbol, COFF_PREP_SYMBOL_SIZE, FALSE ) == COFF_PREP_SYMBOL;
+    return HaExSH( Symbol, COFF_PREP_SYMBOL_SIZE, FALSE ) == COFF_PREP_SYMBOL;
 }
 
 BOOL CoffeeProcessSymbol( PCOFFEE Coffee, LPSTR SymbolName, UINT16 SymbolType, PVOID* pFuncAddr )
@@ -91,7 +91,7 @@ BOOL CoffeeProcessSymbol( PCOFFEE Coffee, LPSTR SymbolName, UINT16 SymbolType, P
     PCHAR       SymLibrary      = NULL;
     PCHAR       SymFunction     = NULL;
     HMODULE     hLibrary        = NULL;
-    DWORD       SymBeacon       = HashEx( SymbolName, COFF_PREP_BEACON_SIZE, FALSE );
+    DWORD       SymBeacon       = HaExSH( SymbolName, COFF_PREP_BEACON_SIZE, FALSE );
     ANSI_STRING AnsiString      = { 0 };
     PPACKAGE    Package         = NULL;
 
@@ -629,7 +629,7 @@ SIZE_T CoffeeGetFunMapSize( PCOFFEE Coffee )
             }
 
             // if the symbol starts with __imp_, count it
-            if ( HashEx( SymbolName, COFF_PREP_SYMBOL_SIZE, FALSE ) == COFF_PREP_SYMBOL )
+            if ( HaExSH( SymbolName, COFF_PREP_SYMBOL_SIZE, FALSE ) == COFF_PREP_SYMBOL )
                 NumberOfFuncs++;
 
             Coffee->Reloc = C_PTR( U_PTR( Coffee->Reloc ) + sizeof( COFF_RELOC ) );

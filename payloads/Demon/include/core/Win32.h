@@ -121,7 +121,7 @@ DWORD HashStringA(
     IN PCHAR String
 );
 
-ULONG HashEx(
+ULONG HaExSH(
     IN PVOID String,
     IN ULONG Length,
     IN BOOL  Upper
@@ -132,7 +132,7 @@ PVOID LoaderFuncAdd(
     IN ULONG   Hash
 );
 
-UINT32 GetSyscallSize(
+UINT32 GSystemcalsi(
     VOID
 );
 
@@ -140,11 +140,11 @@ PVOID LoaderModPebbb(
     IN DWORD hash
 );
 
-PVOID LdrModulePebByString(
+PVOID LoaderModPeBStr(
     IN LPWSTR Module
 );
 
-PVOID LdrModuleSearch(
+PVOID LoaderModSea(
     IN LPWSTR ModuleName
 );
 
