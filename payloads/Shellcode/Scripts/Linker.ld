@@ -8,6 +8,8 @@ SECTIONS
 		*( .text$D )
 		*( .text$E )
 		*( .rdata* )
+		*( .data* )
+		*( .bss* )
 		*( .text$F )
 	}
 }

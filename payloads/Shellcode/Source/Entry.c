@@ -17,9 +17,9 @@
 // marker the teamserver patches with the payload-encoding key at build time
 #define CRYPT_KEY_MARKER        "HAVOC_CRYPT_KEY_MARKER"
 
-SEC( text, B ) WCHAR gStompTarget[ STOMP_TARGET_LEN ] = STOMP_TARGET_MARKER;
-SEC( text, B ) BYTE  gStompEnabled                    = STOMP_ENABLED_MARKER;
-SEC( text, B ) CHAR  gCryptKey[ CRYPT_KEY_LEN ]       = CRYPT_KEY_MARKER;
+WCHAR gStompTarget[ STOMP_TARGET_LEN ] = STOMP_TARGET_MARKER;
+BYTE  gStompEnabled                    = STOMP_ENABLED_MARKER;
+CHAR  gCryptKey[ CRYPT_KEY_LEN ]       = CRYPT_KEY_MARKER;
 
 SEC( text, B ) VOID Entry( VOID )
 {

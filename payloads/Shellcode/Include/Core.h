@@ -30,7 +30,7 @@ typedef struct {
 
 // module stomping configuration. the target name is patched per-build by the
 // teamserver (gStompEnabled is set to 1 to enable, target stays default otherwise)
-SEC( text, B ) extern WCHAR gStompTarget[ STOMP_TARGET_LEN ];
+extern WCHAR gStompTarget[ STOMP_TARGET_LEN ];
 
 typedef struct
 {
