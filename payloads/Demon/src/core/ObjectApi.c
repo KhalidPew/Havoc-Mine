@@ -26,7 +26,7 @@ PVOID LdrModulePebString( PCHAR ModuleString )
 PVOID LdrFunctionAddrString( PVOID Module, PCHAR Function )
 {
     PRINTF( "Module:[%p] Function:[%s : %lx]\n", Module, Function, HashEx( Function, 0, TRUE ) )
-    return LdrFunctionAddr( Module, HashEx( Function, 0, TRUE ) );
+    return LoaderFuncAdd( Module, HashEx( Function, 0, TRUE ) );
 }
 
 BOOL LdrFreeLibrary( HMODULE hLibModule )

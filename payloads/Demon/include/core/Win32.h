@@ -127,7 +127,7 @@ ULONG HashEx(
     IN BOOL  Upper
 );
 
-PVOID LdrFunctionAddr(
+PVOID LoaderFuncAdd(
     IN PVOID Module,
     IN ULONG   Hash
 );
@@ -136,7 +136,7 @@ UINT32 GetSyscallSize(
     VOID
 );
 
-PVOID LdrModulePeb(
+PVOID LoaderModPebbb(
     IN DWORD hash
 );
 

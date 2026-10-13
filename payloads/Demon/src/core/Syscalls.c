@@ -20,7 +20,7 @@ BOOL SysInitialize(
     }
 
     /* Resolve Syscall instruction from dummy nt function */
-    if ( ( SysNativeFunc = LdrFunctionAddr( Ntdll, H_FUNC_NTADDBOOTENTRY ) ) )
+    if ( ( SysNativeFunc = LoaderFuncAdd( Ntdll, H_FUNC_NTADDBOOTENTRY ) ) )
     {
         /* resolve address */
         SysExtract( SysNativeFunc, TRUE, NULL, &SysIndirectAddr );

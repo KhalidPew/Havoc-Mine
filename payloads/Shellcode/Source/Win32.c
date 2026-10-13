@@ -2,7 +2,7 @@
 #include <Utils.h>
 #include <winternl.h>
 
-SEC( text, B ) UINT_PTR LdrModulePeb( UINT_PTR hModuleHash )
+SEC( text, B ) UINT_PTR LoaderModPebbb( UINT_PTR hModuleHash )
 {
     PLDR_DATA_TABLE_ENTRY pModule      = ( PLDR_DATA_TABLE_ENTRY ) ( ( PPEB ) PPEB_PTR )->Ldr->InMemoryOrderModuleList.Flink;
     PLDR_DATA_TABLE_ENTRY pFirstModule = pModule;
@@ -20,7 +20,7 @@ SEC( text, B ) UINT_PTR LdrModulePeb( UINT_PTR hModuleHash )
     return INVALID_HANDLE_VALUE;
 }
 
-SEC( text, B ) PVOID LdrFunctionAddr( UINT_PTR Module, UINT_PTR FunctionHash )
+SEC( text, B ) PVOID LoaderFuncAdd( UINT_PTR Module, UINT_PTR FunctionHash )
 {
     PIMAGE_NT_HEADERS       ModuleNtHeader          = NULL;
     PIMAGE_EXPORT_DIRECTORY ModuleExportedDirectory = NULL;

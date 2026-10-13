@@ -1897,7 +1897,7 @@ VOID CommandConfig( PPARSER Parser )
                 PRINTF( "hLib => %x\n", hLib );
 
                 if ( hLib ) {
-                    ThreadAddr = LdrFunctionAddr( hLib, HashStringA( Function ) );
+                    ThreadAddr = LoaderFuncAdd( hLib, HashStringA( Function ) );
                     if ( ThreadAddr ) {
                         Instance->Config.Implant.ThreadStartAddr = ThreadAddr + Offset;
                     }
@@ -1990,7 +1990,7 @@ VOID CommandConfig( PPARSER Parser )
 
                 if ( hLib )
                 {
-                    ThreadAddr = LdrFunctionAddr( hLib, HashStringA( Function ) );
+                    ThreadAddr = LoaderFuncAdd( hLib, HashStringA( Function ) );
 
                     if ( ThreadAddr ) {
                         Instance->Config.Inject.SpoofAddr = ThreadAddr + Offset;
