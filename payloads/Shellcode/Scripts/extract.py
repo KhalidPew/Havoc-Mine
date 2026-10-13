@@ -13,13 +13,14 @@ if __name__ in '__main__':
         PeExe = pefile.PE( option.f );
         PeSec = PeExe.sections[0].get_data();
 
-        if PeSec.find( b'ENDOFCODE' ) != None:
-            ScRaw = PeSec[ : PeSec.find( b'ENDOFCODE' ) ];
-            f = open( option.o, 'wb+' );
-            f.write( ScRaw );
-            f.close();
-        else:
-            print('[!] error: no ending tag');
+        # trim trailing zero padding so the template is the real loader image;
+        # the Demon DLL is appended right after it by the teamserver.
+        ScRaw = PeSec.rstrip( b'\x00' );
+
+        f = open( option.o, 'wb+' );
+        f.write( ScRaw );
+        f.close();
+        print( '[*] wrote {} ({} bytes)'.format( option.o, len( ScRaw ) ) );
     except Exception as e:
         print( '[!] error: {}'.format( e ) );
 

