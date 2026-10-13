@@ -845,6 +845,18 @@ func (t *Teamserver) DispatchEvent(pk packager.Package) {
 						return
 					}
 
+					// optional module stomping (shellcode only)
+					var (
+						StompEnabled bool
+						StompTarget  string
+					)
+					if Format == "Windows Shellcode" {
+						if val, ok := ConfigMap["Module Stomping"].(string); ok {
+							StompEnabled = val != "None" && val != ""
+							StompTarget = val
+						}
+					}
+
 					var PayloadBuilder = builder.NewBuilder(builder.BuilderConfig{
 						Compiler64: t.Settings.Compiler64,
 						Compiler86: t.Settings.Compiler32,
@@ -907,6 +919,7 @@ func (t *Teamserver) DispatchEvent(pk packager.Package) {
 					}
 
 					PayloadBuilder.SetExtension(Ext)
+					PayloadBuilder.SetModuleStomping(StompEnabled, StompTarget)
 
 					if t.Profile.Config.Demon != nil && t.Profile.Config.Demon.Binary != nil {
 						PayloadBuilder.SetPatchConfig(t.Profile.Config.Demon.Binary)

