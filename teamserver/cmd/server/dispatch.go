@@ -849,11 +849,19 @@ func (t *Teamserver) DispatchEvent(pk packager.Package) {
 					var (
 						StompEnabled bool
 						StompTarget  string
+						EncodeEnable bool
+						EncodeKey    string
 					)
 					if Format == "Windows Shellcode" {
 						if val, ok := ConfigMap["Module Stomping"].(string); ok {
 							StompEnabled = val != "None" && val != ""
 							StompTarget = val
+						}
+						if val, ok := ConfigMap["Payload Encode"].(bool); ok {
+							EncodeEnable = val
+						}
+						if val, ok := ConfigMap["Encode Key"].(string); ok {
+							EncodeKey = val
 						}
 					}
 
@@ -920,6 +928,7 @@ func (t *Teamserver) DispatchEvent(pk packager.Package) {
 
 					PayloadBuilder.SetExtension(Ext)
 					PayloadBuilder.SetModuleStomping(StompEnabled, StompTarget)
+					PayloadBuilder.SetPayloadEncode(EncodeEnable, EncodeKey)
 
 					if t.Profile.Config.Demon != nil && t.Profile.Config.Demon.Binary != nil {
 						PayloadBuilder.SetPatchConfig(t.Profile.Config.Demon.Binary)

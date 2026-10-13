@@ -21,6 +21,7 @@ VOID     KaynLdrReloc( PVOID KaynImage, PVOID ImageBase, PVOID BaseRelocDir, DWO
 #endif
 #define STOMP_TARGET_LEN                22
 #define STOMP_TARGET_HASH               0x6ddb9555
+#define CRYPT_KEY_LEN                   32
 
 typedef struct {
     WORD offset :12;

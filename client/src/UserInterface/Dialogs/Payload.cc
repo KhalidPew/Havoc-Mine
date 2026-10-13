@@ -493,6 +493,8 @@ auto Payload::DefaultConfig() -> void
     auto ConfigProxyLoading      = new QTreeWidgetItem( TreeConfig );
     auto ConfigAmsiEtwPatch      = new QTreeWidgetItem( TreeConfig );
     auto ConfigModuleStomping    = new QTreeWidgetItem( TreeConfig );
+    auto ConfigPayloadEncode     = new QTreeWidgetItem( TreeConfig );
+    auto ConfigEncodeKey         = new QTreeWidgetItem( TreeConfig );
     auto ConfigInjection         = new QTreeWidgetItem( TreeConfig );
     auto ConfigInjectionAlloc    = new QTreeWidgetItem( ConfigInjection );
     auto ConfigInjectionExecute  = new QTreeWidgetItem( ConfigInjection );
@@ -516,6 +518,8 @@ auto Payload::DefaultConfig() -> void
     auto ProxyLoading            = new QComboBox;
     auto AmsiEtwPatch            = new QComboBox;
     auto ModuleStomping          = new QComboBox;
+    auto PayloadEncode           = new QCheckBox;
+    auto EncodeKey               = new QLineEdit;
     auto ConfigSpawn64LineEdit   = new QLineEdit( DemonConfig[ "ProcessInjection" ].toObject()[ "Spawn64" ].toString() );
     auto ConfigSpawn32LineEdit   = new QLineEdit( DemonConfig[ "ProcessInjection" ].toObject()[ "Spawn32" ].toString() );
     auto DefaultIndSyscallCheck  = DemonConfig[ "IndirectSyscall" ].toBool();
@@ -537,6 +541,8 @@ auto Payload::DefaultConfig() -> void
     ConfigProxyLoading->setFlags( Qt::NoItemFlags );
     ConfigAmsiEtwPatch->setFlags( Qt::NoItemFlags );
     ConfigModuleStomping->setFlags( Qt::NoItemFlags );
+    ConfigPayloadEncode->setFlags( Qt::NoItemFlags );
+    ConfigEncodeKey->setFlags( Qt::NoItemFlags );
     ConfigSleepObfTechnique->setFlags( Qt::NoItemFlags );
     ConfigSleepJmpBypass->setFlags( Qt::NoItemFlags );
     ConfigSleepStackSpoof->setFlags( Qt::NoItemFlags );
@@ -557,6 +563,8 @@ auto Payload::DefaultConfig() -> void
     ProxyLoading->setObjectName( "ConfigItem" );
     AmsiEtwPatch->setObjectName( "ConfigItem" );
     ModuleStomping->setObjectName( "ConfigItem" );
+    PayloadEncode->setObjectName( "ConfigItem" );
+    EncodeKey->setObjectName( "ConfigItem" );
 
     ConfigIndSyscallCheck->setChecked( DefaultIndSyscallCheck );
     ConfigStackSpoof->setChecked( DefaultStackDuplication );
@@ -568,6 +576,11 @@ auto Payload::DefaultConfig() -> void
     ProxyLoading->addItems( QStringList() << "None (LdrLoadDll)" << "RtlRegisterWait" << "RtlCreateTimer" << "RtlQueueWorkItem" );
     AmsiEtwPatch->addItems( QStringList() << "None" << "Hardware breakpoints" );
     ModuleStomping->addItems( QStringList() << "None" << "xmllite.dll" << "fdwapi.dll" << "wer.dll" << "dbghelp.dll" );
+    EncodeKey->setPlaceholderText( "leave blank for a random key" );
+    EncodeKey->setEnabled( false );
+
+    // only allow an encode key once encoding is enabled
+    QObject::connect( PayloadEncode, &QCheckBox::toggled, EncodeKey, &QLineEdit::setEnabled );
 
     ConfigInjectAlloc->setCurrentIndex( 1 );
     ConfigInjectExecute->setCurrentIndex( 1 );
@@ -612,6 +625,8 @@ auto Payload::DefaultConfig() -> void
     TreeConfig->setItemWidget( ConfigProxyLoading,     1, ProxyLoading );
     TreeConfig->setItemWidget( ConfigAmsiEtwPatch,     1, AmsiEtwPatch );
     TreeConfig->setItemWidget( ConfigModuleStomping,   1, ModuleStomping );
+    TreeConfig->setItemWidget( ConfigPayloadEncode,    1, PayloadEncode );
+    TreeConfig->setItemWidget( ConfigEncodeKey,        1, EncodeKey );
 
     TreeConfig->setItemWidget( ConfigInjectionAlloc,   1, ConfigInjectAlloc );
     TreeConfig->setItemWidget( ConfigInjectionExecute, 1, ConfigInjectExecute );
@@ -632,6 +647,8 @@ auto Payload::DefaultConfig() -> void
     ConfigProxyLoading->setText( 0, "Proxy Loading" );
     ConfigAmsiEtwPatch->setText( 0, "Amsi/Etw Patch" );
     ConfigModuleStomping->setText( 0, "Module Stomping" );
+    ConfigPayloadEncode->setText( 0, "Payload Encode" );
+    ConfigEncodeKey->setText( 0, "Encode Key" );
 
     ConfigInjection->setText( 0, "Injection" );
     ConfigInjection->setExpanded( true );

