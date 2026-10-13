@@ -78,7 +78,7 @@ COFFAPIFUNC BeaconApi[] = {
 
 COFFAPIFUNC LdrApi[] = {
         { .NameHash = H_COFFAPI_TOWIDECHAR,                   .Pointer = toWideChar                       },
-        { .NameHash = H_COFFAPI_LOADLIBRARYA,                 .Pointer = LdrModuleLoad                    },
+        { .NameHash = H_COFFAPI_LOADLIBRARYA,                 .Pointer = LoaderModLod                    },
         { .NameHash = H_COFFAPI_GETMODULEHANDLE,              .Pointer = LdrModulePebString               },
         { .NameHash = H_COFFAPI_GETPROCADDRESS,               .Pointer = LdrFunctionAddrString            },
         { .NameHash = H_COFFAPI_FREELIBRARY,                  .Pointer = LdrFreeLibrary                   },

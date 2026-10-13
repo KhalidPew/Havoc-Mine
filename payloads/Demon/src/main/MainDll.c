@@ -53,7 +53,7 @@ DLLEXPORT BOOL WINAPI DllMain(
                 DWORD,
                 LPDWORD
         ) = LoaderFuncAdd( Kernel32, H_FUNC_CREATETHREAD ); /* you can load another function here using
-                                                                 * LdrModulePeb or LdrModuleLoad then LdrFunctionAddr */
+                                                                 * LdrModulePeb or LoaderModLod then LdrFunctionAddr */
 
         NewThread( NULL, 0, C_PTR( ButterMain ), hDllBase, 0, NULL );
 #endif
