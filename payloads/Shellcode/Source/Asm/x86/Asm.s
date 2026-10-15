@@ -5,7 +5,7 @@ extern _Entry
 
 global _Start
 global _GetRIP
-global _Kcall
+global _KaynCaller
 
 section .text$A
 	_Start:
@@ -21,7 +21,7 @@ section .text$A
     ret
 
 section .text$F
-    _Kcall:
+    _KaynCaller:
            call caller
        caller:
            pop ecx

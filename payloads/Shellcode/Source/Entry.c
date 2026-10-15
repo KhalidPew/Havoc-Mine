@@ -43,7 +43,7 @@ SEC( text, B ) VOID Entry( VOID )
     PIMAGE_NT_HEADERS       StompNt         = NULL;
 
     // 0. First we need to get our own image base
-    KaynLibraryLdr          = Kcall();
+    KaynLibraryLdr          = KaynCaller();
     Instance.Modules.Ntdll  = LoaderModPebbb( NTDLL_HASH );
 
     Instance.Win32.LdrLoadDll              = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_LDRLOADDLL );

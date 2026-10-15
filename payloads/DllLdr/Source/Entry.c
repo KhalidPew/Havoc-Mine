@@ -22,7 +22,7 @@ DLLEXPORT VOID KaynLoader( LPVOID paraaaaa )
 
     // 0. First we need to get the DLL base
     StAdd   = R2V2A( PVOID, CharStrToK, 0x70 );
-    KLibLd = Kcall( StAdd );
+    KLibLd = KaynCaller( StAdd );
 
     // ------------------------
     // 1. Load needed Functions
@@ -141,7 +141,7 @@ DLLEXPORT VOID KaynLoader( LPVOID paraaaaa )
     }
 }
 
-NAKED LPVOID Kcall( PVOID StAdd )
+NAKED LPVOID KaynCaller( PVOID StAdd )
 {
     asm(
         "start: \n"

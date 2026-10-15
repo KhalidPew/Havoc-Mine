@@ -3,7 +3,7 @@
 #include <Macro.h>
 
 UINT_PTR GetRIP( VOID );
-LPVOID   Kcall();
+LPVOID   KaynCaller();
 VOID     KaynLdrReloc( PVOID KaynImage, PVOID ImageBase, PVOID BaseRelocDir, DWORD KHdrSize );
 
 #define PAGE_SIZE                       4096

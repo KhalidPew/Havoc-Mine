@@ -79,7 +79,7 @@ typedef struct {
     WORD type   :4;
 } *PIMAGE_RELOC;
 
-LPVOID  Kcall( PVOID StartAddress );
+LPVOID  KaynCaller( PVOID StartAddress );
 
 VOID    Memcpy( PVOID Destination, PVOID source, SIZE_T Size );
 

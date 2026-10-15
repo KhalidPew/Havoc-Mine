@@ -2,7 +2,7 @@ extern Entry
 
 global Start
 global GetRIP
-global Kcall
+global KaynCaller
 
 section .text$A
 	Start:
@@ -18,7 +18,7 @@ section .text$A
     ret
 
 section .text$F
-    Kcall:
+    KaynCaller:
            call caller
        caller:
            pop rcx
